@@ -10,7 +10,7 @@
 #define MAINCOMPONENT_H_INCLUDED
 
 #include "../JuceLibraryCode/JuceHeader.h"
-
+#include "JucyBoy/JucyBoy.h"
 
 //==============================================================================
 /*
@@ -29,6 +29,8 @@ public:
 
 private:
     //==============================================================================
+	JucyBoy jucy_boy_;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };
 
