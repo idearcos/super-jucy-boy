@@ -9,7 +9,7 @@
 */
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "MainComponent.h"
+#include "JucyBoy.h"
 
 
 //==============================================================================
@@ -66,7 +66,7 @@ public:
                                                     DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
-            setContentOwned (new MainContentComponent(), true);
+            setContentOwned (new JucyBoy(), true);
 
             centreWithSize (getWidth(), getHeight());
             setVisible (true);

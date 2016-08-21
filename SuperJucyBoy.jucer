@@ -11,12 +11,13 @@
         <FILE id="OVAOjP" name="RegisterPair.h" compile="0" resource="0" file="Source/JucyBoy/RegisterPair.h"/>
         <FILE id="kZEcqM" name="CPU.cpp" compile="1" resource="0" file="Source/JucyBoy/CPU.cpp"/>
         <FILE id="YypB1H" name="CPU.h" compile="0" resource="0" file="Source/JucyBoy/CPU.h"/>
-        <FILE id="mMewXL" name="JucyBoy.cpp" compile="1" resource="0" file="Source/JucyBoy/JucyBoy.cpp"/>
-        <FILE id="KUptA6" name="JucyBoy.h" compile="0" resource="0" file="Source/JucyBoy/JucyBoy.h"/>
       </GROUP>
-      <FILE id="dhem0M" name="MainComponent.cpp" compile="1" resource="0"
-            file="Source/MainComponent.cpp"/>
-      <FILE id="TQFnBn" name="MainComponent.h" compile="1" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="dhem0M" name="JucyBoy.cpp" compile="1" resource="0" file="Source/JucyBoy.cpp"/>
+      <FILE id="TQFnBn" name="JucyBoy.h" compile="0" resource="0" file="Source/JucyBoy.h"/>
+      <FILE id="l7KWIo" name="CpuStatusComponent.cpp" compile="1" resource="0"
+            file="Source/CpuStatusComponent.cpp"/>
+      <FILE id="a26fGe" name="CpuStatusComponent.h" compile="0" resource="0"
+            file="Source/CpuStatusComponent.h"/>
       <FILE id="uh1Uzk" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
     <FILE id="IxbJmR" name="README.md" compile="0" resource="1" file="README.md"/>
