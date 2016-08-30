@@ -1,80 +1,46 @@
 #include "JucyBoy.h"
 #include <sstream>
 
-JucyBoy::JucyBoy() :
-	cpu_{ mmu_ },
-	is_running_{ false },
-	exit_loop_{ false }
+JucyBoy::JucyBoy()
 {
-	setSize (600, 400);
+	setSize (320, 240);
 	setWantsKeyboardFocus(true);
 	addAndMakeVisible(cpu_status_component_);
 
-	cpu_status_component_.SetCpuState(cpu_);
+	// Add listeners
+	cpu_.AddListener(cpu_status_component_);
+	cpu_.Reset();
 }
 
 JucyBoy::~JucyBoy()
 {
-	Stop();
+
 }
 
 void JucyBoy::Reset()
 {
-	Stop();
-
+	// Stop execution, then reset all components
+	cpu_.Stop();
 	cpu_.Reset();
 	mmu_.Reset();
+	cpu_.Run();
 }
 
 void JucyBoy::LoadRom(const juce::File &file)
 {
-	Stop();
+	cpu_.Stop();
+	cpu_.Reset();
+	mmu_.Reset();
 
 	// Convert the juce file to std string
 	mmu_.LoadRom(file.getFullPathName().toStdString());
 
-	Run();
-}
-
-void JucyBoy::Run()
-{
-	if (loop_function_thread_.joinable()) { return; }
-
-	exit_loop_.store(false);
-	loop_function_thread_ = std::thread{ &JucyBoy::RunningLoopFunction, this };
-	is_running_ = true;
-}
-
-void JucyBoy::Stop()
-{
-	if (!loop_function_thread_.joinable()) { return; }
-
-	exit_loop_.store(true);
-	loop_function_thread_.join();
-	is_running_ = false;
-}
-
-bool JucyBoy::IsRunning() const
-{
-	return is_running_;
-}
-
-void JucyBoy::RunningLoopFunction()
-{
-	while (!exit_loop_.load())
-	{
-		ExecuteNextInstruction();
-	}
-}
-
-void JucyBoy::ExecuteNextInstruction()
-{
-	auto cycles = cpu_.ExecuteInstruction(cpu_.FetchOpcode());
+	cpu_.Run();
 }
 
 void JucyBoy::paint (Graphics& g)
 {
-    g.fillAll(Colours::white);
+	g.fillAll(Colours::white);
 
 	g.setColour(Colours::lightblue);
 	g.setFont(14.0f);
@@ -129,23 +95,21 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 	// Switch statement does not work below because the keys are not compile time constants...
 	if (key.getKeyCode() == KeyPress::spaceKey)
 	{
-		if (is_running_)
+		if (cpu_.IsRunning())
 		{
-			Stop();
-			cpu_status_component_.SetCpuState(cpu_);
+			cpu_.Stop();
 		}
 		else
 		{
-			Run();
+			cpu_.Run();
 		}
 	}
 	else if (key.getKeyCode() == KeyPress::rightKey)
 	{
-		if (!is_running_)
+		if (!cpu_.IsRunning())
 		{
 			try {
-				ExecuteNextInstruction();
-				cpu_status_component_.SetCpuState(cpu_);
+				cpu_.StepOver();
 			}
 			catch (std::exception &e)
 			{

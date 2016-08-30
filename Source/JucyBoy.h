@@ -27,20 +27,9 @@ private:
 	void Reset();
 	void LoadRom(const juce::File &file);
 
-	void Run();
-	void Stop();
-	bool IsRunning() const;
-	void RunningLoopFunction();
-
-	void ExecuteNextInstruction();
-
 private:
-	CPU cpu_;
-	MMU mmu_;
-
-	bool is_running_;
-	std::atomic<bool> exit_loop_;
-	std::thread loop_function_thread_;
+	MMU mmu_{};
+	CPU cpu_{ mmu_ };
 
 	CpuStatusComponent cpu_status_component_;
 

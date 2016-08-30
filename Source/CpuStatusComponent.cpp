@@ -7,7 +7,28 @@
 //==============================================================================
 CpuStatusComponent::CpuStatusComponent()
 {
+	// Add register labels
+	addAndMakeVisible(af_label_);
+	addAndMakeVisible(bc_label_);
+	addAndMakeVisible(de_label_);
+	addAndMakeVisible(hl_label_);
+	addAndMakeVisible(pc_label_);
+	addAndMakeVisible(sp_label_);
 
+	// Add flag toggle buttons (read-only)
+	addAndMakeVisible(carry_flag_toggle_);
+	addAndMakeVisible(half_carry_flag_toggle_);
+	addAndMakeVisible(subtract_flag_toggle_);
+	addAndMakeVisible(zero_flag_toggle_);
+
+	carry_flag_toggle_.setButtonText("Carry");
+	carry_flag_toggle_.setEnabled(false);
+	half_carry_flag_toggle_.setButtonText("Half Carry");
+	half_carry_flag_toggle_.setEnabled(false);
+	subtract_flag_toggle_.setButtonText("Subtract");
+	subtract_flag_toggle_.setEnabled(false);
+	zero_flag_toggle_.setButtonText("Zero");
+	zero_flag_toggle_.setEnabled(false);
 }
 
 CpuStatusComponent::~CpuStatusComponent()
@@ -17,46 +38,51 @@ CpuStatusComponent::~CpuStatusComponent()
 
 void CpuStatusComponent::paint (Graphics& g)
 {
-    g.fillAll (Colours::white);   // clear the background
+	g.fillAll (Colours::white);   // clear the background
 
-    g.setColour (Colours::grey);
-    g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
-
-    g.setColour (Colours::lightblue);
-    g.setFont (14.0f);
-	std::stringstream registers_state;
-	registers_state << "CPU registers:" << std::endl;
-	registers_state << "AF: 0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex
-		<< static_cast<size_t>(a_) << static_cast<size_t>(f_) << std::endl;
-	registers_state << "BC: 0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex
-		<< static_cast<size_t>(b_) << static_cast<size_t>(c_) << std::endl;
-	registers_state << "DE: 0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex
-		<< static_cast<size_t>(d_) << static_cast<size_t>(e_) << std::endl;
-	registers_state << "HL: 0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex 
-		<< static_cast<size_t>(h_) << static_cast<size_t>(l_) << std::endl;
-	registers_state << "PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << pc_ << std::endl;
-	registers_state << "SP: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << sp_ << std::endl;
-    g.drawMultiLineText (registers_state.str(), getLocalBounds().getX(), getLocalBounds().getY() + 14, getLocalBounds().getWidth());
+	g.setColour (Colours::grey);
+	g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
 }
 
 void CpuStatusComponent::resized()
 {
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
+	auto working_area = getLocalBounds();
+	auto flags_area = working_area.removeFromBottom(getHeight() / 4);
+	auto first_registers_row_area = working_area.removeFromTop(getHeight() / 4);
+	auto second_registers_row_area = working_area.removeFromTop(getHeight() / 4);
+	auto third_registers_row_area = working_area;
 
+	af_label_.setBounds(first_registers_row_area.removeFromLeft(getWidth() / 2));
+	bc_label_.setBounds(first_registers_row_area);
+	de_label_.setBounds(second_registers_row_area.removeFromLeft(getWidth() / 2));
+	hl_label_.setBounds(second_registers_row_area);
+	pc_label_.setBounds(third_registers_row_area.removeFromLeft(getWidth() / 2));
+	sp_label_.setBounds(third_registers_row_area);
+
+	carry_flag_toggle_.setBounds(flags_area.removeFromLeft(getWidth() / 4));
+	half_carry_flag_toggle_.setBounds(flags_area.removeFromLeft(getWidth() / 4));
+	subtract_flag_toggle_.setBounds(flags_area.removeFromLeft(getWidth() / 4));
+	zero_flag_toggle_.setBounds(flags_area);
 }
 
-void CpuStatusComponent::SetCpuState(const CPU &cpu)
+std::string CpuStatusComponent::FormatRegisterLabelText(std::string register_name, uint16_t value)
 {
-	const auto &registers = cpu.GetRegisters();
-	a_ = registers.af_.ReadHighByte();
-	f_ = registers.af_.ReadLowByte();
-	b_ = registers.bc_.ReadHighByte();
-	c_ = registers.bc_.ReadLowByte();
-	d_ = registers.de_.ReadHighByte();
-	e_ = registers.de_.ReadLowByte();
-	h_ = registers.hl_.ReadHighByte();
-	l_ = registers.hl_.ReadLowByte();
-	pc_ = registers.pc_;
-	sp_ = registers.sp_;
+	std::stringstream register_text;
+	register_text << std::move(register_name) << ": 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << value << std::endl;
+	return register_text.str();
+}
+
+void CpuStatusComponent::OnCpuStateChanged(const CPU::Registers &registers, CPU::Flags flags)
+{
+	af_label_.setText(FormatRegisterLabelText("AF", registers.af.ReadWord()), NotificationType::sendNotification);
+	bc_label_.setText(FormatRegisterLabelText("BC", registers.bc.ReadWord()), NotificationType::sendNotification);
+	de_label_.setText(FormatRegisterLabelText("DE", registers.de.ReadWord()), NotificationType::sendNotification);
+	hl_label_.setText(FormatRegisterLabelText("HL", registers.hl.ReadWord()), NotificationType::sendNotification);
+	pc_label_.setText(FormatRegisterLabelText("PC", registers.pc), NotificationType::sendNotification);
+	sp_label_.setText(FormatRegisterLabelText("SP", registers.sp), NotificationType::sendNotification);
+
+	carry_flag_toggle_.setToggleState((flags & CPU::Flags::C) != CPU::Flags::None, NotificationType::sendNotification);
+	half_carry_flag_toggle_.setToggleState((flags & CPU::Flags::H) != CPU::Flags::None, NotificationType::sendNotification);
+	subtract_flag_toggle_.setToggleState((flags & CPU::Flags::N) != CPU::Flags::None, NotificationType::sendNotification);
+	zero_flag_toggle_.setToggleState((flags & CPU::Flags::Z) != CPU::Flags::None, NotificationType::sendNotification);
 }

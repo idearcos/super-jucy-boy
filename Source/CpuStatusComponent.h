@@ -1,34 +1,39 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "JucyBoy/CPU.h"
 
 class CPU;
 
 //==============================================================================
 /*
 */
-class CpuStatusComponent    : public Component
+class CpuStatusComponent : public Component, public CPU::Listener
 {
 public:
-    CpuStatusComponent();
-    ~CpuStatusComponent();
+	CpuStatusComponent();
+	~CpuStatusComponent();
 
-    void paint (Graphics&) override;
-    void resized() override;
+	void paint (Graphics&) override;
+	void resized() override;
 
-	void SetCpuState(const CPU &cpu);
+	void OnCpuStateChanged(const CPU::Registers &registers, CPU::Flags flags) override;
 
 private:
-	uint8_t a_;
-	uint8_t f_;
-	uint8_t b_;
-	uint8_t c_;
-	uint8_t d_;
-	uint8_t e_;
-	uint8_t h_;
-	uint8_t l_;
-	uint16_t pc_;
-	uint16_t sp_;
+	static std::string FormatRegisterLabelText(std::string register_name, uint16_t value);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CpuStatusComponent)
+private:
+	Label af_label_;
+	Label bc_label_;
+	Label de_label_;
+	Label hl_label_;
+	Label pc_label_;
+	Label sp_label_;
+
+	ToggleButton carry_flag_toggle_;
+	ToggleButton half_carry_flag_toggle_;
+	ToggleButton subtract_flag_toggle_;
+	ToggleButton zero_flag_toggle_;
+
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CpuStatusComponent)
 };

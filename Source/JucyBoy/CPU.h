@@ -4,55 +4,104 @@
 #include <functional>
 #include <atomic>
 #include <thread>
+#include <set>
 #include "RegisterPair.h"
 
 class MMU;
 
 class CPU
 {
-	struct Registers
-	{
-		RegisterPair af_;
-		RegisterPair bc_;
-		RegisterPair de_;
-		RegisterPair hl_;
-		uint16_t pc_;
-		uint16_t sp_;
-	};
-
-	enum Flags : uint8_t
-	{
-		Zero = 0x80,
-		Subtract = 0x40,
-		HalfCarry = 0x20,
-		Carry = 0x10,
-	};
-
 public:
 	using MachineCycles = size_t;
 	using OpCode = uint8_t;
 	using Instruction = std::function<MachineCycles()>;
 
+	struct Registers
+	{
+		RegisterPair af;
+		RegisterPair bc;
+		RegisterPair de;
+		RegisterPair hl;
+		uint16_t pc;
+		uint16_t sp;
+	};
+
+	enum class Flags : uint8_t
+	{
+		None = 0x00,
+		C = 1 << 4,
+		H = 1 << 5,
+		N = 1 << 6,
+		Z = 1 << 7,
+	};
+
+	class Listener
+	{
+	public:
+		virtual ~Listener() {}
+		virtual void OnCpuStateChanged(const Registers &registers, Flags flags) = 0;
+	};
+
+public:
 	CPU(MMU &mmu);
 	~CPU();
 
+	// Set initial state of registers_
 	void Reset();
-	void PopulateInstructions();
 
-	OpCode FetchOpcode();
-	MachineCycles ExecuteInstruction(OpCode opcode);
+	// Execution flow control
+	void Run();
+	void Stop();
+	bool IsRunning() const;
+	void StepOver();
 
-	const Registers& GetRegisters() const { return registers_; }
+	// Listeners management
+	void AddListener(Listener &listener);
+	void RemoveListener(Listener &listener);
 
 private:
-	void SetFlags(Flags flags) { registers_.af_.WriteLowByte(registers_.af_.ReadLowByte() | flags); }
-	void ClearFlags(Flags flags) { registers_.af_.WriteLowByte(registers_.af_.ReadLowByte() & ~flags); }
-	void ClearAndSetFlags(Flags flags) { registers_.af_.WriteLowByte(flags); }
-	bool IsFlagSet(Flags flags) const { return (registers_.af_.ReadLowByte() & flags) != 0; }
+	// Initialization of instructions_ array
+	void PopulateInstructions();
+
+	// Execution flow
+	OpCode FetchOpcode();
+	MachineCycles ExecuteInstruction(OpCode opcode);
+	void RunningLoopFunction();
+
+	// Flag operations
+	void SetFlag(Flags flag);
+	void ClearFlag(Flags flag);
+	bool IsFlagSet(Flags flag) const;
+	Flags ReadFlags() const;
+	void ClearAndSetFlags(Flags flags);
+
+	// Listener notification
+	void NotifyCpuStateChange() const;
 
 private:
 	std::array<Instruction, 256> instructions_;
 	Registers registers_;
+
+	std::atomic<bool> exit_loop_{ false };
+	std::thread loop_function_thread_;
 	
 	MMU *mmu_;
+	std::set<Listener*> listeners_;
 };
+
+#pragma region Flags bitwise operators
+inline CPU::Flags operator | (const CPU::Flags &lhs, const CPU::Flags &rhs)
+{
+	return static_cast<CPU::Flags>(static_cast<std::underlying_type_t<CPU::Flags>>(lhs) | static_cast<std::underlying_type_t<CPU::Flags>>(rhs));
+}
+
+inline CPU::Flags operator & (const CPU::Flags &lhs, const CPU::Flags &rhs)
+{
+	return static_cast<CPU::Flags>(static_cast<std::underlying_type_t<CPU::Flags>>(lhs) & static_cast<std::underlying_type_t<CPU::Flags>>(rhs));
+}
+
+inline CPU::Flags operator ~ (const CPU::Flags &flag)
+{
+	return static_cast<CPU::Flags>(~static_cast<std::underlying_type_t<CPU::Flags>>(flag));
+}
+#pragma endregion

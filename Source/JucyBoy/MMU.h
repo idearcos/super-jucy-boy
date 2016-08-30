@@ -13,6 +13,7 @@ public:
 	MMU();
 	~MMU();
 
+	// Sets certain memory registers' initial state
 	void Reset();
 
 	uint8_t Read(Address address) const;
