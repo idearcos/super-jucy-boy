@@ -16,11 +16,16 @@ public:
 	// Sets certain memory registers' initial state
 	void Reset();
 
-	uint8_t Read(Address address) const;
-	void Write(Address address, uint8_t value);
+	uint8_t ReadByte(Address address) const;
+	uint16_t ReadWord(Address address) const;
+	void WriteByte(Address address, uint8_t value);
+	void WriteWord(Address address, uint16_t value);
 
 	void LoadRom(const std::string &rom_file_path);
+	bool IsRomLoaded() const noexcept { return rom_loaded_; }
 
 private:
-	std::array<uint8_t, std::numeric_limits<Address>::max() + 1> memory_;
+	std::array<uint8_t, std::numeric_limits<Address>::max() + 1> memory_{}; // Value-initialize to all-zeroes
+
+	bool rom_loaded_{ false };
 };

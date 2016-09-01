@@ -3,7 +3,7 @@
 #include <array>
 #include <functional>
 #include <atomic>
-#include <thread>
+#include <future>
 #include <set>
 #include "RegisterPair.h"
 
@@ -40,6 +40,7 @@ public:
 	public:
 		virtual ~Listener() {}
 		virtual void OnCpuStateChanged(const Registers &registers, Flags flags) = 0;
+		virtual void OnExceptionInRunningLoop() = 0;
 	};
 
 public:
@@ -52,7 +53,7 @@ public:
 	// Execution flow control
 	void Run();
 	void Stop();
-	bool IsRunning() const;
+	bool IsRunning() const noexcept;
 	void StepOver();
 
 	// Listeners management
@@ -62,6 +63,9 @@ public:
 private:
 	// Initialization of instructions_ array
 	void PopulateInstructions();
+	void PopulateInstructionNames();
+	void PopulateCbInstructions();
+	void PopulateCbInstructionNames();
 
 	// Execution flow
 	OpCode FetchOpcode();
@@ -77,14 +81,19 @@ private:
 
 	// Listener notification
 	void NotifyCpuStateChange() const;
+	void NotifyExceptionInRunningLoop() const;
 
 private:
-	std::array<Instruction, 256> instructions_;
 	Registers registers_;
 
+	std::array<Instruction, 256> instructions_;
+	std::array<std::string, 256> instruction_names_;
+	std::array<Instruction, 256> cb_instructions_;
+	std::array<std::string, 256> cb_instruction_names_;
+
 	std::atomic<bool> exit_loop_{ false };
-	std::thread loop_function_thread_;
-	
+	std::future<void> loop_function_result_;
+
 	MMU *mmu_;
 	std::set<Listener*> listeners_;
 };
@@ -103,5 +112,11 @@ inline CPU::Flags operator & (const CPU::Flags &lhs, const CPU::Flags &rhs)
 inline CPU::Flags operator ~ (const CPU::Flags &flag)
 {
 	return static_cast<CPU::Flags>(~static_cast<std::underlying_type_t<CPU::Flags>>(flag));
+}
+
+inline CPU::Flags& operator |= (CPU::Flags &lhs, const CPU::Flags &rhs)
+{
+	lhs = static_cast<CPU::Flags>(static_cast<std::underlying_type_t<CPU::Flags>>(lhs) | static_cast<std::underlying_type_t<CPU::Flags>>(rhs));
+	return lhs;
 }
 #pragma endregion

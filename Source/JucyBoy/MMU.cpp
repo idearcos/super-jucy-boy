@@ -1,10 +1,9 @@
 #include "MMU.h"
 #include <fstream>
 
-MMU::MMU() :
-	memory_{} // Value-initialize to all-zeroes
+MMU::MMU()
 {
-
+	
 }
 
 MMU::~MMU()
@@ -47,18 +46,33 @@ void MMU::Reset()
 	memory_[0xFFFF] = 0x00; //IE
 }
 
-uint8_t MMU::Read(Address address) const
+uint8_t MMU::ReadByte(Address address) const
 {
 	return memory_[address];
 }
 
-void MMU::Write(Address address, uint8_t value)
+uint16_t MMU::ReadWord(Address address) const
+{
+	uint16_t value{ ReadByte(address) };
+	value += (ReadByte(++address) << 8);
+	return value; 
+}
+
+void MMU::WriteByte(Address address, uint8_t value)
 {
 	memory_[address] = value;
 }
 
+void MMU::WriteWord(Address address, uint16_t value)
+{
+	WriteByte(address, (value & 0xFF));
+	WriteByte(++address, ((value >> 8) & 0xFF));
+}
+
 void MMU::LoadRom(const std::string &rom_file_path)
 {
+	rom_loaded_ = false;
+
 	std::ifstream rom_read_stream{ rom_file_path, std::ios::binary | std::ios::ate };
 	if (!rom_read_stream.is_open()) { throw std::runtime_error{ "ROM file could not be opened" }; }
 
@@ -68,4 +82,6 @@ void MMU::LoadRom(const std::string &rom_file_path)
 	rom_read_stream.read(reinterpret_cast<char*>(memory_.data()), std::max(file_size, memory_.size()));
 
 	rom_read_stream.close();
+
+	rom_loaded_ = true;
 }

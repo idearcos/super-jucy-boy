@@ -18,6 +18,7 @@ public:
 	void resized() override;
 
 	void OnCpuStateChanged(const CPU::Registers &registers, CPU::Flags flags) override;
+	void OnExceptionInRunningLoop() override {};
 
 private:
 	static std::string FormatRegisterLabelText(std::string register_name, uint16_t value);

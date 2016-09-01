@@ -9,6 +9,9 @@ JucyBoy::JucyBoy()
 
 	// Add listeners
 	cpu_.AddListener(cpu_status_component_);
+	cpu_.AddListener(*this);
+
+	// Call Reset again just to notify the listeners of the initial CPU state
 	cpu_.Reset();
 }
 
@@ -35,7 +38,7 @@ void JucyBoy::LoadRom(const juce::File &file)
 	// Convert the juce file to std string
 	mmu_.LoadRom(file.getFullPathName().toStdString());
 
-	cpu_.Run();
+	//cpu_.Run();
 }
 
 void JucyBoy::paint (Graphics& g)
@@ -54,9 +57,6 @@ void JucyBoy::paint (Graphics& g)
 
 void JucyBoy::resized()
 {
-    // This is called when the MainContentComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
 	cpu_status_component_.setBounds(getLocalBounds().withTop(getHeight() / 2));
 }
 
@@ -74,7 +74,7 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 		// Did not select anything
 		break;
 	case 1:
-		{FileChooser rom_chooser{ "Select a ROM file to load...", File::getSpecialLocation(File::currentExecutableFile), ".gb" };
+		{FileChooser rom_chooser{ "Select a ROM file to load...", File::getSpecialLocation(File::currentExecutableFile), "*.gb" };
 		if (rom_chooser.browseForFileToOpen()) {
 			auto rom_file = rom_chooser.getResult();
 			try
@@ -95,6 +95,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 	// Switch statement does not work below because the keys are not compile time constants...
 	if (key.getKeyCode() == KeyPress::spaceKey)
 	{
+		if (!mmu_.IsRomLoaded()) { return true; }
 		if (cpu_.IsRunning())
 		{
 			cpu_.Stop();
@@ -106,17 +107,41 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 	}
 	else if (key.getKeyCode() == KeyPress::rightKey)
 	{
+		if (!mmu_.IsRomLoaded()) { return true; }
 		if (!cpu_.IsRunning())
 		{
-			try {
+			try
+			{
 				cpu_.StepOver();
 			}
 			catch (std::exception &e)
 			{
-				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught: ", e.what());
+				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 			}
 		}
 	}
 
 	return true;
+}
+
+void JucyBoy::OnExceptionInRunningLoop()
+{
+	// The listener callback is called from within the CPU's running loop.
+	// The call has to be forwarded to the message thread in order to join the running loop thread.
+	// Moreover, any update to the GUI components (as the listener callback of Reset) can only be done safely in the message thread.
+	triggerAsyncUpdate();
+}
+
+void JucyBoy::handleAsyncUpdate()
+{
+	try
+	{
+		// Stop will rethrow the exception that was thrown in the running loop
+		cpu_.Stop();
+	}
+	catch (std::exception &e)
+	{
+		AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
+		cpu_.Reset();
+	}
 }

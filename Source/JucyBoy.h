@@ -5,23 +5,23 @@
 #include "JucyBoy/MMU.h"
 #include "CpuStatusComponent.h"
 
-//==============================================================================
-/*
-    This component lives inside our window, and this is where you should put all
-    your controls and content.
-*/
-class JucyBoy final : public Component
+class JucyBoy final : public Component, public CPU::Listener, public AsyncUpdater
 {
 public:
-    //==============================================================================
 	JucyBoy();
-    ~JucyBoy();
+	~JucyBoy();
 
-    void paint (Graphics&) override;
-    void resized() override;
+	void paint (Graphics&) override;
+	void resized() override;
 
 	void mouseDown(const MouseEvent &event) override;
 	bool keyPressed(const KeyPress &key) override;
+
+	void OnCpuStateChanged(const CPU::Registers &registers, CPU::Flags flags) override {};
+	void OnExceptionInRunningLoop() override;
+
+	// Transfers the handling of exception in running loop to the message thread
+	void handleAsyncUpdate() override;
 
 private:
 	void Reset();
@@ -33,5 +33,5 @@ private:
 
 	CpuStatusComponent cpu_status_component_;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
 };

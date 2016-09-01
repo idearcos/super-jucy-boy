@@ -6,6 +6,10 @@
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
       <GROUP id="{F134FA3D-DA88-4DFD-F9D2-E3EF84037505}" name="JucyBoy">
+        <FILE id="ArciXF" name="CPU_PopulateCbInstructions.cpp" compile="1"
+              resource="0" file="Source/JucyBoy/CPU_PopulateCbInstructions.cpp"/>
+        <FILE id="NRAfZO" name="CPU_PopulateInstructions.cpp" compile="1" resource="0"
+              file="Source/JucyBoy/CPU_PopulateInstructions.cpp"/>
         <FILE id="DfP5e5" name="MMU.cpp" compile="1" resource="0" file="Source/JucyBoy/MMU.cpp"/>
         <FILE id="ZKlLmE" name="MMU.h" compile="0" resource="0" file="Source/JucyBoy/MMU.h"/>
         <FILE id="OVAOjP" name="RegisterPair.h" compile="0" resource="0" file="Source/JucyBoy/RegisterPair.h"/>
