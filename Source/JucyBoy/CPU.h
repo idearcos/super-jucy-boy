@@ -5,7 +5,7 @@
 #include <atomic>
 #include <future>
 #include <set>
-#include "RegisterPair.h"
+#include "Registers.h"
 
 class MMU;
 
@@ -15,6 +15,7 @@ public:
 	using MachineCycles = size_t;
 	using OpCode = uint8_t;
 	using Instruction = std::function<MachineCycles()>;
+	using BreakpointList = std::set<uint16_t>;
 
 	struct Registers
 	{
@@ -40,7 +41,8 @@ public:
 	public:
 		virtual ~Listener() {}
 		virtual void OnCpuStateChanged(const Registers &registers, Flags flags) = 0;
-		virtual void OnExceptionInRunningLoop() = 0;
+		virtual void OnBreakpointsChanged(const BreakpointList &breakpoint_list) = 0;
+		virtual void OnRunningLoopExited() = 0;
 	};
 
 public:
@@ -56,6 +58,9 @@ public:
 	bool IsRunning() const noexcept;
 	void StepOver();
 
+	void AddBreakpoint(uint16_t address);
+	void RemoveBreakpoint(uint16_t address);
+
 	// Listeners management
 	void AddListener(Listener &listener);
 	void RemoveListener(Listener &listener);
@@ -68,9 +73,12 @@ private:
 	void PopulateCbInstructionNames();
 
 	// Execution flow
-	OpCode FetchOpcode();
+	inline OpCode FetchOpcode() { return FetchByte(); }
 	MachineCycles ExecuteInstruction(OpCode opcode);
 	void RunningLoopFunction();
+	uint8_t FetchByte();
+	uint16_t FetchWord();
+	bool BreakpointHit() const;
 
 	// Flag operations
 	void SetFlag(Flags flag);
@@ -81,10 +89,12 @@ private:
 
 	// Listener notification
 	void NotifyCpuStateChange() const;
-	void NotifyExceptionInRunningLoop() const;
+	void NotifyBreakpointsChange() const;
+	void NotifyRunningLoopExited() const;
 
 private:
 	Registers registers_;
+	uint16_t previous_pc_{ 0 };
 
 	std::array<Instruction, 256> instructions_;
 	std::array<std::string, 256> instruction_names_;
@@ -93,6 +103,8 @@ private:
 
 	std::atomic<bool> exit_loop_{ false };
 	std::future<void> loop_function_result_;
+
+	BreakpointList breakpoints_;
 
 	MMU *mmu_;
 	std::set<Listener*> listeners_;

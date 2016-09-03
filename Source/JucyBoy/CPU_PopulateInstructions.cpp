@@ -8,10 +8,11 @@ void CPU::PopulateInstructions()
 	for (size_t ii = 0; ii < instructions_.size(); ++ii)
 	{
 		instructions_[ii] = [this, ii]() -> MachineCycles {
+			registers_.pc = previous_pc_;
 			std::stringstream error;
 			error << "Instruction not yet implemented: 0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << ii
 				<< " [" << instruction_names_[ii] << "]" << std::endl
-				<< "(PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << registers_.pc - 1 << ")";
+				<< "(PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << registers_.pc << ")";
 			throw std::runtime_error(error.str());
 		};
 	}
@@ -21,33 +22,147 @@ void CPU::PopulateInstructions()
 		return 1;
 	};
 
+	// DEC B
+	instructions_[0x05] = [this]() -> MachineCycles {
+		ClearFlag(Flags::Z | Flags::H);
+		SetFlag(Flags::N);
+		const auto value = registers_.bc.GetHigh().Decrement();
+		if ((value & 0x0F) == 0x0F) { SetFlag(Flags::H); }
+		if (value == 0) { SetFlag(Flags::Z); }
+		
+		return 1;
+	};
+
+	// LD B, d8
+	instructions_[0x06] = [this]() -> MachineCycles {
+		registers_.bc.GetHigh().Write(FetchByte());
+		return 2;
+	};
+
+	// DEC C
+	instructions_[0x0D] = [this]() -> MachineCycles {
+		ClearFlag(Flags::Z | Flags::H);
+		SetFlag(Flags::N);
+		const auto value = registers_.bc.GetLow().Decrement();
+		if ((value & 0x0F) == 0x0F) { SetFlag(Flags::H); }
+		if (value == 0) { SetFlag(Flags::Z); }
+
+		return 1;
+	};
+
+	// LD C, d8
+	instructions_[0x0E] = [this]() -> MachineCycles {
+		registers_.bc.GetLow().Write(FetchByte());
+		return 2;
+	};
+
+	// LD D, d8
+	instructions_[0x16] = [this]() -> MachineCycles {
+		registers_.de.GetHigh().Write(FetchByte());
+		return 2;
+	};
+
+	// LD E, d8
+	instructions_[0x1E] = [this]() -> MachineCycles {
+		registers_.de.GetLow().Write(FetchByte());
+		return 2;
+	};
+
+	// JR NZ, r8
+	instructions_[0x20] = [this]() -> MachineCycles {
+		const auto displacement = static_cast<int8_t>(FetchByte());
+
+		if (IsFlagSet(Flags::Z)) { return 2; }
+
+		registers_.pc += displacement;
+		return 3;
+	};
+
+	// LD HL, d16
+	instructions_[0x21] = [this]() -> MachineCycles {
+		registers_.hl.Write(FetchWord());
+		return 3;
+	};
+
+	// LD (HL+), A
+	instructions_[0x32] = [this]() -> MachineCycles {
+		mmu_->WriteByte(registers_.hl.Read(), registers_.af.GetHigh().Read());
+		registers_.hl.Increment();
+		return 2;
+	};
+
+	// LD H, d8
+	instructions_[0x26] = [this]() -> MachineCycles {
+		registers_.hl.GetHigh().Write(FetchByte());
+		return 2;
+	};
+
+	// LD L, d8
+	instructions_[0x2E] = [this]() -> MachineCycles {
+		registers_.hl.GetLow().Write(FetchByte());
+		return 2;
+	};
+
+	// LD (HL-), A
+	instructions_[0x32] = [this]() -> MachineCycles {
+		mmu_->WriteByte(registers_.hl.Read(), registers_.af.GetHigh().Read());
+		registers_.hl.Decrement();
+		return 2;
+	};
+
 	// JR C, r8
 	instructions_[0x38] = [this]() -> MachineCycles {
-		const auto displacement = static_cast<int8_t>(mmu_->ReadByte(registers_.pc++));
+		const auto displacement = static_cast<int8_t>(FetchByte());
 		if (!IsFlagSet(Flags::C)) { return 2; }
 		
 		registers_.pc += displacement;
 		return 3;
 	};
 
+	// LD A, d8
+	instructions_[0x3E] = [this]() -> MachineCycles {
+		registers_.af.GetHigh().Write(FetchByte());
+		return 2;
+	};
+
+	// XOR A
+	instructions_[0xAF] = [this]() -> MachineCycles {
+		const uint8_t value = registers_.af.GetHigh().Read() ^ registers_.af.GetHigh().Read();
+		ClearAndSetFlags((value != 0) ? Flags::None : Flags::Z);
+		registers_.af.GetHigh().Write(value);
+		return 1;
+	};
+
 	// JP a16
 	instructions_[0xC3] = [this]() -> MachineCycles {
-		registers_.pc = mmu_->ReadWord(registers_.pc);
+		registers_.pc = FetchWord();
 		return 4;
+	};
+
+	// LDH (a8), A
+	instructions_[0xE0] = [this]() -> MachineCycles {
+		mmu_->WriteByte(uint16_t{ 0xFF00 } + FetchByte(), registers_.af.GetHigh().Read());
+		return 3;
 	};
 
 	// LDH A, (a8)
 	instructions_[0xF0] = [this]() -> MachineCycles {
-		registers_.af.WriteHighByte(mmu_->ReadWord(uint16_t{ 0xFF00 } + mmu_->ReadWord(registers_.pc++)));
+		registers_.af.GetHigh().Write(mmu_->ReadByte(uint16_t{ 0xFF00 } + FetchByte()));
 		return 3;
+	};
+
+	// DI
+	instructions_[0xF3] = [this]() -> MachineCycles {
+		//TODO: disable interrupts
+		return 1;
 	};
 
 	// CP d8
 	instructions_[0xFE] = [this]() -> MachineCycles {
 		Flags flags_to_set{ Flags::N };
 
-		const auto value = mmu_->ReadWord(registers_.pc++);
-		const auto acc = registers_.af.ReadHighByte();
+		const auto value = FetchByte();
+		const auto acc = registers_.af.GetHigh().Read();
 
 		if ((value & 0x0F) > (acc & 0x0F)) { flags_to_set |= Flags::H; }
 		if (value > acc) { flags_to_set |= Flags::C; }

@@ -12,7 +12,7 @@
               file="Source/JucyBoy/CPU_PopulateInstructions.cpp"/>
         <FILE id="DfP5e5" name="MMU.cpp" compile="1" resource="0" file="Source/JucyBoy/MMU.cpp"/>
         <FILE id="ZKlLmE" name="MMU.h" compile="0" resource="0" file="Source/JucyBoy/MMU.h"/>
-        <FILE id="OVAOjP" name="RegisterPair.h" compile="0" resource="0" file="Source/JucyBoy/RegisterPair.h"/>
+        <FILE id="OVAOjP" name="Registers.h" compile="0" resource="0" file="Source/JucyBoy/Registers.h"/>
         <FILE id="kZEcqM" name="CPU.cpp" compile="1" resource="0" file="Source/JucyBoy/CPU.cpp"/>
         <FILE id="YypB1H" name="CPU.h" compile="0" resource="0" file="Source/JucyBoy/CPU.h"/>
       </GROUP>

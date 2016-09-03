@@ -26,14 +26,11 @@ void JucyBoy::Reset()
 	cpu_.Stop();
 	cpu_.Reset();
 	mmu_.Reset();
-	cpu_.Run();
 }
 
 void JucyBoy::LoadRom(const juce::File &file)
 {
-	cpu_.Stop();
-	cpu_.Reset();
-	mmu_.Reset();
+	Reset();
 
 	// Convert the juce file to std string
 	mmu_.LoadRom(file.getFullPathName().toStdString());
@@ -124,7 +121,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 	return true;
 }
 
-void JucyBoy::OnExceptionInRunningLoop()
+void JucyBoy::OnRunningLoopExited()
 {
 	// The listener callback is called from within the CPU's running loop.
 	// The call has to be forwarded to the message thread in order to join the running loop thread.
@@ -136,12 +133,11 @@ void JucyBoy::handleAsyncUpdate()
 {
 	try
 	{
-		// Stop will rethrow the exception that was thrown in the running loop
+		// If an exception was thrown in the running loop, Stop will rethrow it
 		cpu_.Stop();
 	}
 	catch (std::exception &e)
 	{
 		AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
-		cpu_.Reset();
 	}
 }

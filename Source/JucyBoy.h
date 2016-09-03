@@ -17,8 +17,9 @@ public:
 	void mouseDown(const MouseEvent &event) override;
 	bool keyPressed(const KeyPress &key) override;
 
-	void OnCpuStateChanged(const CPU::Registers &registers, CPU::Flags flags) override {};
-	void OnExceptionInRunningLoop() override;
+	void OnCpuStateChanged(const CPU::Registers &/*registers*/, CPU::Flags /*flags*/) override {}
+	void OnBreakpointsChanged(const CPU::BreakpointList &/*breakpoint_list*/) override {}
+	void OnRunningLoopExited() override;
 
 	// Transfers the handling of exception in running loop to the message thread
 	void handleAsyncUpdate() override;
