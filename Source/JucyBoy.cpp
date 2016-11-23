@@ -3,21 +3,42 @@
 
 JucyBoy::JucyBoy()
 {
-	setSize (320, 240);
+	setSize (160 * 4 + 150, 144 * 4);
 	setWantsKeyboardFocus(true);
 	addAndMakeVisible(cpu_status_component_);
+	addAndMakeVisible(game_screen_component_);
 
 	// Add listeners
+	cpu_.AddListener(gpu_);
 	cpu_.AddListener(cpu_status_component_);
 	cpu_.AddListener(*this);
+	listener_deregister_functions_.emplace_back(mmu_.AddListener(cpu_, &CPU::OnIoMemoryWritten, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener(cpu_, &CPU::OnInterruptsRegisterWritten, Memory::Region::Interrupts));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnVramWritten, Memory::Region::VRAM));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnOamWritten, Memory::Region::OAM));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnIoMemoryWritten, Memory::Region::IO));
+	gpu_.AddListener(game_screen_component_);
+	cpu_status_component_.AddListener(*this);
 
 	// Call Reset again just to notify the listeners of the initial CPU state
 	cpu_.Reset();
+	mmu_.Reset();
+
+	//cpu_.AddBreakpoint(0x29b5);
 }
 
 JucyBoy::~JucyBoy()
 {
+	// Remove listeners
+	cpu_.RemoveListener(gpu_);
+	cpu_.RemoveListener(cpu_status_component_);
+	cpu_.RemoveListener(*this);
+	gpu_.RemoveListener(game_screen_component_);
 
+	for (auto deregister_function : listener_deregister_functions_)
+	{
+		deregister_function();
+	}
 }
 
 void JucyBoy::Reset()
@@ -54,7 +75,10 @@ void JucyBoy::paint (Graphics& g)
 
 void JucyBoy::resized()
 {
-	cpu_status_component_.setBounds(getLocalBounds().withTop(getHeight() / 2));
+	auto working_area = getLocalBounds();
+	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
+	//usage_instructions_area_ = working_area.removeFromTop(getHeight() / 4);
+	cpu_status_component_.setBounds(working_area.removeFromLeft(150));
 }
 
 void JucyBoy::mouseDown( const MouseEvent &event)
@@ -127,6 +151,11 @@ void JucyBoy::OnRunningLoopExited()
 	// The call has to be forwarded to the message thread in order to join the running loop thread.
 	// Moreover, any update to the GUI components (as the listener callback of Reset) can only be done safely in the message thread.
 	triggerAsyncUpdate();
+}
+
+void JucyBoy::OnBreakpointAdd(Memory::Address breakpoint)
+{
+	cpu_.AddBreakpoint(breakpoint);
 }
 
 void JucyBoy::handleAsyncUpdate()
