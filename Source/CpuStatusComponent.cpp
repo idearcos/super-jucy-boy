@@ -1,46 +1,51 @@
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "CpuStatusComponent.h"
 #include <sstream>
 #include <iomanip>
-#include "JucyBoy/CPU.h"
 
-//==============================================================================
 CpuStatusComponent::CpuStatusComponent()
 {
 	// Add register labels
+	af_label_.setJustificationType(Justification::centred);
 	addAndMakeVisible(af_label_);
+	bc_label_.setJustificationType(Justification::centred);
 	addAndMakeVisible(bc_label_);
+	de_label_.setJustificationType(Justification::centred);
 	addAndMakeVisible(de_label_);
+	hl_label_.setJustificationType(Justification::centred);
 	addAndMakeVisible(hl_label_);
+	pc_label_.setJustificationType(Justification::centred);
 	addAndMakeVisible(pc_label_);
+	sp_label_.setJustificationType(Justification::centred);
 	addAndMakeVisible(sp_label_);
 
-	af_label_.setJustificationType(Justification::centred);
-	bc_label_.setJustificationType(Justification::centred);
-	de_label_.setJustificationType(Justification::centred);
-	hl_label_.setJustificationType(Justification::centred);
-	pc_label_.setJustificationType(Justification::centred);
-	sp_label_.setJustificationType(Justification::centred);
-
 	// Add flag toggle buttons (read-only)
-	addAndMakeVisible(carry_flag_toggle_);
-	addAndMakeVisible(half_carry_flag_toggle_);
-	addAndMakeVisible(subtract_flag_toggle_);
-	addAndMakeVisible(zero_flag_toggle_);
-
 	carry_flag_toggle_.setButtonText("C");
 	carry_flag_toggle_.setEnabled(false);
+	addAndMakeVisible(carry_flag_toggle_);
+
 	half_carry_flag_toggle_.setButtonText("H");
 	half_carry_flag_toggle_.setEnabled(false);
+	addAndMakeVisible(half_carry_flag_toggle_);
+
 	subtract_flag_toggle_.setButtonText("N");
 	subtract_flag_toggle_.setEnabled(false);
+	addAndMakeVisible(subtract_flag_toggle_);
+
 	zero_flag_toggle_.setButtonText("Z");
 	zero_flag_toggle_.setEnabled(false);
+	addAndMakeVisible(zero_flag_toggle_);
 	
 	// Add list of breakpoints
 	breakpoint_list_box_.setModel(this);
-	breakpoint_list_box_.setOutlineThickness(1);
+	//breakpoint_list_box_.setOutlineThickness(1);
 	addAndMakeVisible(breakpoint_list_box_);
+
+	// Add text editor for new breakpoints
+	breakpoint_add_editor_.addListener(this);
+	breakpoint_add_editor_.setPopupMenuEnabled(false);
+	breakpoint_add_editor_.setTextToShowWhenEmpty("Add breakpoint...", Colours::grey);
+	breakpoint_add_editor_.setInputRestrictions(4, "0123456789ABCDEF");
+	addAndMakeVisible(breakpoint_add_editor_);
 }
 
 CpuStatusComponent::~CpuStatusComponent()
@@ -57,10 +62,10 @@ std::string CpuStatusComponent::FormatRegisterLabelText(std::string register_nam
 
 void CpuStatusComponent::OnCpuStateChanged(const CPU::Registers &registers, CPU::Flags flags)
 {
-	af_label_.setText(FormatRegisterLabelText("AF", registers.af.Read()), NotificationType::dontSendNotification);
-	bc_label_.setText(FormatRegisterLabelText("BC", registers.bc.Read()), NotificationType::dontSendNotification);
-	de_label_.setText(FormatRegisterLabelText("DE", registers.de.Read()), NotificationType::dontSendNotification);
-	hl_label_.setText(FormatRegisterLabelText("HL", registers.hl.Read()), NotificationType::dontSendNotification);
+	af_label_.setText(FormatRegisterLabelText("AF", registers.af), NotificationType::dontSendNotification);
+	bc_label_.setText(FormatRegisterLabelText("BC", registers.bc), NotificationType::dontSendNotification);
+	de_label_.setText(FormatRegisterLabelText("DE", registers.de), NotificationType::dontSendNotification);
+	hl_label_.setText(FormatRegisterLabelText("HL", registers.hl), NotificationType::dontSendNotification);
 	pc_label_.setText(FormatRegisterLabelText("PC", registers.pc), NotificationType::dontSendNotification);
 	sp_label_.setText(FormatRegisterLabelText("SP", registers.sp), NotificationType::dontSendNotification);
 
@@ -82,31 +87,33 @@ void CpuStatusComponent::paint(Graphics& g)
 
 	g.setColour(Colours::grey);
 	g.drawRect(getLocalBounds(), 1);   // draw an outline around the component
+	g.drawRect(breakpoint_list_box_.getBounds().expanded(1, 1), 1);   // draw an outline around the component
+	g.drawRect(breakpoint_add_editor_.getBounds().expanded(1, 1), 1);   // draw an outline around the component
 }
 
 void CpuStatusComponent::resized()
 {
 	auto working_area = getLocalBounds();
-	auto breakpoint_list_area = working_area.removeFromRight(getWidth() / 3);
-	auto flags_area = working_area.removeFromBottom(getHeight() / 4);
-	auto first_registers_row_area = working_area.removeFromTop(getHeight() / 4);
-	auto second_registers_row_area = working_area.removeFromTop(getHeight() / 4);
-	auto third_registers_row_area = working_area;
+	auto registers_area = working_area.removeFromTop(getHeight() / 4);
+	auto flags_area = registers_area.removeFromRight(getWidth() / 3);
 
-	af_label_.setBounds(first_registers_row_area.removeFromLeft(first_registers_row_area.getWidth() / 2));
-	bc_label_.setBounds(first_registers_row_area);
-	de_label_.setBounds(second_registers_row_area.removeFromLeft(second_registers_row_area.getWidth() / 2));
-	hl_label_.setBounds(second_registers_row_area);
-	pc_label_.setBounds(third_registers_row_area.removeFromLeft(third_registers_row_area.getWidth() / 2));
-	sp_label_.setBounds(third_registers_row_area);
+	const auto registers_area_height = registers_area.getHeight();
+	af_label_.setBounds(registers_area.removeFromTop(registers_area_height / 6));
+	bc_label_.setBounds(registers_area.removeFromTop(registers_area_height / 6));
+	de_label_.setBounds(registers_area.removeFromTop(registers_area_height / 6));
+	hl_label_.setBounds(registers_area.removeFromTop(registers_area_height / 6));
+	sp_label_.setBounds(registers_area.removeFromTop(registers_area_height / 6));
+	pc_label_.setBounds(registers_area.removeFromTop(registers_area_height / 6));
 
-	const auto flags_area_width = flags_area.getWidth();
-	zero_flag_toggle_.setBounds(flags_area.removeFromLeft(flags_area_width / 4));
-	subtract_flag_toggle_.setBounds(flags_area.removeFromLeft(flags_area_width / 4));
-	half_carry_flag_toggle_.setBounds(flags_area.removeFromLeft(flags_area_width / 4));
+	const auto flags_area_height = flags_area.getHeight();
+	zero_flag_toggle_.setBounds(flags_area.removeFromTop(flags_area_height / 4));
+	subtract_flag_toggle_.setBounds(flags_area.removeFromTop(flags_area_height / 4));
+	half_carry_flag_toggle_.setBounds(flags_area.removeFromTop(flags_area_height / 4));
 	carry_flag_toggle_.setBounds(flags_area);
 
-	breakpoint_list_box_.setBounds(breakpoint_list_area);
+	auto breakpoint_list_area = working_area.removeFromTop(getHeight() / 2);
+	breakpoint_add_editor_.setBounds(breakpoint_list_area.removeFromBottom(breakpoint_list_area.getHeight() / 8).reduced(1, 1));
+	breakpoint_list_box_.setBounds(breakpoint_list_area.reduced(1, 0));
 }
 
 int CpuStatusComponent::getNumRows()
@@ -114,9 +121,22 @@ int CpuStatusComponent::getNumRows()
 	return static_cast<int>(breakpoints_.size());
 }
 
-void CpuStatusComponent::paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected)
+void CpuStatusComponent::paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool /*rowIsSelected*/)
 {
 	if ((rowNumber < 0) || (rowNumber >= breakpoints_.size())) { return; }
 
 	g.drawText(FormatRegisterLabelText("PC", breakpoints_[rowNumber]), 0, 0, width, height, Justification::centred);
+}
+
+void CpuStatusComponent::textEditorReturnKeyPressed(TextEditor &)
+{
+	const auto breakpoint = std::stoi(breakpoint_add_editor_.getText().toStdString(), 0, 16);
+	if (breakpoint < std::numeric_limits<Memory::Address>::min() || breakpoint > std::numeric_limits<Memory::Address>::max()) return;
+
+	breakpoint_add_editor_.clear();
+
+	for (auto& listener : listeners_)
+	{
+		listener->OnBreakpointAdd(breakpoint);
+	}
 }
