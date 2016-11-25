@@ -19,10 +19,10 @@ public:
 	RegisterPair& operator+=(uint16_t value) { high_ = static_cast<uint8_t>(((*this + value) >> 8) & 0xFF); low_ = static_cast<uint8_t>((*this + value) & 0xFF); return *this; }
 	RegisterPair& operator-=(uint16_t value) { high_ = static_cast<uint8_t>(((*this - value) >> 8) & 0xFF); low_ = static_cast<uint8_t>((*this - value) & 0xFF); return *this; }
 
-	uint16_t operator++() { auto value = uint16_t(*this); *this = ++value; return uint16_t(*this); }
-	uint16_t operator--() { auto value = uint16_t(*this); *this = --value; return uint16_t(*this); }
-	uint16_t operator++(int) { const auto original_value = uint16_t(*this); auto value = original_value; *this = ++value; return value; }
-	uint16_t operator--(int) { const auto original_value = uint16_t(*this); auto value = original_value; *this = --value; return value; }
+	uint16_t operator++() { *this += 1; return uint16_t(*this); }
+	uint16_t operator--() { *this -= 1; return uint16_t(*this); }
+	uint16_t operator++(int) { const auto original_value = static_cast<uint16_t>(*this); *this += 1; return original_value; }
+	uint16_t operator--(int) { const auto original_value = static_cast<uint16_t>(*this); *this -= 1; return original_value; }
 
 private:
 	uint8_t low_;

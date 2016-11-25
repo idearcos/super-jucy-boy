@@ -94,7 +94,7 @@ void GPU::RenderBackground(uint8_t line_number)
 		auto tile_number = tile_maps_[active_bg_tile_map_][32 * (current_y >> 3) + (current_x >> 3)];
 
 		// Select tile depending on which tile set is currently active
-		auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[128 + static_cast<int8_t>(tile_number)];
+		auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
 
 		// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
 		color_numbers_buffer_[160 * line_number + i] = tile[8 * (current_y & 0x07) + (current_x & 0x07)];
@@ -141,7 +141,7 @@ void GPU::SetLcdControl(uint8_t value)
 	active_bg_tile_map_ = (value & (1 << 3)) != 0 ? 1 : 0;
 	active_tile_set_ = (value & (1 << 4)) != 0 ? 1 : 0;
 	show_window_ = (value & (1 << 5)) != 0;
-	selected_window_tile_map_ = (value & (1 << 6)) != 0 ? 1 : 0;
+	active_window_tile_map_ = (value & (1 << 6)) != 0 ? 1 : 0;
 	EnableLcd((value & (1 << 7)) != 0);
 }
 
@@ -225,11 +225,10 @@ void GPU::OnVramWritten(Memory::Address address, uint8_t value)
 		for (int i = 0; i < 8; ++i)
 		{
 			const auto pixel_mask = (1 << (7 - i));
-			const auto pixel_low_bit = static_cast<uint8_t>((mmu_->ReadByte(address & 0xFE) & pixel_mask) != 0 ? 1 : 0);
-			const auto pixel_high_bit = static_cast<uint8_t>((mmu_->ReadByte((address & 0xFE) + 1) & pixel_mask) != 0 ? 1 : 0);
+			const auto pixel_low_bit = static_cast<uint8_t>((mmu_->ReadByte(address & 0xFFFE) & pixel_mask) != 0 ? 1 : 0);
+			const auto pixel_high_bit = static_cast<uint8_t>((mmu_->ReadByte((address & 0xFFFE) + 1) & pixel_mask) != 0 ? 1 : 0);
 			tile[8 * line_in_tile + i] = pixel_low_bit + 2 * pixel_high_bit;
 		}
-		
 	}
 	else if (address < Memory::tile_map_1_start_)
 	{
@@ -241,7 +240,7 @@ void GPU::OnVramWritten(Memory::Address address, uint8_t value)
 	}
 }
 
-void GPU::OnOamWritten(Memory::Address address, uint8_t value)
+void GPU::OnOamWritten(Memory::Address /*address*/, uint8_t /*value*/)
 {
 	//TODO: sprite support
 }

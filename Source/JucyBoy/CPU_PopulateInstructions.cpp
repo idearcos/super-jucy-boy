@@ -294,6 +294,7 @@ void CPU::PopulateInstructions()
 	// CPL
 	instructions_[0x2F] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() ^= 0xFF;
+		SetFlag(Flags::H | Flags::N);
 		return 1;
 	};
 

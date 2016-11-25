@@ -51,10 +51,10 @@ public:
 	{
 	public:
 		virtual ~Listener() {}
-		virtual void OnCpuStateChanged(const Registers &registers, Flags flags) = 0;
-		virtual void OnBreakpointsChanged(const BreakpointList &breakpoint_list) = 0;
-		virtual void OnRunningLoopExited() = 0;
-		virtual void OnCyclesLapsed(MachineCycles cycles) = 0;
+		virtual void OnCpuStateChanged(const Registers &/*registers*/, Flags /*flags*/) {}
+		virtual void OnRunningLoopExited() {}
+		virtual void OnCyclesLapsed(MachineCycles /*cycles*/) {}
+		virtual void OnBreakpointsChanged(const BreakpointList &/*breakpoint_list*/) {}
 	};
 
 public:

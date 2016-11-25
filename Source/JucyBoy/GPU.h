@@ -5,7 +5,7 @@
 #include "CPU.h"
 #include "MMU.h"
 
-class GPU final : public CPU::Listener//, public MMU::Listener
+class GPU final : public CPU::Listener
 {
 public:
 	GPU(MMU &mmu);
@@ -33,15 +33,12 @@ public:
 	{
 	public:
 		virtual ~Listener() {}
-		virtual void OnNewFrame(const Framebuffer &framebuffer) = 0;
+		virtual void OnNewFrame(const Framebuffer &/*framebuffer*/) {}
 	};
 
 	State GetCurrentState() { return current_state_; }
 
 	// CPU::Listener overrides
-	void OnCpuStateChanged(const CPU::Registers &/*registers*/, CPU::Flags /*flags*/) override {}
-	void OnBreakpointsChanged(const CPU::BreakpointList &/*breakpoint_list*/) override {}
-	void OnRunningLoopExited() override {}
 	void OnCyclesLapsed(CPU::MachineCycles cycles) override;
 
 	// MMU listener functions
@@ -85,7 +82,7 @@ private:
 	size_t active_bg_tile_map_{ 0 }; // bit 3
 	size_t active_tile_set_{ 1 }; // bit 4
 	bool show_window_{ false }; // bit 5
-	size_t selected_window_tile_map_{ 0 }; // bit 6
+	size_t active_window_tile_map_{ 0 }; // bit 6
 	bool lcd_on_{ true }; // bit 7
 
 	// LCD Status register values

@@ -68,10 +68,10 @@ void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 		return;
 	case Memory::Region::VRAM:
 		//TODO: ignore writes during VRAM GPU state
-		return;
+		break;
 	case Memory::Region::OAM:
 		//TODO: ignore writes during OAM and VRAM GPU states
-		return;
+		break;
 	}
 
 	memory_[address] = value;

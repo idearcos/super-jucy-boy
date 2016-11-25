@@ -1,10 +1,10 @@
 #include "GameScreenComponent.h"
 
 GameScreenComponent::GameScreenComponent() :
-	vertices_{ Vertex{ { -1.0f, 1.0f },{ 1.0f, 0.0f, 0.0f },{ 0.0f, 1.0f } },
-	Vertex{ { 1.0f, 1.0f },{ 0.0f, 1.0f, 0.0f },{ 1.0f, 1.0f } },
-	Vertex{ { 1.0f, -1.0f },{ 0.0f, 0.0f, 1.0f },{ 1.0f, 0.0f } },
-	Vertex{ { -1.0f, -1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f } } },
+	vertices_{ Vertex{ { -1.0f, 1.0f },{ 1.0f, 0.0f, 0.0f },{ 0.0f, 0.0f } },
+	Vertex{ { 1.0f, 1.0f },{ 0.0f, 1.0f, 0.0f },{ 1.0f, 0.0f } },
+	Vertex{ { 1.0f, -1.0f },{ 0.0f, 0.0f, 1.0f },{ 1.0f, 1.0f } },
+	Vertex{ { -1.0f, -1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 1.0f } } },
 	elements_{ 0, 1, 2, 2, 3, 0 }
 {
 	openGLContext.setComponentPaintingEnabled(true);
@@ -104,13 +104,13 @@ uint8_t GameScreenComponent::GpuColorToIntensity(GPU::Color color)
 	switch (color)
 	{
 	case GPU::Color::White:
-		return 0;
-	case GPU::Color::LightGrey:
-		return 96;
-	case GPU::Color::DarkGrey:
-		return 192;
-	case GPU::Color::Black:
 		return 255;
+	case GPU::Color::LightGrey:
+		return 192;
+	case GPU::Color::DarkGrey:
+		return 96;
+	case GPU::Color::Black:
+		return 0;
 	default:
 		throw std::invalid_argument("Invalid argument to GbColorToIntensity: " + std::to_string(static_cast<int>(color)));
 	}
@@ -120,9 +120,9 @@ void GameScreenComponent::OnNewFrame(const GPU::Framebuffer &gb_framebuffer)
 {
 	for (int i = 0; i < gb_framebuffer.size(); ++i)
 	{
-		framebuffer_[3 * i] = GbColorToIntensity(gb_framebuffer[i]);
-		framebuffer_[3 * i + 1] = GbColorToIntensity(gb_framebuffer[i]);
-		framebuffer_[3 * i + 2] = GbColorToIntensity(gb_framebuffer[i]);
+		framebuffer_[3 * i] = GpuColorToIntensity(gb_framebuffer[i]);
+		framebuffer_[3 * i + 1] = GpuColorToIntensity(gb_framebuffer[i]);
+		framebuffer_[3 * i + 2] = GpuColorToIntensity(gb_framebuffer[i]);
 	}
 
 	openGLContext.triggerRepaint();
@@ -134,7 +134,7 @@ void GameScreenComponent::render()
 
 	OpenGLHelpers::clear(Colour::greyLevel(0.1f));
 
-	glViewport(getWidth() / 2 - 160 / 2, getHeight() / 2- 144 / 2, 160, 144);
+	glViewport(0, 0, getWidth(), getHeight());
 
 	shader_program.use();
 
