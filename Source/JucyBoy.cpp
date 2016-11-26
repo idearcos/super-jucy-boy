@@ -6,7 +6,11 @@ JucyBoy::JucyBoy() :
 {
 	setSize (160 * 4 + 150, 144 * 4);
 	setWantsKeyboardFocus(true);
+
+	cpu_status_component_.addMouseListener(this, true);
 	addAndMakeVisible(cpu_status_component_);
+
+	game_screen_component_.addMouseListener(this, true);
 	addAndMakeVisible(game_screen_component_);
 
 	// Add listeners
@@ -78,7 +82,7 @@ void JucyBoy::resized()
 	auto working_area = getLocalBounds();
 	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
 	//usage_instructions_area_ = working_area.removeFromTop(getHeight() / 4);
-	cpu_status_component_.setBounds(working_area.removeFromTop(3 * getHeight() / 4));
+	cpu_status_component_.setBounds(working_area);
 }
 
 void JucyBoy::mouseDown( const MouseEvent &event)
