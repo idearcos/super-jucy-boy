@@ -51,7 +51,7 @@ public:
 	{
 	public:
 		virtual ~Listener() {}
-		virtual void OnExceptionInRunningLoop() {}
+		virtual void OnRunningLoopInterrupted() {}
 		virtual void OnCyclesLapsed(MachineCycles /*cycles*/) {}
 		virtual void OnBreakpointsChanged(const BreakpointList &/*breakpoint_list*/) {}
 	};
@@ -148,9 +148,9 @@ private:
 	Flags ReadFlags() const;
 
 	// Listener notification
-	void NotifyBreakpointsChange() const;
-	void NotifyExceptionInRunningLoop() const;
+	void NotifyRunningLoopInterruption() const;
 	void NotifyCyclesLapsed(MachineCycles cycles) const;
+	void NotifyBreakpointsChange() const;
 
 private:
 	Registers registers_;

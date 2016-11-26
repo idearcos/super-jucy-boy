@@ -60,28 +60,29 @@ void JucyBoy::LoadRom(const juce::File &file)
 	// Convert the juce file to std string
 	mmu_.LoadRom(file.getFullPathName().toStdString());
 
-	//cpu_.Run();
+	NotifyStatusUpdateRequest();
 }
 
 void JucyBoy::paint (Graphics& g)
 {
 	g.fillAll(Colours::white);
 
-	g.setColour(Colours::lightblue);
+	g.setColour(Colours::orange);
 	g.setFont(14.0f);
+
 	std::stringstream usage_instructions;
 	usage_instructions << "Space: run / stop" << std::endl;
 	usage_instructions << "Right: step over" << std::endl;
-	g.drawMultiLineText(usage_instructions.str(), 0, 14, getWidth());
+	g.drawFittedText(usage_instructions.str(), usage_instructions_area_, Justification::centred, 2);
 
-	cpu_status_component_.repaint();
+	g.drawRect(usage_instructions_area_, 1);
 }
 
 void JucyBoy::resized()
 {
 	auto working_area = getLocalBounds();
 	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
-	//usage_instructions_area_ = working_area.removeFromTop(getHeight() / 4);
+	usage_instructions_area_ = working_area.removeFromTop(getHeight() / 10);
 	cpu_status_component_.setBounds(working_area);
 }
 
@@ -151,7 +152,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 	return true;
 }
 
-void JucyBoy::OnExceptionInRunningLoop()
+void JucyBoy::OnRunningLoopInterrupted()
 {
 	// The listener callback is called from within the CPU's running loop.
 	// The call has to be forwarded to the message thread in order to join the running loop thread.
@@ -163,7 +164,7 @@ void JucyBoy::handleAsyncUpdate()
 {
 	try
 	{
-		// If an exception was thrown in the running loop, Stop will rethrow it
+		// Join the thread. If an exception was thrown in the running loop, Stop will rethrow it.
 		cpu_.Stop();
 	}
 	catch (std::exception &e)

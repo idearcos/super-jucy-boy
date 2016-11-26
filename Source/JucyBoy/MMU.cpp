@@ -3,7 +3,7 @@
 
 MMU::MMU()
 {
-	
+	Reset();
 }
 
 MMU::~MMU()

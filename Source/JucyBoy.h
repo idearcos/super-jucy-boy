@@ -22,7 +22,7 @@ public:
 	bool keyPressed(const KeyPress &key) override;
 
 	// CPU::Listener overrides
-	void OnExceptionInRunningLoop() override;
+	void OnRunningLoopInterrupted() override;
 
 	// Transfers the handling of exception in running loop to the message thread
 	void handleAsyncUpdate() override;
@@ -49,6 +49,7 @@ private:
 
 	std::vector<std::function<void()>> listener_deregister_functions_;
 
+	Rectangle<int> usage_instructions_area_;
 	CpuStatusComponent cpu_status_component_;
 	GameScreenComponent game_screen_component_;
 

@@ -154,7 +154,7 @@ void GameScreenComponent::render()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void GameScreenComponent::paint (Graphics& g)
+void GameScreenComponent::paint (Graphics&)
 {
 	
 }

@@ -84,6 +84,11 @@ void CpuStatusComponent::OnStatusUpdateRequested()
 	half_carry_flag_toggle_.setToggleState((cpu_flags & CPU::Flags::H) != CPU::Flags::None, NotificationType::dontSendNotification);
 	subtract_flag_toggle_.setToggleState((cpu_flags & CPU::Flags::N) != CPU::Flags::None, NotificationType::dontSendNotification);
 	zero_flag_toggle_.setToggleState((cpu_flags & CPU::Flags::Z) != CPU::Flags::None, NotificationType::dontSendNotification);
+
+	for (int i = 0; i < breakpoints_.size(); ++i)
+	{
+		if (breakpoints_[i] == registers.pc) breakpoint_list_box_.selectRow(i);
+	}
 }
 
 void CpuStatusComponent::OnBreakpointsChanged(const CPU::BreakpointList &breakpoint_list)

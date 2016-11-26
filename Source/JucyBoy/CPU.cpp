@@ -79,12 +79,16 @@ void CPU::RunningLoopFunction()
 
 			CheckInterrupts();
 
-			if (IsBreakpointHit()) break;
+			if (IsBreakpointHit())
+			{
+				NotifyRunningLoopInterruption();
+				break;
+			}
 		}
 	}
 	catch (std::exception &)
 	{
-		NotifyExceptionInRunningLoop();
+		NotifyRunningLoopInterruption();
 
 		// Rethrow the exception that was just caught, in order to retrieve it later via future::get()
 		throw;
@@ -441,11 +445,11 @@ void CPU::NotifyBreakpointsChange() const
 	}
 }
 
-void CPU::NotifyExceptionInRunningLoop() const
+void CPU::NotifyRunningLoopInterruption() const
 {
 	for (auto& listener : listeners_)
 	{
-		listener->OnExceptionInRunningLoop();
+		listener->OnRunningLoopInterrupted();
 	}
 }
 
