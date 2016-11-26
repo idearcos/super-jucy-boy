@@ -1,7 +1,8 @@
 #include "JucyBoy.h"
 #include <sstream>
 
-JucyBoy::JucyBoy()
+JucyBoy::JucyBoy() :
+	cpu_status_component_{ cpu_ }
 {
 	setSize (160 * 4 + 150, 144 * 4);
 	setWantsKeyboardFocus(true);
@@ -9,22 +10,21 @@ JucyBoy::JucyBoy()
 	addAndMakeVisible(game_screen_component_);
 
 	// Add listeners
+	listener_deregister_functions_.emplace_back(AddListener(cpu_status_component_, &CpuStatusComponent::OnStatusUpdateRequested));
+
 	cpu_.AddListener(gpu_);
 	cpu_.AddListener(cpu_status_component_);
 	cpu_.AddListener(*this);
+
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(cpu_, &CPU::OnIoMemoryWritten, Memory::Region::IO));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(cpu_, &CPU::OnInterruptsRegisterWritten, Memory::Region::Interrupts));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnVramWritten, Memory::Region::VRAM));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnOamWritten, Memory::Region::OAM));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnIoMemoryWritten, Memory::Region::IO));
+
 	gpu_.AddListener(game_screen_component_);
-	cpu_status_component_.AddListener(*this);
 
-	// Call Reset again just to notify the listeners of the initial CPU state
-	cpu_.Reset();
-	mmu_.Reset();
-
-	//cpu_.AddBreakpoint(0x29b5);
+	NotifyStatusUpdateRequest();
 }
 
 JucyBoy::~JucyBoy()
@@ -78,7 +78,7 @@ void JucyBoy::resized()
 	auto working_area = getLocalBounds();
 	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
 	//usage_instructions_area_ = working_area.removeFromTop(getHeight() / 4);
-	cpu_status_component_.setBounds(working_area.removeFromLeft(150));
+	cpu_status_component_.setBounds(working_area.removeFromTop(3 * getHeight() / 4));
 }
 
 void JucyBoy::mouseDown( const MouseEvent &event)
@@ -120,6 +120,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 		if (cpu_.IsRunning())
 		{
 			cpu_.Stop();
+			NotifyStatusUpdateRequest();
 		}
 		else
 		{
@@ -139,23 +140,19 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 			{
 				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 			}
+			NotifyStatusUpdateRequest();
 		}
 	}
 
 	return true;
 }
 
-void JucyBoy::OnRunningLoopExited()
+void JucyBoy::OnExceptionInRunningLoop()
 {
 	// The listener callback is called from within the CPU's running loop.
 	// The call has to be forwarded to the message thread in order to join the running loop thread.
 	// Moreover, any update to the GUI components (as the listener callback of Reset) can only be done safely in the message thread.
 	triggerAsyncUpdate();
-}
-
-void JucyBoy::OnBreakpointAdd(Memory::Address breakpoint)
-{
-	cpu_.AddBreakpoint(breakpoint);
 }
 
 void JucyBoy::handleAsyncUpdate()
@@ -168,5 +165,15 @@ void JucyBoy::handleAsyncUpdate()
 	catch (std::exception &e)
 	{
 		AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
+	}
+
+	NotifyStatusUpdateRequest();
+}
+
+void JucyBoy::NotifyStatusUpdateRequest()
+{
+	for (auto& listener : listeners_)
+	{
+		listener();
 	}
 }

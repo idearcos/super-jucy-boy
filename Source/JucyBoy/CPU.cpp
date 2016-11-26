@@ -27,8 +27,6 @@ void CPU::Reset()
 	registers_.hl = 0x014D;
 	registers_.pc = 0x0100;
 	registers_.sp = 0xFFFE;
-
-	NotifyCpuStateChange();
 }
 
 void CPU::Run()
@@ -58,20 +56,8 @@ void CPU::Stop()
 	auto shared_future = loop_function_result_.share();
 	assert(!loop_function_result_.valid());
 
-	try
-	{
-		// get() will throw if any exception was thrown in the running loop
-		shared_future.get();
-	}
-	catch (std::exception &)
-	{
-		// Catch and re-throw potential exception so we can notify listeners in this case too
-		NotifyCpuStateChange();
-		throw;
-	}
-
-	// Notify the state of the registers only when exitting the running loop, in order to keep a good performance
-	NotifyCpuStateChange();
+	// get() will throw if any exception was thrown in the running loop
+	shared_future.get();
 }
 
 bool CPU::IsRunning() const noexcept
@@ -95,12 +81,10 @@ void CPU::RunningLoopFunction()
 
 			if (IsBreakpointHit()) break;
 		}
-
-		NotifyRunningLoopExited();
 	}
 	catch (std::exception &)
 	{
-		NotifyRunningLoopExited();
+		NotifyExceptionInRunningLoop();
 
 		// Rethrow the exception that was just caught, in order to retrieve it later via future::get()
 		throw;
@@ -115,22 +99,11 @@ void CPU::StepOver()
 	// Therefore, do not allow calling StepOver if Run has already been called.
 	if (IsRunning()) { throw std::logic_error{ "Trying to call StepOver while RunningLoopFunction thread is running" }; }
 
-	try
-	{
-		previous_pc_ = registers_.pc;
-		auto cycles = ExecuteInstruction(FetchOpcode());
-		NotifyCyclesLapsed(cycles);
+	previous_pc_ = registers_.pc;
+	auto cycles = ExecuteInstruction(FetchOpcode());
+	NotifyCyclesLapsed(cycles);
 
-		CheckInterrupts();
-	}
-	catch (std::exception &)
-	{
-		// Catch and re-throw potential exception so we can notify listeners in this case too
-		NotifyCpuStateChange();
-		throw;
-	}
-
-	NotifyCpuStateChange();
+	CheckInterrupts();
 }
 
 CPU::MachineCycles CPU::ExecuteInstruction(OpCode opcode)
@@ -460,14 +433,6 @@ bool CPU::IsBreakpointHit() const
 #pragma endregion
 
 #pragma region Listener notification
-void CPU::NotifyCpuStateChange() const
-{
-	for (auto& listener : listeners_)
-	{
-		listener->OnCpuStateChanged(registers_, ReadFlags());
-	}
-}
-
 void CPU::NotifyBreakpointsChange() const
 {
 	for (auto& listener : listeners_)
@@ -476,11 +441,11 @@ void CPU::NotifyBreakpointsChange() const
 	}
 }
 
-void CPU::NotifyRunningLoopExited() const
+void CPU::NotifyExceptionInRunningLoop() const
 {
 	for (auto& listener : listeners_)
 	{
-		listener->OnRunningLoopExited();
+		listener->OnExceptionInRunningLoop();
 	}
 }
 

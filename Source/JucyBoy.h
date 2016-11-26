@@ -9,7 +9,7 @@
 #include "CpuStatusComponent.h"
 #include "GameScreenComponent.h"
 
-class JucyBoy final : public Component, public CPU::Listener, public AsyncUpdater, public CpuStatusComponent::Listener
+class JucyBoy final : public Component, public CPU::Listener, public AsyncUpdater
 {
 public:
 	JucyBoy();
@@ -22,20 +22,25 @@ public:
 	bool keyPressed(const KeyPress &key) override;
 
 	// CPU::Listener overrides
-	void OnCpuStateChanged(const CPU::Registers &/*registers*/, CPU::Flags /*flags*/) override {}
-	void OnBreakpointsChanged(const CPU::BreakpointList &/*breakpoint_list*/) override {}
-	void OnRunningLoopExited() override;
-	void OnCyclesLapsed(CPU::MachineCycles /*cycles*/) override {}
-
-	// CpuStatusComponent::Listener overrides
-	void OnBreakpointAdd(Memory::Address breakpoint) override;
+	void OnExceptionInRunningLoop() override;
 
 	// Transfers the handling of exception in running loop to the message thread
 	void handleAsyncUpdate() override;
 
+	// AddListener returns a deregister function that can be called with no arguments
+	template <typename T>
+	std::function<void()> AddListener(T &listener, void(T::*func)())
+	{
+		auto it = listeners_.emplace(listeners_.begin(), std::bind(func, std::ref(listener)));
+		return [=, this]() { listeners_.erase(it); };
+	}
+
 private:
 	void Reset();
 	void LoadRom(const juce::File &file);
+
+	// Listener notification
+	void NotifyStatusUpdateRequest();
 
 private:
 	MMU mmu_{};
@@ -47,8 +52,8 @@ private:
 	CpuStatusComponent cpu_status_component_;
 	GameScreenComponent game_screen_component_;
 
-	// Removal of listeners
-	MMU::ListenerIterator gpu_io_it_;
+	using Listener = std::function<void()>;
+	std::list<Listener> listeners_;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
 };

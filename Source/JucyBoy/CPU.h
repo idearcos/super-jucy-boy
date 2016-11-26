@@ -51,8 +51,7 @@ public:
 	{
 	public:
 		virtual ~Listener() {}
-		virtual void OnCpuStateChanged(const Registers &/*registers*/, Flags /*flags*/) {}
-		virtual void OnRunningLoopExited() {}
+		virtual void OnExceptionInRunningLoop() {}
 		virtual void OnCyclesLapsed(MachineCycles /*cycles*/) {}
 		virtual void OnBreakpointsChanged(const BreakpointList &/*breakpoint_list*/) {}
 	};
@@ -77,6 +76,10 @@ public:
 	// Breakpoints
 	void AddBreakpoint(Memory::Address address);
 	void RemoveBreakpoint(Memory::Address address);
+
+	// Status retrieval
+	Registers GetRegistersState() const { return registers_; }
+	inline Flags GetFlagsState() const { return ReadFlags(); }
 
 	// Listeners management
 	void AddListener(Listener &listener) { listeners_.insert(&listener); }
@@ -145,9 +148,8 @@ private:
 	Flags ReadFlags() const;
 
 	// Listener notification
-	void NotifyCpuStateChange() const;
 	void NotifyBreakpointsChange() const;
-	void NotifyRunningLoopExited() const;
+	void NotifyExceptionInRunningLoop() const;
 	void NotifyCyclesLapsed(MachineCycles cycles) const;
 
 private:
