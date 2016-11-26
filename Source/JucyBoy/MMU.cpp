@@ -13,6 +13,8 @@ MMU::~MMU()
 
 void MMU::Reset()
 {
+	memory_[0xFF00] = 0xFE;
+
 	WriteByte(0xFF05, 0x00); //TIMA
 	WriteByte(0xFF06, 0x00); //TMA
 	WriteByte(0xFF07, 0x00); //TAC
@@ -72,6 +74,8 @@ void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 	case Memory::Region::OAM:
 		//TODO: ignore writes during OAM and VRAM GPU states
 		break;
+	case Memory::Region::IO:
+		if (address == 0xFF00) return;
 	}
 
 	memory_[address] = value;
