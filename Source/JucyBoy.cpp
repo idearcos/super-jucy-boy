@@ -162,6 +162,8 @@ void JucyBoy::OnRunningLoopInterrupted()
 
 void JucyBoy::handleAsyncUpdate()
 {
+	NotifyStatusUpdateRequest();
+
 	try
 	{
 		// Join the thread. If an exception was thrown in the running loop, Stop will rethrow it.
@@ -171,8 +173,6 @@ void JucyBoy::handleAsyncUpdate()
 	{
 		AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 	}
-
-	NotifyStatusUpdateRequest();
 }
 
 void JucyBoy::NotifyStatusUpdateRequest()
