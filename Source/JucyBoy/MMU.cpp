@@ -13,6 +13,8 @@ MMU::~MMU()
 
 void MMU::Reset()
 {
+	std::fill(memory_.begin(), memory_.end(), 0);
+
 	memory_[0xFF00] = 0xFE;
 
 	WriteByte(0xFF05, 0x00); //TIMA
@@ -102,7 +104,7 @@ void MMU::LoadRom(const std::string &rom_file_path)
 	const auto file_size = static_cast<size_t>(rom_read_stream.tellg());
 	rom_read_stream.seekg(0, std::ios::beg);
 
-	rom_read_stream.read(reinterpret_cast<char*>(memory_.data()), std::max(file_size, memory_.size()));
+	rom_read_stream.read(reinterpret_cast<char*>(memory_.data()), std::min(file_size, memory_.size()));
 
 	rom_read_stream.close();
 
