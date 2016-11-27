@@ -138,12 +138,13 @@ private:
 	{
 		ClearFlag(Flags::N | Flags::Z);
 		SetFlag(Flags::H);
-		if ((reg & (1 << BitNum)) != 0) SetFlag(Flags::Z);
+		if ((reg & (1 << BitNum)) == 0) SetFlag(Flags::Z);
 	}
 
 	// Flag operations
 	void SetFlag(Flags flag);
 	void ClearFlag(Flags flag);
+	void ToggleFlag(Flags flag);
 	bool IsFlagSet(Flags flag) const;
 	Flags ReadFlags() const;
 
@@ -190,6 +191,11 @@ inline CPU::Flags operator | (const CPU::Flags &lhs, const CPU::Flags &rhs)
 inline CPU::Flags operator & (const CPU::Flags &lhs, const CPU::Flags &rhs)
 {
 	return static_cast<CPU::Flags>(static_cast<std::underlying_type_t<CPU::Flags>>(lhs) & static_cast<std::underlying_type_t<CPU::Flags>>(rhs));
+}
+
+inline CPU::Flags operator ^ (const CPU::Flags &lhs, const CPU::Flags &rhs)
+{
+	return static_cast<CPU::Flags>(static_cast<std::underlying_type_t<CPU::Flags>>(lhs) ^ static_cast<std::underlying_type_t<CPU::Flags>>(rhs));
 }
 
 inline CPU::Flags operator ~ (const CPU::Flags &flag)

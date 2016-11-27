@@ -235,8 +235,8 @@ void CPU::Add(uint8_t value)
 
 void CPU::Adc(uint8_t value)
 {
-	ClearFlag(Flags::All);
 	const auto carry_value = IsFlagSet(Flags::C) ? 1 : 0;
+	ClearFlag(Flags::All);
 	if ((registers_.af.GetHigh() + value + carry_value) > 0xFF) SetFlag(Flags::C);
 	if (((registers_.af.GetHigh() & 0x0F) + (value & 0x0F) + carry_value) > 0x0F) SetFlag(Flags::H);
 	registers_.af.GetHigh() += static_cast<uint8_t>(value + carry_value);
@@ -255,9 +255,9 @@ void CPU::Sub(uint8_t value)
 
 void CPU::Sbc(uint8_t value)
 {
+	const auto carry_value = IsFlagSet(Flags::C) ? 1 : 0;
 	ClearFlag(Flags::All);
 	SetFlag(Flags::N);
-	const auto carry_value = IsFlagSet(Flags::C) ? 1 : 0;
 	if ((registers_.af.GetHigh() - value - carry_value) < 0) SetFlag(Flags::C);
 	if (((registers_.af.GetHigh() & 0x0F) - (value & 0x0F) - carry_value) < 0) SetFlag(Flags::H);
 	registers_.af.GetHigh() -= static_cast<uint8_t>(value + carry_value);
@@ -337,8 +337,8 @@ void CPU::Rrc(uint8_t &reg)
 
 void CPU::Rl(uint8_t &reg)
 {
-	ClearFlag(Flags::All);
 	const auto carry_value = static_cast<uint8_t>(IsFlagSet(Flags::C) ? 1 : 0);
+	ClearFlag(Flags::All);
 	if ((reg & 0x80) != 0) SetFlag(Flags::C);
 	reg = (reg << 1) | carry_value;
 	if (reg == 0) SetFlag(Flags::Z);
@@ -346,8 +346,8 @@ void CPU::Rl(uint8_t &reg)
 
 void CPU::Rr(uint8_t &reg)
 {
-	ClearFlag(Flags::All);
 	const auto carry_value = static_cast<uint8_t>(IsFlagSet(Flags::C) ? 1 : 0);
+	ClearFlag(Flags::All);
 	if ((reg & 0x01) != 0) SetFlag(Flags::C);
 	reg = (reg >> 1) | (carry_value << 7);
 	if (reg == 0) SetFlag(Flags::Z);
@@ -471,6 +471,11 @@ void CPU::SetFlag(Flags flag)
 void CPU::ClearFlag(Flags flag)
 {
 	registers_.af.GetLow() = static_cast<uint8_t>(ReadFlags() & ~flag);
+}
+
+void CPU::ToggleFlag(Flags flag)
+{
+	registers_.af.GetLow() = static_cast<uint8_t>(ReadFlags() ^ flag);
 }
 
 bool CPU::IsFlagSet(Flags flag) const

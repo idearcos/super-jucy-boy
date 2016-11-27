@@ -66,6 +66,12 @@ void CPU::PopulateInstructions()
 		return 1;
 	};
 
+	// LD (a16), SP
+	instructions_[0x08] = [this]() -> MachineCycles {
+		mmu_->WriteWord(FetchWord(), registers_.sp);
+		return 5;
+	};
+
 	// ADD HL, BC
 	instructions_[0x09] = [this]() -> MachineCycles {
 		AddToHl(registers_.bc);
@@ -148,8 +154,8 @@ void CPU::PopulateInstructions()
 
 	// RLA
 	instructions_[0x17] = [this]() -> MachineCycles {
-		ClearFlag(Flags::All);
 		const auto carry_value = static_cast<uint8_t>(IsFlagSet(Flags::C) ? 1 : 0);
+		ClearFlag(Flags::All);
 		if ((registers_.af.GetHigh() & 0x80) != 0) SetFlag(Flags::C);
 		registers_.af.GetHigh() = (registers_.af.GetHigh() << 1) | carry_value;
 		return 1;
@@ -175,6 +181,12 @@ void CPU::PopulateInstructions()
 		return 2;
 	};
 
+	// DEC DE
+	instructions_[0x1B] = [this]() -> MachineCycles {
+		--registers_.de;
+		return 2;
+	};
+
 	// INC E
 	instructions_[0x1C] = [this]() -> MachineCycles {
 		IncrementRegister(registers_.de.GetLow());
@@ -195,8 +207,8 @@ void CPU::PopulateInstructions()
 
 	// RRA
 	instructions_[0x1F] = [this]() -> MachineCycles {
-		ClearFlag(Flags::All);
 		const auto carry_value = static_cast<uint8_t>(IsFlagSet(Flags::C) ? 1 : 0);
+		ClearFlag(Flags::All);
 		if ((registers_.af.GetHigh() & 0x01) != 0) SetFlag(Flags::C);
 		registers_.af.GetHigh() >>= 1;
 		registers_.af.GetHigh() |= (carry_value << 7);
@@ -250,6 +262,35 @@ void CPU::PopulateInstructions()
 		return 2;
 	};
 
+	// DAA
+	instructions_[0x27] = [this]() -> MachineCycles {
+		uint8_t correction_factor{ 0 };
+		const auto original_value = registers_.af.GetHigh();
+
+		// Correct the high nibble first
+		if (((original_value > 0x99) && (!IsFlagSet(Flags::N))) || IsFlagSet(Flags::C))
+		{
+			correction_factor |= 0x60;
+			SetFlag(Flags::C);
+		}
+
+		// Correct the low nibble
+		if ((((original_value & 0x0F) > 9) && (!IsFlagSet(Flags::N))) || IsFlagSet(Flags::H))
+		{
+			correction_factor |= 0x06;
+		}
+		ClearFlag(Flags::H);
+
+		const uint8_t result = IsFlagSet(Flags::N) ? original_value - correction_factor :
+			original_value + correction_factor;
+
+		(result == 0) ? SetFlag(Flags::Z) : ClearFlag(Flags::Z);
+
+		registers_.af.GetHigh() = result;
+
+		return 1;
+	};
+
 	// JR Z, r8
 	instructions_[0x28] = [this]() -> MachineCycles {
 		const auto displacement = static_cast<int8_t>(FetchByte());
@@ -270,6 +311,12 @@ void CPU::PopulateInstructions()
 	// LD A, (HL+)
 	instructions_[0x2A] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() = mmu_->ReadByte(registers_.hl++);
+		return 2;
+	};
+
+	// DEC HL
+	instructions_[0x2B] = [this]() -> MachineCycles {
+		--registers_.hl;
 		return 2;
 	};
 
@@ -354,6 +401,13 @@ void CPU::PopulateInstructions()
 		return 3;
 	};
 
+	// SCF
+	instructions_[0x37] = [this]() -> MachineCycles {
+		SetFlag(Flags::C);
+		ClearFlag(Flags::H | Flags::N);
+		return 1;
+	};
+
 	// JR C, r8
 	instructions_[0x38] = [this]() -> MachineCycles {
 		const auto displacement = static_cast<int8_t>(FetchByte());
@@ -368,6 +422,18 @@ void CPU::PopulateInstructions()
 	// ADD HL, SP
 	instructions_[0x39] = [this]() -> MachineCycles {
 		AddToHl(registers_.sp);
+		return 2;
+	};
+
+	// LD A, (HL-)
+	instructions_[0x3A] = [this]() -> MachineCycles {
+		registers_.af.GetHigh() = mmu_->ReadByte(registers_.hl--);
+		return 2;
+	};
+
+	// DEC SP
+	instructions_[0x3B] = [this]() -> MachineCycles {
+		--registers_.sp;
 		return 2;
 	};
 
@@ -387,6 +453,13 @@ void CPU::PopulateInstructions()
 	instructions_[0x3E] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() = FetchByte();
 		return 2;
+	};
+
+	// CCF
+	instructions_[0x3F] = [this]() -> MachineCycles {
+		ToggleFlag(Flags::C);
+		ClearFlag(Flags::H | Flags::N);
+		return 1;
 	};
 
 	// LD B, B
@@ -1411,6 +1484,17 @@ void CPU::PopulateInstructions()
 		return 4;
 	};
 
+	// ADD SP, r8
+	instructions_[0xE8] = [this]() -> MachineCycles {
+		ClearFlag(Flags::All);
+		const auto displacement = static_cast<int8_t>(FetchByte());
+		// Flags are calculated on the lower byte of SP, adding an unsigned displacement
+		if (((registers_.sp & 0x000F) + (static_cast<uint8_t>(displacement) & 0x0F)) > 0x0F) SetFlag(Flags::H);
+		if (((registers_.sp & 0x00FF) + static_cast<uint8_t>(displacement)) > 0xFF) SetFlag(Flags::C);
+		registers_.sp += displacement;
+		return 4;
+	};
+
 	// JP (HL)
 	instructions_[0xE9] = [this]() -> MachineCycles {
 		registers_.pc = registers_.hl;
@@ -1443,8 +1527,14 @@ void CPU::PopulateInstructions()
 
 	// POP AF
 	instructions_[0xF1] = [this]() -> MachineCycles {
-		registers_.af = ReadWordFromStack(); //TODO: not all bytes of register F can be written to
+		registers_.af = ReadWordFromStack() & 0xFFF0;
 		return 3;
+	};
+
+	// LD A, (C)
+	instructions_[0xF2] = [this]() -> MachineCycles {
+		registers_.af.GetHigh() = mmu_->ReadByte(Memory::io_region_start_ + registers_.bc.GetLow());
+		return 2;
 	};
 
 	// DI

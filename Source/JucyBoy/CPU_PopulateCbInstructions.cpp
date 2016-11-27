@@ -1,8 +1,7 @@
 #include "CPU.h"
-
-#include "CPU.h"
 #include <sstream>
 #include <iomanip>
+#include "MMU.h"
 
 void CPU::PopulateCbInstructions()
 {
@@ -390,6 +389,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// BIT 0, (HL)
+	cb_instructions_[0x46] = [this]() -> MachineCycles {
+		TestBit<0>(mmu_->ReadByte(registers_.hl));
+		return 4;
+	};
+
 	// BIT 0, A
 	cb_instructions_[0x47] = [this]() -> MachineCycles {
 		TestBit<0>(registers_.af.GetHigh());
@@ -430,6 +435,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x4D] = [this]() -> MachineCycles {
 		TestBit<1>(registers_.hl.GetLow());
 		return 2;
+	};
+
+	// BIT 1, (HL)
+	cb_instructions_[0x4E] = [this]() -> MachineCycles {
+		TestBit<1>(mmu_->ReadByte(registers_.hl));
+		return 4;
 	};
 
 	// BIT 1, A
@@ -474,6 +485,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// BIT 2, (HL)
+	cb_instructions_[0x56] = [this]() -> MachineCycles {
+		TestBit<2>(mmu_->ReadByte(registers_.hl));
+		return 4;
+	};
+
 	// BIT 2, A
 	cb_instructions_[0x57] = [this]() -> MachineCycles {
 		TestBit<2>(registers_.af.GetHigh());
@@ -514,6 +531,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x5D] = [this]() -> MachineCycles {
 		TestBit<3>(registers_.hl.GetLow());
 		return 2;
+	};
+
+	// BIT 3, (HL)
+	cb_instructions_[0x5E] = [this]() -> MachineCycles {
+		TestBit<3>(mmu_->ReadByte(registers_.hl));
+		return 4;
 	};
 
 	// BIT 3, A
@@ -558,6 +581,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// BIT 4, (HL)
+	cb_instructions_[0x66] = [this]() -> MachineCycles {
+		TestBit<4>(mmu_->ReadByte(registers_.hl));
+		return 4;
+	};
+
 	// BIT 4, A
 	cb_instructions_[0x67] = [this]() -> MachineCycles {
 		TestBit<4>(registers_.af.GetHigh());
@@ -598,6 +627,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x6D] = [this]() -> MachineCycles {
 		TestBit<5>(registers_.hl.GetLow());
 		return 2;
+	};
+
+	// BIT 5, (HL)
+	cb_instructions_[0x6E] = [this]() -> MachineCycles {
+		TestBit<5>(mmu_->ReadByte(registers_.hl));
+		return 4;
 	};
 
 	// BIT 5, A
@@ -642,6 +677,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// BIT 6, (HL)
+	cb_instructions_[0x76] = [this]() -> MachineCycles {
+		TestBit<6>(mmu_->ReadByte(registers_.hl));
+		return 4;
+	};
+
 	// BIT 6, A
 	cb_instructions_[0x77] = [this]() -> MachineCycles {
 		TestBit<6>(registers_.af.GetHigh());
@@ -682,6 +723,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x7D] = [this]() -> MachineCycles {
 		TestBit<7>(registers_.hl.GetLow());
 		return 2;
+	};
+
+	// BIT 7, (HL)
+	cb_instructions_[0x7E] = [this]() -> MachineCycles {
+		TestBit<7>(mmu_->ReadByte(registers_.hl));
+		return 4;
 	};
 
 	// BIT 7, A
@@ -726,6 +773,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// RES 0, (HL)
+	cb_instructions_[0x86] = [this]() -> MachineCycles {
+		mmu_->ClearBit<0>(registers_.hl);
+		return 4;
+	};
+
 	// RES 0, A
 	cb_instructions_[0x87] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() &= ~(1 << 0);
@@ -766,6 +819,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x8D] = [this]() -> MachineCycles {
 		registers_.hl.GetLow() &= ~(1 << 1);
 		return 2;
+	};
+
+	// RES 1, (HL)
+	cb_instructions_[0x8E] = [this]() -> MachineCycles {
+		mmu_->ClearBit<1>(registers_.hl);
+		return 4;
 	};
 
 	// RES 1, A
@@ -810,6 +869,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// RES 2, (HL)
+	cb_instructions_[0x96] = [this]() -> MachineCycles {
+		mmu_->ClearBit<2>(registers_.hl);
+		return 4;
+	};
+
 	// RES 2, A
 	cb_instructions_[0x97] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() &= ~(1 << 2);
@@ -850,6 +915,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x9D] = [this]() -> MachineCycles {
 		registers_.hl.GetLow() &= ~(1 << 3);
 		return 2;
+	};
+
+	// RES 3, (HL)
+	cb_instructions_[0x9E] = [this]() -> MachineCycles {
+		mmu_->ClearBit<3>(registers_.hl);
+		return 4;
 	};
 
 	// RES 3, A
@@ -894,6 +965,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// RES 4, (HL)
+	cb_instructions_[0xA6] = [this]() -> MachineCycles {
+		mmu_->ClearBit<4>(registers_.hl);
+		return 4;
+	};
+
 	// RES 4, A
 	cb_instructions_[0xA7] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() &= ~(1 << 4);
@@ -934,6 +1011,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0xAD] = [this]() -> MachineCycles {
 		registers_.hl.GetLow() &= ~(1 << 5);
 		return 2;
+	};
+
+	// RES 5, (HL)
+	cb_instructions_[0xAE] = [this]() -> MachineCycles {
+		mmu_->ClearBit<5>(registers_.hl);
+		return 4;
 	};
 
 	// RES 5, A
@@ -978,6 +1061,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// RES 6, (HL)
+	cb_instructions_[0xB6] = [this]() -> MachineCycles {
+		mmu_->ClearBit<6>(registers_.hl);
+		return 4;
+	};
+
 	// RES 6, A
 	cb_instructions_[0xB7] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() &= ~(1 << 6);
@@ -1018,6 +1107,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0xBD] = [this]() -> MachineCycles {
 		registers_.hl.GetLow() &= ~(1 << 7);
 		return 2;
+	};
+
+	// RES 7, (HL)
+	cb_instructions_[0xBE] = [this]() -> MachineCycles {
+		mmu_->ClearBit<7>(registers_.hl);
+		return 4;
 	};
 
 	// RES 7, A
@@ -1062,6 +1157,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// SET 0, (HL)
+	cb_instructions_[0xC6] = [this]() -> MachineCycles {
+		mmu_->SetBit<0>(registers_.hl);
+		return 4;
+	};
+
 	// SET 0, A
 	cb_instructions_[0xC7] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() |= (1 << 0);
@@ -1102,6 +1203,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0xCD] = [this]() -> MachineCycles {
 		registers_.hl.GetLow() |= (1 << 1);
 		return 2;
+	};
+
+	// SET 1, (HL)
+	cb_instructions_[0xCE] = [this]() -> MachineCycles {
+		mmu_->SetBit<1>(registers_.hl);
+		return 4;
 	};
 
 	// SET 1, A
@@ -1146,6 +1253,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// SET 2, (HL)
+	cb_instructions_[0xD6] = [this]() -> MachineCycles {
+		mmu_->SetBit<2>(registers_.hl);
+		return 4;
+	};
+
 	// SET 2, A
 	cb_instructions_[0xD7] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() |= (1 << 2);
@@ -1186,6 +1299,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0xDD] = [this]() -> MachineCycles {
 		registers_.hl.GetLow() |= (1 << 3);
 		return 2;
+	};
+
+	// SET 3, (HL)
+	cb_instructions_[0xDE] = [this]() -> MachineCycles {
+		mmu_->SetBit<3>(registers_.hl);
+		return 4;
 	};
 
 	// SET 3, A
@@ -1230,6 +1349,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// SET 4, (HL)
+	cb_instructions_[0xE6] = [this]() -> MachineCycles {
+		mmu_->SetBit<4>(registers_.hl);
+		return 4;
+	};
+
 	// SET 4, A
 	cb_instructions_[0xE7] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() |= (1 << 4);
@@ -1270,6 +1395,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0xED] = [this]() -> MachineCycles {
 		registers_.hl.GetLow() |= (1 << 5);
 		return 2;
+	};
+
+	// SET 5, (HL)
+	cb_instructions_[0xEE] = [this]() -> MachineCycles {
+		mmu_->SetBit<5>(registers_.hl);
+		return 4;
 	};
 
 	// SET 5, A
@@ -1314,6 +1445,12 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// SET 6, (HL)
+	cb_instructions_[0xF6] = [this]() -> MachineCycles {
+		mmu_->SetBit<6>(registers_.hl);
+		return 4;
+	};
+
 	// SET 6, A
 	cb_instructions_[0xF7] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() |= (1 << 6);
@@ -1354,6 +1491,12 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0xFD] = [this]() -> MachineCycles {
 		registers_.hl.GetLow() |= (1 << 7);
 		return 2;
+	};
+
+	// SET 7, (HL)
+	cb_instructions_[0xFE] = [this]() -> MachineCycles {
+		mmu_->SetBit<7>(registers_.hl);
+		return 4;
 	};
 
 	// SET 7, A
