@@ -17,6 +17,7 @@ void CPU::PopulateCbInstructions()
 		};
 	}
 
+#pragma region CB instructions 0x00 - 0x0F
 	// RLC B
 	cb_instructions_[0x00] = [this]() -> MachineCycles {
 		Rlc(registers_.bc.GetHigh());
@@ -51,6 +52,14 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x05] = [this]() -> MachineCycles {
 		Rlc(registers_.hl.GetLow());
 		return 2;
+	};
+
+	// RLC (HL)
+	cb_instructions_[0x06] = [this]() -> MachineCycles {
+		auto value = mmu_->ReadByte(registers_.hl);
+		Rlc(value);
+		mmu_->WriteByte(registers_.hl, value);
+		return 4;
 	};
 
 	// RLC A
@@ -95,12 +104,22 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// RRC (HL)
+	cb_instructions_[0x0E] = [this]() -> MachineCycles {
+		auto value = mmu_->ReadByte(registers_.hl);
+		Rrc(value);
+		mmu_->WriteByte(registers_.hl, value);
+		return 4;
+	};
+
 	// RRC A
 	cb_instructions_[0x0F] = [this]() -> MachineCycles {
 		Rrc(registers_.af.GetHigh());
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0x10 - 0x1F
 	// RL B
 	cb_instructions_[0x10] = [this]() -> MachineCycles {
 		Rl(registers_.bc.GetHigh());
@@ -135,6 +154,14 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x15] = [this]() -> MachineCycles {
 		Rl(registers_.hl.GetLow());
 		return 2;
+	};
+
+	// RL (HL)
+	cb_instructions_[0x16] = [this]() -> MachineCycles {
+		auto value = mmu_->ReadByte(registers_.hl);
+		Rl(value);
+		mmu_->WriteByte(registers_.hl, value);
+		return 4;
 	};
 
 	// RL A
@@ -179,12 +206,22 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// RR (HL)
+	cb_instructions_[0x1E] = [this]() -> MachineCycles {
+		auto value = mmu_->ReadByte(registers_.hl);
+		Rr(value);
+		mmu_->WriteByte(registers_.hl, value);
+		return 4;
+	};
+
 	// RR A
 	cb_instructions_[0x1F] = [this]() -> MachineCycles {
 		Rr(registers_.af.GetHigh());
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0x20 - 0x2F
 	// SLA B
 	cb_instructions_[0x20] = [this]() -> MachineCycles {
 		Sla(registers_.bc.GetHigh());
@@ -219,6 +256,14 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x25] = [this]() -> MachineCycles {
 		Sla(registers_.hl.GetLow());
 		return 2;
+	};
+
+	// SLA (HL)
+	cb_instructions_[0x26] = [this]() -> MachineCycles {
+		auto value = mmu_->ReadByte(registers_.hl);
+		Sla(value);
+		mmu_->WriteByte(registers_.hl, value);
+		return 4;
 	};
 
 	// SLA A
@@ -263,12 +308,22 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// SRA (HL)
+	cb_instructions_[0x2E] = [this]() -> MachineCycles {
+		auto value = mmu_->ReadByte(registers_.hl);
+		Sra(value);
+		mmu_->WriteByte(registers_.hl, value);
+		return 4;
+	};
+
 	// SRA A
 	cb_instructions_[0x2F] = [this]() -> MachineCycles {
 		Sra(registers_.af.GetHigh());
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0x30 - 0x3F
 	// SWAP B
 	cb_instructions_[0x30] = [this]() -> MachineCycles {
 		Swap(registers_.bc.GetHigh());
@@ -303,6 +358,14 @@ void CPU::PopulateCbInstructions()
 	cb_instructions_[0x35] = [this]() -> MachineCycles {
 		Swap(registers_.hl.GetLow());
 		return 2;
+	};
+
+	// SWAP (HL)
+	cb_instructions_[0x36] = [this]() -> MachineCycles {
+		auto value = mmu_->ReadByte(registers_.hl);
+		Swap(value);
+		mmu_->WriteByte(registers_.hl, value);
+		return 4;
 	};
 
 	// SWAP A
@@ -347,12 +410,22 @@ void CPU::PopulateCbInstructions()
 		return 2;
 	};
 
+	// SRL (HL)
+	cb_instructions_[0x3E] = [this]() -> MachineCycles {
+		auto value = mmu_->ReadByte(registers_.hl);
+		Srl(value);
+		mmu_->WriteByte(registers_.hl, value);
+		return 4;
+	};
+
 	// SRL A
 	cb_instructions_[0x3F] = [this]() -> MachineCycles {
 		Srl(registers_.af.GetHigh());
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0x40 - 0x4F
 	// BIT 0, B
 	cb_instructions_[0x40] = [this]() -> MachineCycles {
 		TestBit<0>(registers_.bc.GetHigh());
@@ -448,7 +521,9 @@ void CPU::PopulateCbInstructions()
 		TestBit<1>(registers_.af.GetHigh());
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0x50 - 0x5F
 	// BIT 2, B
 	cb_instructions_[0x50] = [this]() -> MachineCycles {
 		TestBit<2>(registers_.bc.GetHigh());
@@ -544,7 +619,9 @@ void CPU::PopulateCbInstructions()
 		TestBit<3>(registers_.af.GetHigh());
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0x60 - 0x6F
 	// BIT 4, B
 	cb_instructions_[0x60] = [this]() -> MachineCycles {
 		TestBit<4>(registers_.bc.GetHigh());
@@ -640,7 +717,9 @@ void CPU::PopulateCbInstructions()
 		TestBit<5>(registers_.af.GetHigh());
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0x70 - 0x7F
 	// BIT 6, B
 	cb_instructions_[0x70] = [this]() -> MachineCycles {
 		TestBit<6>(registers_.bc.GetHigh());
@@ -736,7 +815,9 @@ void CPU::PopulateCbInstructions()
 		TestBit<7>(registers_.af.GetHigh());
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0x80 - 0x8F
 	// RES 0, B
 	cb_instructions_[0x80] = [this]() -> MachineCycles {
 		registers_.bc.GetHigh() &= ~(1 << 0);
@@ -832,7 +913,9 @@ void CPU::PopulateCbInstructions()
 		registers_.af.GetHigh() &= ~(1 << 1);
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0x90 - 0x9F
 	// RES 2, B
 	cb_instructions_[0x90] = [this]() -> MachineCycles {
 		registers_.bc.GetHigh() &= ~(1 << 2);
@@ -928,7 +1011,9 @@ void CPU::PopulateCbInstructions()
 		registers_.af.GetHigh() &= ~(1 << 3);
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0xA0 - 0xAF
 	// RES 4, B
 	cb_instructions_[0xA0] = [this]() -> MachineCycles {
 		registers_.bc.GetHigh() &= ~(1 << 4);
@@ -1024,7 +1109,9 @@ void CPU::PopulateCbInstructions()
 		registers_.af.GetHigh() &= ~(1 << 5);
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0xB0 - 0xBF
 	// RES 6, B
 	cb_instructions_[0xB0] = [this]() -> MachineCycles {
 		registers_.bc.GetHigh() &= ~(1 << 6);
@@ -1120,7 +1207,9 @@ void CPU::PopulateCbInstructions()
 		registers_.af.GetHigh() &= ~(1 << 7);
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0xC0 - 0xCF
 	// SET 0, B
 	cb_instructions_[0xC0] = [this]() -> MachineCycles {
 		registers_.bc.GetHigh() &= ~(1 << 0);
@@ -1216,7 +1305,9 @@ void CPU::PopulateCbInstructions()
 		registers_.af.GetHigh() |= (1 << 1);
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0xD0 - 0xDF
 	// SET 2, B
 	cb_instructions_[0xD0] = [this]() -> MachineCycles {
 		registers_.bc.GetHigh() |= (1 << 2);
@@ -1312,7 +1403,9 @@ void CPU::PopulateCbInstructions()
 		registers_.af.GetHigh() |= (1 << 3);
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0xE0 - 0xEF
 	// SET 4, B
 	cb_instructions_[0xE0] = [this]() -> MachineCycles {
 		registers_.bc.GetHigh() |= (1 << 4);
@@ -1408,7 +1501,9 @@ void CPU::PopulateCbInstructions()
 		registers_.af.GetHigh() |= (1 << 5);
 		return 2;
 	};
+#pragma endregion
 
+#pragma region CB instructions 0xF0 - 0xFF
 	// SET 6, B
 	cb_instructions_[0xF0] = [this]() -> MachineCycles {
 		registers_.bc.GetHigh() |= (1 << 6);
@@ -1504,6 +1599,7 @@ void CPU::PopulateCbInstructions()
 		registers_.af.GetHigh() |= (1 << 7);
 		return 2;
 	};
+#pragma endregion
 }
 
 void CPU::PopulateCbInstructionNames()

@@ -17,6 +17,7 @@ void CPU::PopulateInstructions()
 		};
 	}
 
+#pragma region Instructions 0x00 - 0x0F
 	// NOP
 	instructions_[0x00] = [this]() -> MachineCycles {
 		return 1;
@@ -115,6 +116,10 @@ void CPU::PopulateInstructions()
 		registers_.af.GetHigh() = (registers_.af.GetHigh() >> 1) | ((registers_.af.GetHigh() & 0x01) << 7);
 		return 1;
 	};
+#pragma endregion
+
+#pragma region Instructions 0x10 - 0x1F
+	//TODO STOP 0x10
 
 	// LD DE, d16
 	instructions_[0x11] = [this]() -> MachineCycles {
@@ -214,7 +219,9 @@ void CPU::PopulateInstructions()
 		registers_.af.GetHigh() |= (carry_value << 7);
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0x20 - 0x2F
 	// JR NZ, r8
 	instructions_[0x20] = [this]() -> MachineCycles {
 		const auto displacement = static_cast<int8_t>(FetchByte());
@@ -344,7 +351,9 @@ void CPU::PopulateInstructions()
 		SetFlag(Flags::H | Flags::N);
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0x30 - 0x3F
 	// JR NC, r8
 	instructions_[0x30] = [this]() -> MachineCycles {
 		const auto displacement = static_cast<int8_t>(FetchByte());
@@ -461,7 +470,9 @@ void CPU::PopulateInstructions()
 		ClearFlag(Flags::H | Flags::N);
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0x40 - 0x4F
 	// LD B, B
 	instructions_[0x40] = [this]() -> MachineCycles {
 		return 1;
@@ -555,7 +566,9 @@ void CPU::PopulateInstructions()
 		registers_.bc.GetLow() = registers_.af.GetHigh();
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0x50 - 0x5F
 	// LD D, B
 	instructions_[0x50] = [this]() -> MachineCycles {
 		registers_.de.GetHigh() = registers_.bc.GetHigh();
@@ -649,7 +662,9 @@ void CPU::PopulateInstructions()
 		registers_.de.GetLow() = registers_.af.GetHigh();
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0x60 - 0x6F
 	// LD H, B
 	instructions_[0x60] = [this]() -> MachineCycles {
 		registers_.hl.GetHigh() = registers_.bc.GetHigh();
@@ -743,7 +758,9 @@ void CPU::PopulateInstructions()
 		registers_.hl.GetLow() = registers_.af.GetHigh();
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0x70 - 0x7F
 	// LD (HL), B
 	instructions_[0x70] = [this]() -> MachineCycles {
 		mmu_->WriteByte(registers_.hl, registers_.bc.GetHigh());
@@ -778,6 +795,12 @@ void CPU::PopulateInstructions()
 	instructions_[0x75] = [this]() -> MachineCycles {
 		mmu_->WriteByte(registers_.hl, registers_.hl.GetLow());
 		return 2;
+	};
+
+	// HALT
+	instructions_[0x76] = [this]() -> MachineCycles {
+		current_state_ = State::Halted;
+		return 1;
 	};
 
 	// LD (HL), A
@@ -832,7 +855,9 @@ void CPU::PopulateInstructions()
 	instructions_[0x7F] = [this]() -> MachineCycles {
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0x80 - 0x8F
 	// ADD A, B
 	instructions_[0x80] = [this]() -> MachineCycles {
 		Add(registers_.bc.GetHigh());
@@ -928,7 +953,9 @@ void CPU::PopulateInstructions()
 		Adc(registers_.af.GetHigh());
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0x90 - 0x9F
 	// SUB B
 	instructions_[0x90] = [this]() -> MachineCycles {
 		Sub(registers_.bc.GetHigh());
@@ -1024,7 +1051,9 @@ void CPU::PopulateInstructions()
 		Sbc(registers_.af.GetHigh());
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0xA0 - 0xAF
 	// AND B
 	instructions_[0xA0] = [this]() -> MachineCycles {
 		And(registers_.bc.GetHigh());
@@ -1120,7 +1149,9 @@ void CPU::PopulateInstructions()
 		Xor(registers_.af.GetHigh());
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0xB0 - 0xBF
 	// OR B
 	instructions_[0xB0] = [this]() -> MachineCycles {
 		Or(registers_.bc.GetHigh());
@@ -1216,7 +1247,9 @@ void CPU::PopulateInstructions()
 		Compare(registers_.af.GetHigh());
 		return 1;
 	};
+#pragma endregion
 
+#pragma region Instructions 0xC0 - 0xCF
 	// RET NZ
 	instructions_[0xC0] = [this]() -> MachineCycles {
 		if (!IsFlagSet(Flags::Z))
@@ -1339,7 +1372,9 @@ void CPU::PopulateInstructions()
 		Call(0x0008);
 		return 4;
 	};
+#pragma endregion
 
+#pragma region Instructions 0xD0 - 0xDF
 	// RET NC
 	instructions_[0xD0] = [this]() -> MachineCycles {
 		if (!IsFlagSet(Flags::C))
@@ -1447,7 +1482,9 @@ void CPU::PopulateInstructions()
 		Call(0x0018);
 		return 4;
 	};
+#pragma endregion
 
+#pragma region Instructions 0xE0 - 0xEF
 	// LDH (a8), A
 	instructions_[0xE0] = [this]() -> MachineCycles {
 		mmu_->WriteByte(Memory::io_region_start_ + FetchByte(), registers_.af.GetHigh());
@@ -1518,7 +1555,9 @@ void CPU::PopulateInstructions()
 		Call(0x0028);
 		return 4;
 	};
+#pragma endregion
 
+#pragma region Instructions 0xF0 - 0xFF
 	// LDH A, (a8)
 	instructions_[0xF0] = [this]() -> MachineCycles {
 		registers_.af.GetHigh() = mmu_->ReadByte(Memory::io_region_start_ + FetchByte());
@@ -1545,7 +1584,7 @@ void CPU::PopulateInstructions()
 
 	// PUSH AF
 	instructions_[0xF5] = [this]() -> MachineCycles {
-		WriteWordToStack(registers_.af); //TODO: some bytes in F are always fixed values
+		WriteWordToStack(registers_.af);
 		return 4;
 	};
 
@@ -1601,6 +1640,7 @@ void CPU::PopulateInstructions()
 		Call(0x0038);
 		return 4;
 	};
+#pragma endregion
 }
 
 void CPU::PopulateInstructionNames()
@@ -1829,7 +1869,7 @@ void CPU::PopulateInstructionNames()
 	instruction_names_[0xD0] = "RET NC";
 	instruction_names_[0xD1] = "POP DE";
 	instruction_names_[0xD2] = "JP NC, a16";
-	//instruction_names_[0xD3] = "";
+	instruction_names_[0xD3] = "-";
 	instruction_names_[0xD4] = "CALL NC, a16";
 	instruction_names_[0xD5] = "PUSH DE";
 	instruction_names_[0xD6] = "SUB A, d8";
@@ -1837,26 +1877,26 @@ void CPU::PopulateInstructionNames()
 	instruction_names_[0xD8] = "RET C";
 	instruction_names_[0xD9] = "RETI";
 	instruction_names_[0xDA] = "JP C, a16";
-	//instruction_names_[0xDB] = "";
+	instruction_names_[0xDB] = "-";
 	instruction_names_[0xDC] = "CALL C, a16";
-	//instruction_names_[0xDD] = "";
+	instruction_names_[0xDD] = "-";
 	instruction_names_[0xDE] = "SBC A, d8";
 	instruction_names_[0xDF] = "RST 18H";
 
 	instruction_names_[0xE0] = "LDH (a8), A";
 	instruction_names_[0xE1] = "POP HL";
 	instruction_names_[0xE2] = "LD (C), A";
-	//instruction_names_[0xE3] = "";
-	//instruction_names_[0xE4] = "";
+	instruction_names_[0xE3] = "-";
+	instruction_names_[0xE4] = "-";
 	instruction_names_[0xE5] = "PUSH HL";
 	instruction_names_[0xE6] = "AND d8";
 	instruction_names_[0xE7] = "RST 20H";
 	instruction_names_[0xE8] = "ADD SP, r8";
 	instruction_names_[0xE9] = "JP (HL)";
 	instruction_names_[0xEA] = "LD (a16), A";
-	//instruction_names_[0xEB] = "";
-	//instruction_names_[0xEC] = "";
-	//instruction_names_[0xED] = "";
+	instruction_names_[0xEB] = "-";
+	instruction_names_[0xEC] = "-";
+	instruction_names_[0xED] = "-";
 	instruction_names_[0xEE] = "XOR d8";
 	instruction_names_[0xEF] = "RST 28H";
 
@@ -1864,7 +1904,7 @@ void CPU::PopulateInstructionNames()
 	instruction_names_[0xF1] = "POP AF";
 	instruction_names_[0xF2] = "LD A, (C)";
 	instruction_names_[0xF3] = "DI";
-	//instruction_names_[0xF4] = "";
+	instruction_names_[0xF4] = "-";
 	instruction_names_[0xF5] = "PUSH AF";
 	instruction_names_[0xF6] = "OR d8";
 	instruction_names_[0xF7] = "RST 30H";
@@ -1872,8 +1912,8 @@ void CPU::PopulateInstructionNames()
 	instruction_names_[0xF9] = "LD SP, HL";
 	instruction_names_[0xFA] = "LD A, (a16)";
 	instruction_names_[0xFB] = "EI";
-	//instruction_names_[0xFC] = "";
-	//instruction_names_[0xFD] = "";
+	instruction_names_[0xFC] = "-";
+	instruction_names_[0xFD] = "-";
 	instruction_names_[0xFE] = "CP d8";
 	instruction_names_[0xFF] = "RST 38H";
 }
