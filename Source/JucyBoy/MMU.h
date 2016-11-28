@@ -33,10 +33,8 @@ public:
 	void LoadRom(const std::string &rom_file_path);
 	bool IsRomLoaded() const noexcept { return rom_loaded_; }
 
-public:
-	// Listeners management
-	using Listener = std::function<void(Memory::Address address, uint8_t value)>;
-	using ListenerIterator = std::list<Listener>::iterator;
+	using MemoryMap = std::array<uint8_t, std::numeric_limits<Memory::Address>::max() + 1>;
+	MemoryMap GetMemoryMap() const { return memory_; }
 
 	// AddListener returns a deregister function that can be called with no arguments
 	template <typename T>
@@ -51,9 +49,10 @@ private:
 	void NotifyMemoryWrite(Memory::Region region, Memory::Address address, uint8_t value);
 
 private:
-	std::array<uint8_t, std::numeric_limits<Memory::Address>::max() + 1> memory_{}; // Value-initialize to all-zeroes
+	MemoryMap memory_{}; // Value-initialize to all-zeroes
 
 	bool rom_loaded_{ false };
 
+	using Listener = std::function<void(Memory::Address address, uint8_t value)>;
 	std::map<Memory::Region, std::list<Listener>> listeners_;
 };

@@ -14,10 +14,10 @@ CpuStatusComponent::CpuStatusComponent(CPU &cpu) :
 	addAndMakeVisible(de_label_);
 	hl_label_.setJustificationType(Justification::centred);
 	addAndMakeVisible(hl_label_);
-	pc_label_.setJustificationType(Justification::centred);
-	addAndMakeVisible(pc_label_);
 	sp_label_.setJustificationType(Justification::centred);
 	addAndMakeVisible(sp_label_);
+	pc_label_.setJustificationType(Justification::centred);
+	addAndMakeVisible(pc_label_);
 
 	// Add flag toggle buttons (read-only)
 	carry_flag_toggle_.setButtonText("C");
@@ -68,7 +68,7 @@ std::string CpuStatusComponent::FormatRegisterLabelText(std::string register_nam
 	return register_text.str();
 }
 
-void CpuStatusComponent::OnStatusUpdateRequested()
+void CpuStatusComponent::OnStatusUpdateRequested(bool compute_diff)
 {
 	const auto registers = cpu_->GetRegistersState();
 	const auto cpu_flags = cpu_->GetFlagsState();
@@ -77,13 +77,45 @@ void CpuStatusComponent::OnStatusUpdateRequested()
 	bc_label_.setText(FormatRegisterLabelText("BC", registers.bc), NotificationType::dontSendNotification);
 	de_label_.setText(FormatRegisterLabelText("DE", registers.de), NotificationType::dontSendNotification);
 	hl_label_.setText(FormatRegisterLabelText("HL", registers.hl), NotificationType::dontSendNotification);
-	pc_label_.setText(FormatRegisterLabelText("PC", registers.pc), NotificationType::dontSendNotification);
 	sp_label_.setText(FormatRegisterLabelText("SP", registers.sp), NotificationType::dontSendNotification);
+	pc_label_.setText(FormatRegisterLabelText("PC", registers.pc), NotificationType::dontSendNotification);
 
 	carry_flag_toggle_.setToggleState((cpu_flags & CPU::Flags::C) != CPU::Flags::None, NotificationType::dontSendNotification);
 	half_carry_flag_toggle_.setToggleState((cpu_flags & CPU::Flags::H) != CPU::Flags::None, NotificationType::dontSendNotification);
 	subtract_flag_toggle_.setToggleState((cpu_flags & CPU::Flags::N) != CPU::Flags::None, NotificationType::dontSendNotification);
 	zero_flag_toggle_.setToggleState((cpu_flags & CPU::Flags::Z) != CPU::Flags::None, NotificationType::dontSendNotification);
+
+	if (compute_diff)
+	{
+		af_label_.setColour(Label::ColourIds::textColourId, (registers.af != previous_registers_state_.af) ? Colours::red : Colours::black);
+		bc_label_.setColour(Label::ColourIds::textColourId, (registers.bc != previous_registers_state_.bc) ? Colours::red : Colours::black);
+		de_label_.setColour(Label::ColourIds::textColourId, (registers.de != previous_registers_state_.de) ? Colours::red : Colours::black);
+		hl_label_.setColour(Label::ColourIds::textColourId, (registers.hl != previous_registers_state_.hl) ? Colours::red : Colours::black);
+		sp_label_.setColour(Label::ColourIds::textColourId, (registers.sp != previous_registers_state_.sp) ? Colours::red : Colours::black);
+		pc_label_.setColour(Label::ColourIds::textColourId, (registers.pc != previous_registers_state_.pc) ? Colours::red : Colours::black);
+
+		carry_flag_toggle_.setColour(ToggleButton::ColourIds::textColourId, ((cpu_flags & CPU::Flags::C) != (previous_cpu_flags_state_ & CPU::Flags::C)) ? Colours::red : Colours::black);
+		half_carry_flag_toggle_.setColour(ToggleButton::ColourIds::textColourId, ((cpu_flags & CPU::Flags::H) != (previous_cpu_flags_state_ & CPU::Flags::H)) ? Colours::red : Colours::black);
+		subtract_flag_toggle_.setColour(ToggleButton::ColourIds::textColourId, ((cpu_flags & CPU::Flags::N) != (previous_cpu_flags_state_ & CPU::Flags::N)) ? Colours::red : Colours::black);
+		zero_flag_toggle_.setColour(ToggleButton::ColourIds::textColourId, ((cpu_flags & CPU::Flags::Z) != (previous_cpu_flags_state_ & CPU::Flags::Z)) ? Colours::red : Colours::black);
+	}
+	else
+	{
+		af_label_.setColour(Label::ColourIds::textColourId, Colours::black);
+		bc_label_.setColour(Label::ColourIds::textColourId, Colours::black);
+		de_label_.setColour(Label::ColourIds::textColourId, Colours::black);
+		hl_label_.setColour(Label::ColourIds::textColourId, Colours::black);
+		sp_label_.setColour(Label::ColourIds::textColourId, Colours::black);
+		pc_label_.setColour(Label::ColourIds::textColourId, Colours::black);
+
+		carry_flag_toggle_.setColour(ToggleButton::ColourIds::textColourId, Colours::black);
+		half_carry_flag_toggle_.setColour(ToggleButton::ColourIds::textColourId, Colours::black);
+		subtract_flag_toggle_.setColour(ToggleButton::ColourIds::textColourId, Colours::black);
+		zero_flag_toggle_.setColour(ToggleButton::ColourIds::textColourId, Colours::black);
+	}
+
+	previous_registers_state_ = registers;
+	previous_cpu_flags_state_ = cpu_flags;
 
 	for (int i = 0; i < breakpoints_.size(); ++i)
 	{

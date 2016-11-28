@@ -10,7 +10,7 @@ public:
 	~CpuStatusComponent();
 
 	// JucyBoy Listener functions
-	void OnStatusUpdateRequested();
+	void OnStatusUpdateRequested(bool compute_diff);
 
 	// CPU::Listener overrides
 	void OnBreakpointsChanged(const CPU::BreakpointList &breakpoint_list) override;
@@ -34,13 +34,16 @@ private:
 	Label bc_label_;
 	Label de_label_;
 	Label hl_label_;
-	Label pc_label_;
 	Label sp_label_;
+	Label pc_label_;
 
 	ToggleButton carry_flag_toggle_;
 	ToggleButton half_carry_flag_toggle_;
 	ToggleButton subtract_flag_toggle_;
 	ToggleButton zero_flag_toggle_;
+
+	CPU::Registers previous_registers_state_;
+	CPU::Flags previous_cpu_flags_state_;
 
 	std::vector<Memory::Address> breakpoints_;
 	Label breakpoint_list_header_;

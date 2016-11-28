@@ -2,19 +2,24 @@
 #include <sstream>
 
 JucyBoy::JucyBoy() :
-	cpu_status_component_{ cpu_ }
+	cpu_status_component_{ cpu_ },
+	memory_map_component_{ mmu_ }
 {
-	setSize (160 * 4 + 150, 144 * 4);
+	setSize (160 * 4 + cpu_status_width_ + memory_map_width_, 144 * 4);
 	setWantsKeyboardFocus(true);
-
-	cpu_status_component_.addMouseListener(this, true);
-	addAndMakeVisible(cpu_status_component_);
 
 	game_screen_component_.addMouseListener(this, true);
 	addAndMakeVisible(game_screen_component_);
 
+	cpu_status_component_.addMouseListener(this, true);
+	addAndMakeVisible(cpu_status_component_);
+
+	memory_map_component_.addMouseListener(this, true);
+	addAndMakeVisible(memory_map_component_);
+
 	// Add listeners
 	listener_deregister_functions_.emplace_back(AddListener(cpu_status_component_, &CpuStatusComponent::OnStatusUpdateRequested));
+	listener_deregister_functions_.emplace_back(AddListener(memory_map_component_, &MemoryMapComponent::OnStatusUpdateRequested));
 
 	cpu_.AddListener(gpu_);
 	cpu_.AddListener(cpu_status_component_);
@@ -28,11 +33,13 @@ JucyBoy::JucyBoy() :
 
 	gpu_.AddListener(game_screen_component_);
 
-	NotifyStatusUpdateRequest();
+	NotifyStatusUpdateRequest(false);
 }
 
 JucyBoy::~JucyBoy()
 {
+	cpu_.Stop();
+
 	// Remove listeners
 	cpu_.RemoveListener(gpu_);
 	cpu_.RemoveListener(cpu_status_component_);
@@ -60,7 +67,7 @@ void JucyBoy::LoadRom(const juce::File &file)
 	// Convert the juce file to std string
 	mmu_.LoadRom(file.getFullPathName().toStdString());
 
-	NotifyStatusUpdateRequest();
+	NotifyStatusUpdateRequest(false);
 }
 
 void JucyBoy::paint (Graphics& g)
@@ -82,8 +89,13 @@ void JucyBoy::resized()
 {
 	auto working_area = getLocalBounds();
 	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
-	usage_instructions_area_ = working_area.removeFromTop(getHeight() / 10);
-	cpu_status_component_.setBounds(working_area);
+
+	auto cpu_status_area = working_area.removeFromLeft(cpu_status_width_);
+	usage_instructions_area_ = cpu_status_area.removeFromTop(getHeight() / 10);
+	cpu_status_component_.setBounds(cpu_status_area);
+
+	auto memory_map_area = working_area.removeFromLeft(memory_map_width_);
+	memory_map_component_.setBounds(memory_map_area);
 }
 
 void JucyBoy::mouseDown( const MouseEvent &event)
@@ -125,7 +137,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 		if (cpu_.IsRunning())
 		{
 			cpu_.Stop();
-			NotifyStatusUpdateRequest();
+			NotifyStatusUpdateRequest(true);
 		}
 		else
 		{
@@ -145,7 +157,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 			{
 				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 			}
-			NotifyStatusUpdateRequest();
+			NotifyStatusUpdateRequest(true);
 		}
 	}
 
@@ -162,7 +174,7 @@ void JucyBoy::OnRunningLoopInterrupted()
 
 void JucyBoy::handleAsyncUpdate()
 {
-	NotifyStatusUpdateRequest();
+	NotifyStatusUpdateRequest(true);
 
 	try
 	{
@@ -175,10 +187,10 @@ void JucyBoy::handleAsyncUpdate()
 	}
 }
 
-void JucyBoy::NotifyStatusUpdateRequest()
+void JucyBoy::NotifyStatusUpdateRequest(bool compute_diff)
 {
 	for (auto& listener : listeners_)
 	{
-		listener();
+		listener(compute_diff);
 	}
 }
