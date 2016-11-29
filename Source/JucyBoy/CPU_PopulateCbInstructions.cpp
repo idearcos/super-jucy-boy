@@ -1212,7 +1212,7 @@ void CPU::PopulateCbInstructions()
 #pragma region CB instructions 0xC0 - 0xCF
 	// SET 0, B
 	cb_instructions_[0xC0] = [this]() -> MachineCycles {
-		registers_.bc.GetHigh() &= ~(1 << 0);
+		registers_.bc.GetHigh() |= (1 << 0);
 		return 2;
 	};
 

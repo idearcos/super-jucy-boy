@@ -388,7 +388,7 @@ void CPU::PopulateInstructions()
 		ClearFlag(Flags::Z | Flags::H | Flags::N);
 		auto value = mmu_->ReadByte(registers_.hl);
 		mmu_->WriteByte(registers_.hl, ++value);
-		if ((value & 0x0F) == 0x0F) { SetFlag(Flags::H); }
+		if ((value & 0x0F) == 0x00) { SetFlag(Flags::H); }
 		if (value == 0) { SetFlag(Flags::Z); }
 		return 3;
 	};
@@ -798,10 +798,10 @@ void CPU::PopulateInstructions()
 	};
 
 	// HALT
-	instructions_[0x76] = [this]() -> MachineCycles {
+	/*instructions_[0x76] = [this]() -> MachineCycles {
 		current_state_ = State::Halted;
 		return 1;
-	};
+	};*/
 
 	// LD (HL), A
 	instructions_[0x77] = [this]() -> MachineCycles {
@@ -1196,7 +1196,7 @@ void CPU::PopulateInstructions()
 
 	// OR A
 	instructions_[0xB7] = [this]() -> MachineCycles {
-		Or(registers_.bc.GetHigh());
+		Or(registers_.af.GetHigh());
 		return 1;
 	};
 
