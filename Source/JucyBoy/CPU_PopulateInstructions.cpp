@@ -798,10 +798,10 @@ void CPU::PopulateInstructions()
 	};
 
 	// HALT
-	/*instructions_[0x76] = [this]() -> MachineCycles {
+	instructions_[0x76] = [this]() -> MachineCycles {
 		current_state_ = State::Halted;
 		return 1;
-	};*/
+	};
 
 	// LD (HL), A
 	instructions_[0x77] = [this]() -> MachineCycles {
@@ -1444,7 +1444,6 @@ void CPU::PopulateInstructions()
 	// RETI
 	instructions_[0xD9] = [this]() -> MachineCycles {
 		Return();
-		//TODO: is the enabling immediate? Or does it take 1 additional instruction as for EI?
 		interrupt_master_enable_ = true;
 		return 4;
 	};
@@ -1625,7 +1624,7 @@ void CPU::PopulateInstructions()
 
 	// EI
 	instructions_[0xFB] = [this]() -> MachineCycles {
-		ime_requested_ = true;
+		if (!interrupt_master_enable_) ime_requested_ = true;
 		return 1;
 	};
 

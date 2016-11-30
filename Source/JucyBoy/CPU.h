@@ -47,6 +47,13 @@ public:
 		Joypad
 	};
 
+	enum class State
+	{
+		Running,
+		Halted,
+		Stopped
+	};
+
 	class Listener
 	{
 	public:
@@ -156,6 +163,8 @@ private:
 private:
 	Registers registers_;
 	uint16_t previous_pc_{ 0 };
+
+	State current_state_{ State::Running };
 
 	std::array<Instruction, 256> instructions_;
 	std::array<std::string, 256> instruction_names_;

@@ -69,13 +69,27 @@ void CPU::RunningLoopFunction()
 {
 	try
 	{
+		MachineCycles cycles{ 0 };
+
 		//TODO: only check exit_loop_ once per frame (during VBlank), in order to increase performance
 		//TODO: precompute the next breakpoint instead of iterating the whole set every time. This "next breakpoint" would need to be updated after every Jump instruction.
 		while (!exit_loop_.load())
 		{
-			previous_pc_ = registers_.pc;
-			auto cycles = ExecuteInstruction(FetchOpcode());
-			NotifyCyclesLapsed(cycles);
+			switch (current_state_)
+			{
+			case State::Running:
+				previous_pc_ = registers_.pc;
+				cycles = ExecuteInstruction(FetchOpcode());
+				NotifyCyclesLapsed(cycles);
+				break;
+			case State::Halted:
+				// NOP instructions are executed until Halted state ends
+				NotifyCyclesLapsed(ExecuteInstruction(0x00));
+				break;
+			case State::Stopped:
+				//TODO check for joypad input, since that is the only thing that can finish Stopped state
+				continue;
+			}
 
 			CheckInterrupts();
 
@@ -97,14 +111,14 @@ void CPU::RunningLoopFunction()
 
 void CPU::StepOver()
 {
-	// The CPU must be used with either of these methods: 
+	// The CPU must be used with either of these methods:
 	//   1) Calling Run to execute instructions until calling Stop
 	//   2) Calling StepOver consecutively to execute one instruction at a time.
 	// Therefore, do not allow calling StepOver if Run has already been called.
 	if (IsRunning()) { throw std::logic_error{ "Trying to call StepOver while RunningLoopFunction thread is running" }; }
 
 	previous_pc_ = registers_.pc;
-	auto cycles = ExecuteInstruction(FetchOpcode());
+	const auto cycles = ExecuteInstruction(FetchOpcode());
 	NotifyCyclesLapsed(cycles);
 
 	CheckInterrupts();
@@ -128,22 +142,12 @@ uint16_t CPU::FetchWord()
 }
 
 #pragma region Stack R/W
-/*uint8_t CPU::ReadByteFromStack()
-{
-	return mmu_->ReadByte(registers_.sp++);
-}*/
-
 uint16_t CPU::ReadWordFromStack()
 {
 	const auto value = mmu_->ReadWord(registers_.sp);
 	registers_.sp += 2;
 	return value;
 }
-
-/*void CPU::WriteByteToStack(uint8_t value)
-{
-	mmu_->WriteByte(--registers_.sp, value);
-}*/
 
 void CPU::WriteWordToStack(uint16_t value)
 {
@@ -155,53 +159,66 @@ void CPU::WriteWordToStack(uint16_t value)
 #pragma region Interrupts
 void CPU::CheckInterrupts()
 {
-	if (!interrupt_master_enable_)
+	switch (current_state_)
 	{
-		// EI enables the interrupts for the instruction AFTER itself
-		if (ime_requested_)
+	case State::Running:
+		if (!interrupt_master_enable_)
 		{
-			interrupt_master_enable_ = true;
-			ime_requested_ = false;
+			break;
 		}
-		return;
-	}
-
-	for (uint16_t interrupt = Interrupt::VBlank; interrupt <= Interrupt::Joypad; ++interrupt)
-	{
-		if (enabled_interrupts_[interrupt] && requested_interrupts_[interrupt])
+	case State::Halted:
+		for (uint16_t interrupt = Interrupt::VBlank; interrupt <= Interrupt::Joypad; ++interrupt)
 		{
-			// Call appropriate Interrupt Service Routine
-			Call(Memory::isr_start_ + (interrupt * 0x08));
-
-			// Interrupt Master Enable and the corresponding bit in the IF register become cleared
-			interrupt_master_enable_ = false;
-			requested_interrupts_[interrupt] = false;
-
-			// Switch needed due to template parameter of ClearBit
-			switch (interrupt)
+			if (enabled_interrupts_[interrupt] && requested_interrupts_[interrupt])
 			{
-			case Interrupt::VBlank:
-				mmu_->ClearBit<Interrupt::VBlank>(Memory::interrupt_flags_register_, false);
-				break;
-			case Interrupt::LcdStat:
-				mmu_->ClearBit<Interrupt::LcdStat>(Memory::interrupt_flags_register_, false);
-				break;
-			case Interrupt::Timer:
-				mmu_->ClearBit<Interrupt::Timer>(Memory::interrupt_flags_register_, false);
-				break;
-			case Interrupt::Serial:
-				mmu_->ClearBit<Interrupt::Serial>(Memory::interrupt_flags_register_, false);
-				break;
-			case Interrupt::Joypad:
-				mmu_->ClearBit<Interrupt::Joypad>(Memory::interrupt_flags_register_, false);
+				current_state_ = State::Running;
+
+				if (!interrupt_master_enable_) { break; }
+
+				// Call appropriate Interrupt Service Routine
+				Call(Memory::isr_start_ + (interrupt * 0x08));
+
+				// Interrupt Master Enable and the corresponding bit in the IF register become cleared
+				interrupt_master_enable_ = false;
+				requested_interrupts_[interrupt] = false;
+
+				// Switch needed due to template parameter of ClearBit
+				switch (interrupt)
+				{
+				case Interrupt::VBlank:
+					mmu_->ClearBit<Interrupt::VBlank>(Memory::interrupt_flags_register_, false);
+					break;
+				case Interrupt::LcdStat:
+					mmu_->ClearBit<Interrupt::LcdStat>(Memory::interrupt_flags_register_, false);
+					break;
+				case Interrupt::Timer:
+					mmu_->ClearBit<Interrupt::Timer>(Memory::interrupt_flags_register_, false);
+					break;
+				case Interrupt::Serial:
+					mmu_->ClearBit<Interrupt::Serial>(Memory::interrupt_flags_register_, false);
+					break;
+				case Interrupt::Joypad:
+					mmu_->ClearBit<Interrupt::Joypad>(Memory::interrupt_flags_register_, false);
+					break;
+				}
+
+				//TODO: how many cycles are spent here???
+				NotifyCyclesLapsed(4);
+
+				// Interrupts are processed one at a time, therefore exit the loop now
 				break;
 			}
-
-			// Interrupts are processed one at a time, therefore exit the loop now
-			break;
-
-			//TODO: how many cycles are spent here???
 		}
+		break;
+	case State::Stopped:
+		break;
+	}
+
+	// EI enables the interrupts for the instruction AFTER itself
+	if (ime_requested_)
+	{
+		interrupt_master_enable_ = true;
+		ime_requested_ = false;
 	}
 }
 #pragma endregion
@@ -392,9 +409,9 @@ void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 	switch (address)
 	{
 	case Memory::interrupt_flags_register_:
-		for (int i = 0; i < enabled_interrupts_.size(); ++i)
+		for (int i = 0; i < requested_interrupts_.size(); ++i)
 		{
-			requested_interrupts_[i] = (value >> (i * 1) & 0x01) != 0;
+			requested_interrupts_[i] = (value & (1 << i)) != 0;
 		}
 		break;
 	}
@@ -404,7 +421,7 @@ void CPU::OnInterruptsRegisterWritten(Memory::Address, uint8_t value)
 {
 	for (int i = 0; i < enabled_interrupts_.size(); ++i)
 	{
-		enabled_interrupts_[i] = (value >> (i * 1) & 0x01) != 0;
+		enabled_interrupts_[i] = (value & (1 << i)) != 0;
 	}
 }
 #pragma endregion
