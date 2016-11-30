@@ -31,23 +31,31 @@ namespace Memory
 	static const Address tile_map_1_start_{ 0x9C00 };
 #pragma endregion
 
+	static const Address oam_start_{ 0xFE00 };
+
 #pragma region IO addresses
 	static const Address io_region_start_{ 0xFF00 };
 
-	static const Address interrupt_flags_register_{ 0xFF0F }; // IF
+	// Timer
+	static const Address divider_register_{ 0xFF04 };				// DIV
+	static const Address timer_counter_register_{ 0xFF05 };			// TIMA
+	static const Address timer_modulo_register_{ 0xFF06 };			// TMA
+	static const Address timer_control_register_{ 0xFF07 };			// TAC
+
+	static const Address interrupt_flags_register_{ 0xFF0F };		// IF
 
 	// GPU
-	static const Address lcd_control_register_{ 0xFF40 }; // LCDC
-	static const Address lcd_status_register_{ 0xFF41 }; // STAT
-	static const Address scroll_y_register_{ 0xFF42 }; //SCY
-	static const Address scroll_x_register_{ 0xFF43 }; // SCX
-	static const Address current_line_register_{ 0xFF44 }; // LY
-	static const Address line_compare_register_{ 0xFF45 }; // LYC
-	static const Address dma_transfer_source_register_{ 0xFF46 }; // DMA
-	static const Address bg_palette_register_{ 0xFF47 }; // BGP
-	static const Address obj_palette_0_register_{ 0xFF48 }; // OBP0
-	static const Address obj_palette_1_register_{ 0xFF49 }; // OBP1
-	static const Address window_y_register_{ 0xFF4A }; // WY
-	static const Address window_x_minus_seven_register_{ 0xFF4B }; // WX
+	static const Address lcd_control_register_{ 0xFF40 };			// LCDC
+	static const Address lcd_status_register_{ 0xFF41 };			// STAT
+	static const Address scroll_y_register_{ 0xFF42 };				//SCY
+	static const Address scroll_x_register_{ 0xFF43 };				// SCX
+	static const Address current_line_register_{ 0xFF44 };			// LY
+	static const Address line_compare_register_{ 0xFF45 };			// LYC
+	static const Address dma_transfer_source_register_{ 0xFF46 };	// DMA
+	static const Address bg_palette_register_{ 0xFF47 };			// BGP
+	static const Address obj_palette_0_register_{ 0xFF48 };			// OBP0
+	static const Address obj_palette_1_register_{ 0xFF49 };			// OBP1
+	static const Address window_y_register_{ 0xFF4A };				// WY
+	static const Address window_x_minus_seven_register_{ 0xFF4B };	// WX
 #pragma endregion
 }

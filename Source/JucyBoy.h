@@ -6,6 +6,7 @@
 #include "JucyBoy/CPU.h"
 #include "JucyBoy/MMU.h"
 #include "JucyBoy/GPU.h"
+#include "JucyBoy/Timer.h"
 #include "GameScreenComponent.h"
 #include "CpuStatusComponent.h"
 #include "MemoryMapComponent.h"
@@ -51,6 +52,7 @@ private:
 	MMU mmu_{};
 	CPU cpu_{ mmu_ };
 	GPU gpu_{ mmu_ };
+	jb::Timer timer_{ mmu_ };
 
 	std::vector<std::function<void()>> listener_deregister_functions_;
 

@@ -22,6 +22,7 @@ JucyBoy::JucyBoy() :
 	listener_deregister_functions_.emplace_back(AddListener(memory_map_component_, &MemoryMapComponent::OnStatusUpdateRequested));
 
 	cpu_.AddListener(gpu_);
+	cpu_.AddListener(timer_);
 	cpu_.AddListener(cpu_status_component_);
 	cpu_.AddListener(*this);
 
@@ -30,6 +31,7 @@ JucyBoy::JucyBoy() :
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnVramWritten, Memory::Region::VRAM));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnOamWritten, Memory::Region::OAM));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnIoMemoryWritten, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener(timer_, &jb::Timer::OnIoMemoryWritten, Memory::Region::IO));
 
 	gpu_.AddListener(game_screen_component_);
 
