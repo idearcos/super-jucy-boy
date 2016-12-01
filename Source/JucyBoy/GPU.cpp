@@ -1,5 +1,8 @@
 #include "GPU.h"
 #include <string>
+#include <cassert>
+#include <algorithm>
+#include "MMU.h"
 
 GPU::GPU(MMU &mmu) :
 	mmu_(&mmu)
@@ -35,8 +38,8 @@ void GPU::OnCyclesLapsed(CPU::MachineCycles cycles)
 			SetLcdState(State::HBLANK);
 
 			RenderBackground(current_line_);
+			RenderSprites(current_line_);
 			// Render window
-			// Render sprites
 		}
 		break;
 	case State::HBLANK:
@@ -46,11 +49,6 @@ void GPU::OnCyclesLapsed(CPU::MachineCycles cycles)
 			if (IncrementLine() == 144)
 			{
 				SetLcdState(State::VBLANK);
-
-				for (int i = 0; i < color_numbers_buffer_.size(); ++i)
-				{
-					framebuffer_[i] = palette_[color_numbers_buffer_[i]];
-				}
 
 				NotifyNewFrame();
 
@@ -84,6 +82,8 @@ void GPU::OnCyclesLapsed(CPU::MachineCycles cycles)
 
 void GPU::RenderBackground(uint8_t line_number)
 {
+	if (!show_bg_) return;
+
 	auto current_x = scroll_x_;
 	auto current_y = line_number;
 	current_y += scroll_y_;
@@ -99,7 +99,72 @@ void GPU::RenderBackground(uint8_t line_number)
 		// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
 		color_numbers_buffer_[160 * line_number + i] = tile[8 * (current_y & 0x07) + (current_x & 0x07)];
 
+		framebuffer_[160 * line_number + i] = bg_palette_[color_numbers_buffer_[160 * line_number + i]];
+
 		++current_x;
+	}
+}
+
+void GPU::RenderSprites(uint8_t line_number)
+{
+	if (!show_sprites_) return;
+
+	// Only 10 sprites can be displayed on any one line, prioritized by address (i.e. 0xFE00 highest, 0xFE04 next highest, etc.)
+	// When this limit is exceeded, the lower priority sprites won't be displayed
+	// Among the sprites to be displayed, the drawing priority is defined as follows:
+	//   Sprites with lower x coordinate (closer to the left) have higher priority and appear above any others
+	//   When sprites with the same x coordinate values overlap, they have priority according to table ordering (i.e. 0xFE00 highest, 0xFE04 next highest, etc.)
+
+	//TODO: precompute sprites priority when OAM is written? That may perform better than rechecking priority every time
+
+	std::vector<size_t> indices_of_sprites_to_render;
+
+	// First, filter the sprites to be rendered in the current scanline
+	const auto sprite_height = double_size_sprites_ ? 16 : 8;
+	for (int i = 0; i < sprites_.size(); ++i)
+	{
+		// Verify if it has to be rendered in the current scanline
+		if ((line_number < sprites_[i].GetY()) || (line_number >= (sprites_[i].GetY() + sprite_height))) { continue; }
+
+		indices_of_sprites_to_render.emplace_back(i);
+
+		if (indices_of_sprites_to_render.size() == 10) break;
+	}
+
+	// Remove the sprites that are off-screen, since they don't need to be rendered
+	indices_of_sprites_to_render.erase(std::remove_if(indices_of_sprites_to_render.begin(), indices_of_sprites_to_render.end(), [this](size_t index) {
+		return (sprites_[index].GetX() <= -8) || (sprites_[index].GetX() >= 160);
+	}), indices_of_sprites_to_render.end());
+
+	// Return if there are no sprites to render
+	if (indices_of_sprites_to_render.empty()) return;
+
+	// Now sort the remaining sprites according to rendering priority: draw higher X (or higher address, if equals X) sprites first (i.e. from right to left)
+	// This way, in the final image the sprites with lower X and lower address will appear above the rest
+	std::sort(indices_of_sprites_to_render.begin(), indices_of_sprites_to_render.end(), [this](size_t lhs_index, size_t rhs_index) {
+		return sprites_[lhs_index].GetX() > sprites_[rhs_index].GetX()
+			|| (sprites_[lhs_index].GetX() == sprites_[rhs_index].GetX()) && (lhs_index > rhs_index);
+	});
+
+	// Render the sprites one by one, right to left
+	for (int i = 0; i < indices_of_sprites_to_render.size(); ++i)
+	{
+		const auto& sprite = sprites_[indices_of_sprites_to_render[i]];
+		const auto& tile = tile_set_[sprite.GetTileNumber()];
+		const auto tile_line = line_number - sprite.GetY();
+
+		for (auto x = sprite.GetX(), tile_x_offset = 0; x < sprite.GetX() + 8; ++x, ++tile_x_offset)
+		{
+			if (x < 0 || x >= 160) continue;
+
+			if (tile[8 * tile_line + tile_x_offset] == 0) continue;
+
+			if (!sprite.IsRenderedAboveBackground() && (color_numbers_buffer_[160 * line_number + x] != 0)) continue;
+
+			color_numbers_buffer_[160 * line_number + x] = tile[8 * tile_line + tile_x_offset];
+
+			framebuffer_[160 * line_number + x] = obj_palettes_[sprite.GetObjPaletteNumber()][color_numbers_buffer_[160 * line_number + x]];
+		}
 	}
 }
 
@@ -153,12 +218,12 @@ void GPU::SetLcdStatus(uint8_t value)
 	line_coincidence_interrupt_enabled_ = (value & (1 << 6)) != 0;
 }
 
-void GPU::SetPaletteData(uint8_t value)
+void GPU::SetPaletteData(Palette &palette, uint8_t value)
 {
-	palette_[0] = static_cast<Color>(value & 0x03);
-	palette_[1] = static_cast<Color>((value >> 2) & 0x03);
-	palette_[2] = static_cast<Color>((value >> 4) & 0x03);
-	palette_[3] = static_cast<Color>((value >> 6) & 0x03);
+	palette[0] = static_cast<Color>(value & 0x03);
+	palette[1] = static_cast<Color>((value >> 2) & 0x03);
+	palette[2] = static_cast<Color>((value >> 4) & 0x03);
+	palette[3] = static_cast<Color>((value >> 6) & 0x03);
 }
 
 #pragma region Helper functions
@@ -240,9 +305,27 @@ void GPU::OnVramWritten(Memory::Address address, uint8_t value)
 	}
 }
 
-void GPU::OnOamWritten(Memory::Address /*address*/, uint8_t /*value*/)
+void GPU::OnOamWritten(Memory::Address address, uint8_t value)
 {
-	//TODO: sprite support
+	// There are 40 sprites, 4 bytes each, held in OAM [0xFE00 - 0xFE9F]
+	const auto sprite_num = (address - Memory::oam_start_) >> 2;
+	assert((sprite_num >= 0) && (sprite_num < 40));
+
+	switch (address & 0x03)
+	{
+	case 0:
+		sprites_[sprite_num].SetY(value);
+		break;
+	case 1:
+		sprites_[sprite_num].SetX(value);
+		break;
+	case 2:
+		sprites_[sprite_num].SetTileNumber(value);
+		break;
+	case 3:
+		sprites_[sprite_num].SetOptions(value);
+		break;
+	}
 }
 
 void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
@@ -277,13 +360,13 @@ void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		//TODO: implement DMA transfer
 		break;
 	case Memory::bg_palette_register_: // BGP
-		SetPaletteData(value);
+		SetPaletteData(bg_palette_, value);
 		break;
 	case Memory::obj_palette_0_register_: // OBP0
-		//TODO: implement sprites
+		SetPaletteData(obj_palettes_[0], value);
 		break;
 	case Memory::obj_palette_1_register_: // OBP1
-		//TODO: implement sprites
+		SetPaletteData(obj_palettes_[1], value);
 		break;
 	case Memory::window_y_register_: // WY
 		window_y_ = value;

@@ -2,15 +2,14 @@
 
 #include <array>
 #include <cstdint>
+#include "Sprite.h"
 #include "CPU.h"
-#include "MMU.h"
+
+class MMU;
 
 class GPU final : public CPU::Listener
 {
 public:
-	GPU(MMU &mmu);
-	~GPU();
-
 	enum class State
 	{
 		HBLANK = 0,
@@ -36,6 +35,10 @@ public:
 		virtual void OnNewFrame(const Framebuffer &/*framebuffer*/) {}
 	};
 
+public:
+	GPU(MMU &mmu);
+	~GPU();
+
 	State GetCurrentState() { return current_state_; }
 
 	// CPU::Listener overrides
@@ -53,6 +56,7 @@ public:
 private:
 	// Rendering
 	void RenderBackground(uint8_t line_number);
+	void RenderSprites(uint8_t line_number);
 
 	uint8_t IncrementLine() { return SetLineNumber(current_line_ + 1); }
 	uint8_t SetLineNumber(uint8_t line_number);
@@ -61,7 +65,8 @@ private:
 	// Register write callback functions
 	void SetLcdControl(uint8_t value);
 	void SetLcdStatus(uint8_t value);
-	void SetPaletteData(uint8_t value);
+	using Palette = std::array<Color, 4>;
+	void SetPaletteData(Palette &palette, uint8_t value);
 
 	// Helper functions
 	void EnableLcd(bool enabled);
@@ -96,7 +101,8 @@ private:
 	uint8_t scroll_x_{ 0 };
 	uint8_t current_line_{ 0 };
 	uint8_t line_compare_{ 0 };
-	std::array<Color, 4> palette_{};
+	Palette bg_palette_{};
+	std::array<Palette, 2> obj_palettes_{ { {}, {} } };
 	uint8_t window_y_{ 0 };
 	uint8_t window_x_{ 0 };
 
@@ -105,6 +111,8 @@ private:
 
 	using TileMap = std::array<uint8_t, 32 * 32>;
 	std::array<TileMap, 2> tile_maps_{};
+
+	std::array<Sprite, 40> sprites_{};
 
 	std::array<uint8_t, 160 * 144> color_numbers_buffer_{}; // Color numbers before mapping to palette colors
 	Framebuffer framebuffer_{};
