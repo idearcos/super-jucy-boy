@@ -20,6 +20,8 @@
         <FILE id="ZKlLmE" name="MMU.h" compile="0" resource="0" file="Source/JucyBoy/MMU.h"/>
         <FILE id="OVAOjP" name="Registers.h" compile="0" resource="0" file="Source/JucyBoy/Registers.h"/>
         <FILE id="wKyaMj" name="Sprite.h" compile="0" resource="0" file="Source/JucyBoy/Sprite.h"/>
+        <FILE id="goh0Iq" name="Timer.cpp" compile="1" resource="0" file="Source/JucyBoy/Timer.cpp"/>
+        <FILE id="FS65Rs" name="Timer.h" compile="0" resource="0" file="Source/JucyBoy/Timer.h"/>
       </GROUP>
       <FILE id="l7KWIo" name="CpuStatusComponent.cpp" compile="1" resource="0"
             file="Source/CpuStatusComponent.cpp"/>
