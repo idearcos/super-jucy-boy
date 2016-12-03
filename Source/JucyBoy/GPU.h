@@ -56,6 +56,7 @@ public:
 private:
 	// Rendering
 	void RenderBackground(uint8_t line_number);
+	void RenderWindow(uint8_t line_number);
 	void RenderSprites(uint8_t line_number);
 
 	uint8_t IncrementLine() { return SetLineNumber(current_line_ + 1); }
@@ -103,8 +104,8 @@ private:
 	uint8_t line_compare_{ 0 };
 	Palette bg_palette_{};
 	std::array<Palette, 2> obj_palettes_{ { {}, {} } };
-	uint8_t window_y_{ 0 };
-	uint8_t window_x_{ 0 };
+	int window_y_{ 0 };
+	int window_x_{ 0 };
 
 	using Tile = std::array<uint8_t, 8 * 8>;
 	std::array<Tile, 384> tile_set_{};

@@ -38,8 +38,8 @@ void GPU::OnCyclesLapsed(CPU::MachineCycles cycles)
 			SetLcdState(State::HBLANK);
 
 			RenderBackground(current_line_);
+			RenderWindow(current_line_);
 			RenderSprites(current_line_);
-			// Render window
 		}
 		break;
 	case State::HBLANK:
@@ -84,24 +84,48 @@ void GPU::RenderBackground(uint8_t line_number)
 {
 	if (!show_bg_) return;
 
-	auto current_x = scroll_x_;
-	auto current_y = line_number;
-	current_y += scroll_y_;
+	auto scrolled_x = scroll_x_;
+	const auto scrolled_y = static_cast<uint8_t>(line_number + scroll_y_);
 
 	for (int i = 0; i < 160; ++i)
 	{
 		// Retrieve the tile number from the active tile map
-		auto tile_number = tile_maps_[active_bg_tile_map_][32 * (current_y >> 3) + (current_x >> 3)];
+		auto tile_number = tile_maps_[active_bg_tile_map_][32 * (scrolled_y >> 3) + (scrolled_x >> 3)];
 
 		// Select tile depending on which tile set is currently active
 		auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
 
 		// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
-		color_numbers_buffer_[160 * line_number + i] = tile[8 * (current_y & 0x07) + (current_x & 0x07)];
+		color_numbers_buffer_[160 * line_number + i] = tile[8 * (scrolled_y & 0x07) + (scrolled_x & 0x07)];
 
 		framebuffer_[160 * line_number + i] = bg_palette_[color_numbers_buffer_[160 * line_number + i]];
 
-		++current_x;
+		++scrolled_x;
+	}
+}
+
+void GPU::RenderWindow(uint8_t line_number)
+{
+	if (!show_window_) return;
+
+	if (line_number < window_y_) return;
+
+	const auto window_line = static_cast<uint8_t>(line_number - window_y_);
+
+	for (int x = window_x_; x < 160; ++x)
+	{
+		if ((x < 0) || (x >= 160)) continue;
+
+		// Retrieve the tile number from the active tile map
+		auto tile_number = tile_maps_[active_window_tile_map_][32 * (window_line >> 3) + (x >> 3)];
+
+		// Select tile depending on which tile set is currently active
+		auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
+
+		// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
+		color_numbers_buffer_[160 * line_number + x] = tile[8 * (window_line & 0x07) + (x & 0x07)];
+
+		framebuffer_[160 * line_number + x] = bg_palette_[color_numbers_buffer_[160 * line_number + x]];
 	}
 }
 
@@ -357,7 +381,11 @@ void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		UpdateLineComparison();
 		break;
 	case Memory::dma_transfer_source_register_: // DMA
-		//TODO: implement DMA transfer
+		if (value > 0xF1) throw std::invalid_argument("Invalid DMA transfer source: " + std::to_string(int{ value }));
+		for (uint16_t i = 0; i < 160; ++i)
+		{
+			mmu_->WriteByte(Memory::oam_start_ + i, mmu_->ReadByte((value << 8) + i));
+		}
 		break;
 	case Memory::bg_palette_register_: // BGP
 		SetPaletteData(bg_palette_, value);
@@ -372,7 +400,7 @@ void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		window_y_ = value;
 		break;
 	case Memory::window_x_minus_seven_register_: // WX
-		window_x_ = value;
+		window_x_ = value - 7;
 		break;
 	}
 }
