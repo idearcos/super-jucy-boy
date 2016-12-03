@@ -126,6 +126,10 @@ void GameScreenComponent::OnNewFrame(const GPU::Framebuffer &gb_framebuffer)
 		framebuffer_[3 * i + 2] = GpuColorToIntensity(gb_framebuffer[i]);
 	}
 
+	std::unique_lock<std::mutex> lock{ last_frame_rendered_mutex_ };
+	last_frame_rendered_cv_.wait(lock, [this]() { return last_frame_rendered_; });
+	last_frame_rendered_ = false;
+	
 	openGLContext.triggerRepaint();
 }
 
@@ -153,6 +157,10 @@ void GameScreenComponent::render()
 	// Unbind VAO and texture
 	openGLContext.extensions.glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	std::unique_lock<std::mutex> lock{ last_frame_rendered_mutex_ };
+	last_frame_rendered_ = true;
+	last_frame_rendered_cv_.notify_one();
 }
 
 void GameScreenComponent::paint (Graphics&)

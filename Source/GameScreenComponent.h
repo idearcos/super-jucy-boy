@@ -45,6 +45,11 @@ private:
 
 	std::array<uint8_t, 160 * 144 * 3> framebuffer_;
 
+	// Synchronization with refresh of the screen
+	bool last_frame_rendered_{ false };
+	std::condition_variable last_frame_rendered_cv_;
+	std::mutex last_frame_rendered_mutex_;
+
 private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GameScreenComponent)
 };
