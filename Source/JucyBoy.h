@@ -7,6 +7,7 @@
 #include "JucyBoy/MMU.h"
 #include "JucyBoy/GPU.h"
 #include "JucyBoy/Timer.h"
+#include "JucyBoy/Joypad.h"
 #include "GameScreenComponent.h"
 #include "CpuStatusComponent.h"
 #include "MemoryMapComponent.h"
@@ -22,6 +23,7 @@ public:
 
 	void mouseDown(const MouseEvent &event) override;
 	bool keyPressed(const KeyPress &key) override;
+	bool keyStateChanged(bool isKeyDown) override;
 
 	// CPU::Listener overrides
 	void OnRunningLoopInterrupted() override;
@@ -53,13 +55,14 @@ private:
 	CPU cpu_{ mmu_ };
 	GPU gpu_{ mmu_ };
 	jb::Timer timer_{ mmu_ };
+	Joypad joypad_{ mmu_ };
 
 	std::vector<std::function<void()>> listener_deregister_functions_;
 
 	GameScreenComponent game_screen_component_;
 	Rectangle<int> usage_instructions_area_;
-	CpuStatusComponent cpu_status_component_;
-	MemoryMapComponent memory_map_component_;
+	CpuStatusComponent cpu_status_component_{ cpu_ };
+	MemoryMapComponent memory_map_component_{ mmu_ };
 
 	using Listener = std::function<void(bool)>;
 	std::list<Listener> listeners_;

@@ -14,6 +14,8 @@
               file="Source/JucyBoy/CPU_PopulateInstructions.cpp"/>
         <FILE id="Kilrvt" name="GPU.cpp" compile="1" resource="0" file="Source/JucyBoy/GPU.cpp"/>
         <FILE id="P09DZp" name="GPU.h" compile="0" resource="0" file="Source/JucyBoy/GPU.h"/>
+        <FILE id="nlYzBQ" name="Joypad.cpp" compile="1" resource="0" file="Source/JucyBoy/Joypad.cpp"/>
+        <FILE id="zo27Nc" name="Joypad.h" compile="0" resource="0" file="Source/JucyBoy/Joypad.h"/>
         <FILE id="UCf5A0" name="Memory.cpp" compile="1" resource="0" file="Source/JucyBoy/Memory.cpp"/>
         <FILE id="oMwB46" name="Memory.h" compile="0" resource="0" file="Source/JucyBoy/Memory.h"/>
         <FILE id="DfP5e5" name="MMU.cpp" compile="1" resource="0" file="Source/JucyBoy/MMU.cpp"/>

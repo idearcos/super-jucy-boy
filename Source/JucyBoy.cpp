@@ -1,9 +1,7 @@
 #include "JucyBoy.h"
 #include <sstream>
 
-JucyBoy::JucyBoy() :
-	cpu_status_component_{ cpu_ },
-	memory_map_component_{ mmu_ }
+JucyBoy::JucyBoy()
 {
 	setSize (160 * 4 + cpu_status_width_ + memory_map_width_, 144 * 4);
 	setWantsKeyboardFocus(true);
@@ -32,6 +30,7 @@ JucyBoy::JucyBoy() :
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnOamWritten, Memory::Region::OAM));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnIoMemoryWritten, Memory::Region::IO));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(timer_, &jb::Timer::OnIoMemoryWritten, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener(joypad_, &Joypad::OnIoMemoryWritten, Memory::Region::IO));
 
 	gpu_.AddListener(game_screen_component_);
 
@@ -162,6 +161,48 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 			NotifyStatusUpdateRequest(true);
 		}
 	}
+	
+	return true;
+}
+
+bool JucyBoy::keyStateChanged(bool isKeyDown)
+{
+	std::vector<Joypad::Keys> pressed_keys;
+
+	if (KeyPress::isKeyCurrentlyDown('a'))
+	{
+		pressed_keys.push_back(Joypad::Keys::Left);
+	}
+	if (KeyPress::isKeyCurrentlyDown('s'))
+	{
+		pressed_keys.push_back(Joypad::Keys::Down);
+	}
+	if (KeyPress::isKeyCurrentlyDown('d'))
+	{
+		pressed_keys.push_back(Joypad::Keys::Right);
+	}
+	if (KeyPress::isKeyCurrentlyDown('w'))
+	{
+		pressed_keys.push_back(Joypad::Keys::Up);
+	}
+	if (KeyPress::isKeyCurrentlyDown('j'))
+	{
+		pressed_keys.push_back(Joypad::Keys::B);
+	}
+	if (KeyPress::isKeyCurrentlyDown('k'))
+	{
+		pressed_keys.push_back(Joypad::Keys::A);
+	}
+	if (KeyPress::isKeyCurrentlyDown(KeyPress::returnKey))
+	{
+		pressed_keys.push_back(Joypad::Keys::Start);
+	}
+	if (KeyPress::isKeyCurrentlyDown(KeyPress::tabKey))
+	{
+		pressed_keys.push_back(Joypad::Keys::Select);
+	}
+
+	joypad_.UpdatePressedKeys(pressed_keys);
 
 	return true;
 }

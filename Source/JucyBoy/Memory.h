@@ -36,6 +36,8 @@ namespace Memory
 #pragma region IO addresses
 	static const Address io_region_start_{ 0xFF00 };
 
+	static const Address joypad_register_{ 0xFF00 };
+
 	// Timer
 	static const Address divider_register_{ 0xFF04 };				// DIV
 	static const Address timer_counter_register_{ 0xFF05 };			// TIMA
