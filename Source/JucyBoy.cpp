@@ -51,6 +51,7 @@ JucyBoy::~JucyBoy()
 	{
 		deregister_function();
 	}
+	listener_deregister_functions_.clear();
 }
 
 void JucyBoy::Reset()
@@ -101,7 +102,10 @@ void JucyBoy::resized()
 
 void JucyBoy::mouseDown( const MouseEvent &event)
 {
- 	if (!event.mods.isRightButtonDown()) { return; }
+	if (!event.mods.isRightButtonDown()) { return; }
+
+	const auto was_cpu_running = cpu_.IsRunning();
+	if (was_cpu_running) { cpu_.Stop(); }
 
 	PopupMenu m;
 	m.addItem(1, "Load ROM");
@@ -111,6 +115,7 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 	{
 	case 0:
 		// Did not select anything
+		if (was_cpu_running) { cpu_.Run(); }
 		break;
 	case 1:
 		{FileChooser rom_chooser{ "Select a ROM file to load...", File::getSpecialLocation(File::currentExecutableFile), "*.gb" };
@@ -125,6 +130,8 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 				AlertWindow::showMessageBox(AlertWindow::AlertIconType::WarningIcon, "Failed to open ROM file", String{ "Error: " } +e.what());
 			}
 		}}
+		break;
+	default:
 		break;
 	}
 }
@@ -165,7 +172,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 	return true;
 }
 
-bool JucyBoy::keyStateChanged(bool isKeyDown)
+bool JucyBoy::keyStateChanged(bool /*isKeyDown*/)
 {
 	std::vector<Joypad::Keys> pressed_keys;
 
