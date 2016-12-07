@@ -2,18 +2,18 @@
 
 namespace Memory
 {
-	Region GetRegionOfAddress(Address address)
+	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address)
 	{
-		if (address < 0x4000)		{ return Region::ROM_0; }
-		else if (address < 0x8000)	{ return Region::ROM_Other; }
-		else if (address < 0xA000)	{ return Region::VRAM; }
-		else if (address < 0xC000)	{ return Region::ERAM; }
-		else if (address < 0xE000)	{ return Region::WRAM; }
-		else if (address < 0xFE00)	{ return Region::WRAM_Echo; }
-		else if (address < 0xFEA0)	{ return Region::OAM; }
-		else if (address < 0xFF00)	{ return Region::None; }
-		else if (address < 0xFF80)	{ return Region::IO; }
-		else if (address < 0xFFFF)	{ return Region::HRAM; }
-		else						{ return Region::Interrupts; }
+		if (address < 0x4000)		{ return std::make_pair(Region::ROM_0, address); }
+		else if (address < 0x8000)	{ return std::make_pair(Region::ROM_Other, address - 0x4000); }
+		else if (address < 0xA000)	{ return std::make_pair(Region::VRAM, address - 0x8000); }
+		else if (address < 0xC000)	{ return std::make_pair(Region::ERAM, address - 0xA000); }
+		else if (address < 0xE000)	{ return std::make_pair(Region::WRAM, address - 0xC000); }
+		else if (address < 0xFE00)	{ return std::make_pair(Region::WRAM_Echo, address - 0xE000); }
+		else if (address < 0xFEA0)	{ return std::make_pair(Region::OAM, address - 0xFE00); }
+		else if (address < 0xFF00)	{ return std::make_pair(Region::Unused, address - 0xFEA0); }
+		else if (address < 0xFF80)	{ return std::make_pair(Region::IO, address - 0xFF00); }
+		else if (address < 0xFFFF)	{ return std::make_pair(Region::HRAM, address - 0xFF80); }
+		else						{ return std::make_pair(Region::Interrupts, address - 0xFFFF); }
 	}
 }

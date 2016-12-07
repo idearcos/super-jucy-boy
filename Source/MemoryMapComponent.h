@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "JucyBoy/MMU.h"
+#include "JucyBoy/Memory.h"
+
+class MMU;
 
 class MemoryMapComponent : public Component, public ListBoxModel
 {
@@ -23,11 +25,11 @@ private:
 	static std::string FormatListBoxRowText(size_t memory_address, uint8_t value);
 
 private:
-	MMU::MemoryMap memory_map_{};
+	Memory::Map memory_map_{};
 	ListBox memory_map_list_box_;
 	Label memory_map_list_header_;
 
-	MMU::MemoryMap previous_memory_map_state_{};
+	Memory::Map previous_memory_map_state_{};
 	std::vector<Colour> memory_map_colours_{ memory_map_.size(), Colours::black };
 
 	MMU* mmu_{ nullptr };

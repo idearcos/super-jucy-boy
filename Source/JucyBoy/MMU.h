@@ -2,12 +2,14 @@
 
 #include <cstdint>
 #include <array>
-#include <limits>
+#include <vector>
 #include <string>
 #include <list>
-#include <map>
 #include <functional>
+#include <map>
+#include <memory>
 #include "Memory.h"
+#include "IMbc.h"
 
 class MMU
 {
@@ -33,8 +35,12 @@ public:
 	void LoadRom(const std::string &rom_file_path);
 	bool IsRomLoaded() const noexcept { return rom_loaded_; }
 
-	using MemoryMap = std::array<uint8_t, std::numeric_limits<Memory::Address>::max() + 1>;
-	MemoryMap GetMemoryMap() const { return memory_; }
+	// Mbc listener functions
+	void EnableExternalRam(bool enable) { external_ram_enabled_ = enable; }
+	void LoadRomBank(size_t rom_bank_number);
+	void LoadRamBank(size_t ram_bank_number);
+
+	Memory::Map GetMemoryMap() const;
 
 	// AddListener returns a deregister function that can be called with no arguments
 	template <typename T>
@@ -49,9 +55,17 @@ private:
 	void NotifyMemoryWrite(Memory::Region region, Memory::Address address, uint8_t value);
 
 private:
-	MemoryMap memory_{}; // Value-initialize to all-zeroes
+	std::vector<std::vector<uint8_t>> memory_{}; // Value-initialize to all-zeroes
+	std::vector<std::vector<uint8_t>> rom_banks;
+	std::vector<std::vector<uint8_t>> external_ram_banks;
+
+	std::unique_ptr<IMbc> mbc_;
+	std::list < std::function<void()>> mbc_listener_deregister_functions_;
 
 	bool rom_loaded_{ false };
+	bool external_ram_enabled_{ false };
+	size_t loaded_rom_bank_{ 1 };
+	size_t loaded_eram_bank_{ 0 };
 
 	using Listener = std::function<void(Memory::Address address, uint8_t value)>;
 	std::map<Memory::Region, std::list<Listener>> listeners_;

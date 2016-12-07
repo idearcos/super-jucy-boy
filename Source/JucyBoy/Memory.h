@@ -1,12 +1,16 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
+#include <vector>
+#include <array>
 
 namespace Memory
 {
 	using Address = uint16_t;
+	using Map = std::array<uint8_t, std::numeric_limits<Address>::max() + 1>;
 
-	enum class Region
+	enum Region
 	{
 		ROM_0,		// 0x0000 - 0x3FFF
 		ROM_Other,	// 0x4000 - 0x7FFF
@@ -15,14 +19,18 @@ namespace Memory
 		WRAM,		// 0xC000 - 0xDFFF
 		WRAM_Echo,	// 0xE000 - 0xFDFF
 		OAM,		// 0xFE00 - 0xFE9F
-		None,		// 0xFEA0 - 0xFEFF
+		Unused,		// 0xFEA0 - 0xFEFF
 		IO,			// 0xFF00 - 0xFF7F
 		HRAM,		// 0xFF80 - 0xFFFE
 		Interrupts	// 0xFFFF - 0xFFFF
 	};
 
-	Region GetRegionOfAddress(Address address);
+	static const std::vector<size_t> region_sizes_{ 0x4000, 0x4000, 0x2000, 0x2000, 0x2000, 0x1E00, 0x00A0, 0x0060, 0x0080, 0x007F, 0x0001 };
 
+	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address);
+	size_t inline GetSizeOfRegion(Region region) { return region_sizes_[static_cast<size_t>(region)]; }
+
+	static const size_t rom_bank_size{ 0x4000 };
 	static const Address isr_start_{ 0x0040 };
 
 #pragma region VRAM addresses
