@@ -1341,7 +1341,8 @@ void CPU::PopulateInstructions()
 
 	// PREFIX CB
 	instructions_[0xCB] = [this]() -> MachineCycles {
-		return cb_instructions_[FetchByte()]();
+		//TODO: add 1 to duration?
+		return 1 + cb_instructions_[FetchByte()]();
 	};
 
 	// CALL Z, a16
