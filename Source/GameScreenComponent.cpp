@@ -8,8 +8,12 @@ GameScreenComponent::GameScreenComponent() :
 	Vertex{ { -1.0f, -1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 1.0f } } },
 	elements_{ 0, 1, 2, 2, 3, 0 }
 {
-	openGLContext.setComponentPaintingEnabled(true);
-	openGLContext.setContinuousRepainting(false);
+	// It's important to set the OpenGL component painting to false, otherwise the OpenGL thread will need to lock Juce's MessageManager, which leads to all sorts of deadlocks
+	openGLContext.setComponentPaintingEnabled(false);
+
+	// Continuous repainting leads to greatly decreased performance (although disabling the above might solve this issue too, in case it was caused by locking the MessageManager continuously)
+	openGLContext.setContinuousRepainting(false); 
+
 	openGLContext.setOpenGLVersionRequired(OpenGLContext::OpenGLVersion::openGL3_2);
 }
 
@@ -135,6 +139,9 @@ void GameScreenComponent::OnNewFrame(const GPU::Framebuffer &gb_framebuffer)
 
 void GameScreenComponent::render()
 {
+	// Return if there is nothing new to render
+	if (last_frame_rendered_) return;
+
 	const auto desktopScale = openGLContext.getRenderingScale();
 
 	OpenGLHelpers::clear(Colour::greyLevel(0.1f));
