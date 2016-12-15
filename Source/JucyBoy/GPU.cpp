@@ -175,9 +175,10 @@ void GPU::RenderSprites(uint8_t line_number)
 	{
 		const auto& sprite = sprites_[indices_of_sprites_to_render[i]];
 		auto tile_line = line_number - sprite.GetY();
+		if (sprite.IsVerticallyFlipped()) tile_line = (sprite_height - 1) - tile_line;
+
 		const auto& tile = tile_line < 8 ? tile_set_[sprite.GetTileNumber()] : tile_set_[sprite.GetTileNumber() + 1];
 		tile_line &= 0x07;
-		if (sprite.IsVerticallyFlipped()) tile_line = 7 - tile_line;
 
 		for (auto x = sprite.GetX(), tile_x_offset = !sprite.IsHorizontallyFlipped() ? 0 : 7; x < sprite.GetX() + 8; ++x, !sprite.IsHorizontallyFlipped() ? ++tile_x_offset : --tile_x_offset)
 		{
