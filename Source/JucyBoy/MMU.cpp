@@ -1,6 +1,7 @@
 #include "MMU.h"
 #include "Mbc1.h"
 #include <fstream>
+#include <cassert>
 
 MMU::MMU()
 {
@@ -9,19 +10,15 @@ MMU::MMU()
 
 MMU::~MMU()
 {
-	for (auto& deregister_function : mbc_listener_deregister_functions_)
-	{
-		deregister_function();
-	}
-	mbc_listener_deregister_functions_.clear();
+	mbc_.reset();
 }
 
 void MMU::Reset()
 {
 	memory_.clear();
 
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::ROM_0), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::ROM_Other), 0);
+	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::ROM_Bank0), 0);
+	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::ROM_OtherBanks), 0);
 	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::VRAM), 0);
 	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::ERAM), 0);
 	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::WRAM), 0);
@@ -76,7 +73,7 @@ uint16_t MMU::ReadWord(Memory::Address address) const
 {
 	uint16_t value{ ReadByte(address) };
 	value += (ReadByte(++address) << 8);
-	return value; 
+	return value;
 }
 
 void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
@@ -85,8 +82,8 @@ void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 
 	switch (region_and_relative_address.first)
 	{
-	case Memory::Region::ROM_0:
-	case Memory::Region::ROM_Other:
+	case Memory::Region::ROM_Bank0:
+	case Memory::Region::ROM_OtherBanks:
 		if (notify) NotifyMemoryWrite(region_and_relative_address.first, address, value);
 		return;
 	case Memory::Region::VRAM:
@@ -94,6 +91,7 @@ void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 		break;
 	case Memory::Region::ERAM:
 		if (!external_ram_enabled_) return;
+		if ((address - Memory::external_ram_start_) > memory_[Memory::Region::ERAM].size()) return;
 		break;
 	case Memory::Region::OAM:
 		//TODO: ignore writes during OAM and VRAM GPU states
@@ -115,13 +113,11 @@ void MMU::WriteWord(Memory::Address address, uint16_t value, bool notify)
 
 void MMU::LoadRom(const std::string &rom_file_path)
 {
+	// Clear all state of previously loaded ROM
 	rom_loaded_ = false;
 	rom_banks.clear();
-	for (auto& deregister_function : mbc_listener_deregister_functions_)
-	{
-		deregister_function();
-	}
-	mbc_listener_deregister_functions_.clear();
+	external_ram_banks.clear();
+	mbc_.reset();
 
 	std::ifstream rom_read_stream{ rom_file_path, std::ios::binary | std::ios::ate };
 	if (!rom_read_stream.is_open()) { throw std::runtime_error{ "ROM file could not be opened" }; }
@@ -130,24 +126,23 @@ void MMU::LoadRom(const std::string &rom_file_path)
 	rom_read_stream.seekg(0, std::ios::beg);
 
 	//TODO: check byte 0x147 for number of ROM banks
-	for (auto i = 0; i < file_size / Memory::GetSizeOfRegion(Memory::ROM_0); ++i)
+	for (auto i = 0; i < file_size / Memory::GetSizeOfRegion(Memory::ROM_Bank0); ++i)
 	{
 		rom_banks.emplace_back();
-		rom_banks.back().resize(Memory::GetSizeOfRegion(Memory::ROM_0));
+		rom_banks.back().resize(Memory::GetSizeOfRegion(Memory::ROM_Bank0));
 		rom_read_stream.read(reinterpret_cast<char*>(rom_banks.back().data()), rom_banks.back().size());
 	}
 
-	// Map ROM banks 0 and 1
-	memory_[Memory::ROM_0].swap(rom_banks[0]);
-	memory_[Memory::ROM_Other].swap(rom_banks[1]);
-
 	rom_read_stream.close();
-
 	rom_loaded_ = true;
+
+	// Map ROM banks 0 and 1
+	memory_[Memory::ROM_Bank0].swap(rom_banks[0]);
+	memory_[Memory::ROM_OtherBanks].swap(rom_banks[1]);
 	loaded_rom_bank_ = 1;
 
 	// Create the appropriate MBC
-	switch (memory_[Memory::ROM_0][0x147])
+	switch (memory_[Memory::ROM_Bank0][0x147])
 	{
 	case 0:
 		// No MBC
@@ -156,61 +151,47 @@ void MMU::LoadRom(const std::string &rom_file_path)
 	case 2:
 	case 3:
 		mbc_ = std::make_unique<Mbc1>(*this);
-		mbc_listener_deregister_functions_.emplace_back(AddListener(*mbc_, &IMbc::OnRomWritten, Memory::Region::ROM_0));
-		mbc_listener_deregister_functions_.emplace_back(AddListener(*mbc_, &IMbc::OnRomWritten, Memory::Region::ROM_Other));
 		break;
-	}
-	
-	// Create the necessary number of RAM banks and map the first one
-	size_t num_ram_banks{ 0 };
-	switch (memory_[Memory::ROM_0][0x149])
-	{
-		//TODO: MBC2 uses value 0
-	case 0:
-		num_ram_banks = 0;
-		break;
-	case 1:
-	case 2:
-		//TODO: case 1 is only a 2 kB bank
-		num_ram_banks = 1;
-		break;
-	case 3:
-		num_ram_banks = 4;
-		break;
-	case 4:
-		num_ram_banks = 16;
-		break;
-	case 5:
-		num_ram_banks = 8;
-		break;
+	default:
+		throw std::logic_error{ "Unsupported MBC:" + std::to_string(static_cast<int>(memory_[Memory::ROM_Bank0][0x147])) };
 	}
 
-	if (num_ram_banks > 0)
-	{
-		for (int i = 0; i < num_ram_banks; ++i)
-		{
-			external_ram_banks.emplace_back(size_t{ 0x2000 }, uint8_t{ 0 });
-		}
+	// Create the necessary number of external RAM banks
+	if (mbc_) external_ram_banks = mbc_->GetExternalRamBanks(memory_[Memory::ROM_Bank0][0x149]);
 
-		memory_[Memory::ERAM].swap(external_ram_banks[0]);
-		loaded_eram_bank_ = 0;
-	}
+	// Map the first external RAM bank
+	if (!external_ram_banks.empty()) memory_[Memory::ERAM].swap(external_ram_banks[0]);
 }
 
 void MMU::LoadRomBank(size_t rom_bank_number)
 {
+	assert(rom_bank_number != 0);
+	if (rom_bank_number >= rom_banks.size()) throw std::invalid_argument("Requested invalid ROM bank: " + std::to_string(rom_bank_number));
+
+	if (rom_bank_number == loaded_rom_bank_) return;
+
 	// Swap the currently loaded ROM bank back into its original slot
-	memory_[Memory::ROM_Other].swap(rom_banks[loaded_rom_bank_]);
-	memory_[Memory::ROM_Other].swap(rom_banks[rom_bank_number]);
+	memory_[Memory::ROM_OtherBanks].swap(rom_banks[loaded_rom_bank_]);
+
+	// Then load the requested ROM bank into the main memory slot
+	memory_[Memory::ROM_OtherBanks].swap(rom_banks[rom_bank_number]);
+
 	loaded_rom_bank_ = rom_bank_number;
 }
 
-void MMU::LoadRamBank(size_t ram_bank_number)
+void MMU::LoadRamBank(size_t external_ram_bank_number)
 {
-	// Swap the currently loaded RAM bank back into its original slot
-	memory_[Memory::ERAM].swap(rom_banks[loaded_eram_bank_]);
-	memory_[Memory::ERAM].swap(rom_banks[ram_bank_number]);
-	loaded_eram_bank_ = ram_bank_number;
+	if (external_ram_bank_number >= external_ram_banks.size()) throw std::invalid_argument("Requested invalid external RAM bank: " + std::to_string(external_ram_bank_number));
+
+	if (external_ram_bank_number == loaded_external_ram_bank_) return;
+
+	// Swap the currently loaded external RAM bank back into its original slot
+	memory_[Memory::ERAM].swap(external_ram_banks[loaded_external_ram_bank_]);
+
+	// Then load the requested external RAM bank into the main memory slot
+	memory_[Memory::ERAM].swap(external_ram_banks[external_ram_bank_number]);
+
+	loaded_external_ram_bank_ = external_ram_bank_number;
 }
 
 Memory::Map MMU::GetMemoryMap() const
@@ -218,10 +199,12 @@ Memory::Map MMU::GetMemoryMap() const
 	Memory::Map memory_map{};
 	size_t offset{ 0 };
 
-	for (const auto& memory_region : memory_)
+	for (int i = 0; i < memory_.size(); ++i)
 	{
-		memcpy(memory_map.data() + offset, memory_region.data(), memory_region.size());
-		offset += memory_region.size();
+		memcpy(memory_map.data() + offset, memory_[i].data(), memory_[i].size());
+
+		// memory_[i].size() cannot be used below, since in the MBC2 case the external RAM size will be 2kBytes, rather than the usual 8 kBytes
+		offset += GetSizeOfRegion(static_cast<Memory::Region>(i));
 	}
 	
 	return memory_map;

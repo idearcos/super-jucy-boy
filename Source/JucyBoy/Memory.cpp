@@ -2,10 +2,10 @@
 
 namespace Memory
 {
-	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address)
+std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address)
 	{
-		if (address < 0x4000)		{ return std::make_pair(Region::ROM_0, address); }
-		else if (address < 0x8000)	{ return std::make_pair(Region::ROM_Other, address - 0x4000); }
+		if (address < 0x4000)		{ return std::make_pair(Region::ROM_Bank0, address); }
+		else if (address < 0x8000)	{ return std::make_pair(Region::ROM_OtherBanks, address - 0x4000); }
 		else if (address < 0xA000)	{ return std::make_pair(Region::VRAM, address - 0x8000); }
 		else if (address < 0xC000)	{ return std::make_pair(Region::ERAM, address - 0xA000); }
 		else if (address < 0xE000)	{ return std::make_pair(Region::WRAM, address - 0xC000); }

@@ -12,8 +12,8 @@ namespace Memory
 
 	enum Region
 	{
-		ROM_0,		// 0x0000 - 0x3FFF
-		ROM_Other,	// 0x4000 - 0x7FFF
+		ROM_Bank0,		// 0x0000 - 0x3FFF
+		ROM_OtherBanks,	// 0x4000 - 0x7FFF
 		VRAM,		// 0x8000 - 0x9FFF
 		ERAM,		// 0xA000 - 0xBFFF
 		WRAM,		// 0xC000 - 0xDFFF
@@ -25,25 +25,26 @@ namespace Memory
 		Interrupts	// 0xFFFF - 0xFFFF
 	};
 
-	static const std::vector<size_t> region_sizes_{ 0x4000, 0x4000, 0x2000, 0x2000, 0x2000, 0x1E00, 0x00A0, 0x0060, 0x0080, 0x007F, 0x0001 };
-
 	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address);
+
+	static const size_t rom_bank_size_{ 0x4000 };
+	static const size_t external_ram_bank_size_{ 0x2000 };
+
+	static const std::vector<size_t> region_sizes_{ rom_bank_size_, rom_bank_size_, 0x2000, external_ram_bank_size_, 0x2000, 0x1E00, 0x00A0, 0x0060, 0x0080, 0x007F, 0x0001 };
 	size_t inline GetSizeOfRegion(Region region) { return region_sizes_[static_cast<size_t>(region)]; }
 
-	static const size_t rom_bank_size{ 0x4000 };
 	static const Address isr_start_{ 0x0040 };
 
-#pragma region VRAM addresses
 	static const Address tile_sets_start_{ 0x8000 };
 	static const Address tile_map_0_start_{ 0x9800 };
 	static const Address tile_map_1_start_{ 0x9C00 };
-#pragma endregion
+
+	static const Address external_ram_start_{ 0xA000 };
 
 	static const Address oam_start_{ 0xFE00 };
 
 #pragma region IO addresses
 	static const Address io_region_start_{ 0xFF00 };
-
 	static const Address joypad_register_{ 0xFF00 };
 
 	// Timer

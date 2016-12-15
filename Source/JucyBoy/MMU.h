@@ -47,7 +47,7 @@ public:
 	std::function<void()> AddListener(T &listener, void(T::*func)(Memory::Address, uint8_t), Memory::Region region)
 	{
 		auto it = listeners_[region].emplace(listeners_[region].begin(), std::bind(func, std::ref(listener), std::placeholders::_1, std::placeholders::_2));
-		return [=, this](){ listeners_[region].erase(it); };
+		return [=, this]() { listeners_[region].erase(it); };
 	}
 
 private:
@@ -55,17 +55,16 @@ private:
 	void NotifyMemoryWrite(Memory::Region region, Memory::Address address, uint8_t value);
 
 private:
-	std::vector<std::vector<uint8_t>> memory_{}; // Value-initialize to all-zeroes
+	std::vector<std::vector<uint8_t>> memory_;
 	std::vector<std::vector<uint8_t>> rom_banks;
 	std::vector<std::vector<uint8_t>> external_ram_banks;
 
 	std::unique_ptr<IMbc> mbc_;
-	std::list < std::function<void()>> mbc_listener_deregister_functions_;
 
 	bool rom_loaded_{ false };
-	bool external_ram_enabled_{ false };
 	size_t loaded_rom_bank_{ 1 };
-	size_t loaded_eram_bank_{ 0 };
+	size_t loaded_external_ram_bank_{ 0 };
+	bool external_ram_enabled_{ false };
 
 	using Listener = std::function<void(Memory::Address address, uint8_t value)>;
 	std::map<Memory::Region, std::list<Listener>> listeners_;

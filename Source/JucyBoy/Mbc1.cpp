@@ -1,8 +1,7 @@
 #include "Mbc1.h"
 #include "MMU.h"
 
-Mbc1::Mbc1(MMU &mmu) :
-	mmu_{ &mmu }
+Mbc1::Mbc1(MMU &mmu) : IMbc(mmu)
 {
 
 }
