@@ -21,9 +21,7 @@ public:
 	void Reset();
 
 	uint8_t ReadByte(Memory::Address address) const;
-	uint16_t ReadWord(Memory::Address address) const;
 	void WriteByte(Memory::Address address, uint8_t value, bool notify = true);
-	void WriteWord(Memory::Address address, uint16_t value, bool notify = true);
 
 	template <int BitNum>
 	void SetBit(Memory::Address address, bool notify = true) { WriteByte(address, (1 << BitNum) | ReadByte(address), notify); }
@@ -35,10 +33,13 @@ public:
 	void LoadRom(const std::string &rom_file_path);
 	bool IsRomLoaded() const noexcept { return rom_loaded_; }
 
-	// Mbc listener functions
+	// Functions called by IMbc
 	void EnableExternalRam(bool enable) { external_ram_enabled_ = enable; }
 	void LoadRomBank(size_t rom_bank_number);
 	void LoadRamBank(size_t ram_bank_number);
+
+	// Functions called by OamDma
+	void OamDmaActive(bool is_active) { is_oam_dma_active_ = is_active; }
 
 	Memory::Map GetMemoryMap() const;
 
@@ -65,6 +66,8 @@ private:
 	size_t loaded_rom_bank_{ 1 };
 	size_t loaded_external_ram_bank_{ 0 };
 	bool external_ram_enabled_{ false };
+
+	bool is_oam_dma_active_{ false };
 
 	using Listener = std::function<void(Memory::Address address, uint8_t value)>;
 	std::map<Memory::Region, std::list<Listener>> listeners_;

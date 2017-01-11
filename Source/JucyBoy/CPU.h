@@ -15,7 +15,7 @@ class CPU
 public:
 	using MachineCycles = size_t;
 	using OpCode = uint8_t;
-	using Instruction = std::function<MachineCycles()>;
+	using Instruction = std::function<void()>;
 	using BreakpointList = std::set<uint16_t>;
 
 	struct Registers
@@ -59,7 +59,7 @@ public:
 	public:
 		virtual ~Listener() {}
 		virtual void OnRunningLoopInterrupted() {}
-		virtual void OnCyclesLapsed(MachineCycles /*cycles*/) {}
+		virtual void OnMachineCycleLapse() {}
 		virtual void OnBreakpointsChanged(const BreakpointList &/*breakpoint_list*/) {}
 	};
 
@@ -101,17 +101,17 @@ private:
 
 	// Execution flow
 	inline OpCode FetchOpcode() { return FetchByte(); }
-	MachineCycles ExecuteInstruction(OpCode opcode);
+	inline void ExecuteInstruction(OpCode opcode) { instructions_[opcode](); }
 	void RunningLoopFunction();
 	bool IsBreakpointHit() const;
+
+	// Memory R/W
 	uint8_t FetchByte();
 	uint16_t FetchWord();
-
-	// Stack R/W
-	//uint8_t ReadByteFromStack();
-	uint16_t ReadWordFromStack();
-	//void WriteByteToStack(uint8_t value);
-	void WriteWordToStack(uint16_t value);
+	uint16_t PopWordFromStack();
+	void PushWordToStack(uint16_t value);
+	uint8_t ReadByte(uint16_t address) const;
+	void WriteByte(uint16_t address, uint8_t value) const;
 
 	// Interrupts
 	void CheckInterrupts();
@@ -129,7 +129,7 @@ private:
 	void Compare(uint8_t value);
 	void AddToHl(uint16_t value);
 	void Call(Memory::Address address);
-	void Return();
+	inline void Return() { registers_.pc = PopWordFromStack(); NotifyMachineCycleLapse(); }
 
 	// CB instruction helper functions
 	void Rlc(uint8_t &reg); // Rotate left
@@ -157,7 +157,7 @@ private:
 
 	// Listener notification
 	void NotifyRunningLoopInterruption() const;
-	void NotifyCyclesLapsed(MachineCycles cycles) const;
+	void NotifyMachineCycleLapse() const;
 	void NotifyBreakpointsChange() const;
 
 private:

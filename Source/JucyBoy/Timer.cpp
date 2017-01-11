@@ -10,10 +10,10 @@ Timer::Timer(MMU &mmu) :
 
 }
 
-void Timer::OnCyclesLapsed(CPU::MachineCycles cycles)
+void Timer::OnMachineCycleLapse()
 {
-	LapseCyclesOnDivider(cycles);
-	LapseCyclesOnTimer(cycles);
+	LapseMachineCycleOnDivider();
+	LapseMachineCycleOnTimer();
 }
 
 void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
@@ -38,20 +38,20 @@ void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 	}
 }
 
-void Timer::LapseCyclesOnDivider(CPU::MachineCycles cycles)
+void Timer::LapseMachineCycleOnDivider()
 {
-	cpu_cycles_lapsed_on_divider_ += cycles;
+	cpu_cycles_lapsed_on_divider_ += 1;
 	if (cpu_cycles_lapsed_on_divider_ < divider_period_) return;
 
 	cpu_cycles_lapsed_on_divider_ -= divider_period_;
 	mmu_->WriteByte(Memory::divider_register_, ++divider_counter_, false);
 }
 
-void Timer::LapseCyclesOnTimer(CPU::MachineCycles cycles)
+void Timer::LapseMachineCycleOnTimer()
 {
 	if (!timer_enabled_) return;
 
-	cpu_cycles_lapsed_on_timer_ += cycles;
+	cpu_cycles_lapsed_on_timer_ += 1;
 	if (cpu_cycles_lapsed_on_timer_ < timer_period_) return;
 
 	cpu_cycles_lapsed_on_timer_ -= timer_period_;

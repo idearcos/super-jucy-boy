@@ -24,6 +24,8 @@
         <FILE id="oMwB46" name="Memory.h" compile="0" resource="0" file="Source/JucyBoy/Memory.h"/>
         <FILE id="DfP5e5" name="MMU.cpp" compile="1" resource="0" file="Source/JucyBoy/MMU.cpp"/>
         <FILE id="ZKlLmE" name="MMU.h" compile="0" resource="0" file="Source/JucyBoy/MMU.h"/>
+        <FILE id="FDuHoS" name="OamDma.cpp" compile="1" resource="0" file="Source/JucyBoy/OamDma.cpp"/>
+        <FILE id="QsSx1X" name="OamDma.h" compile="0" resource="0" file="Source/JucyBoy/OamDma.h"/>
         <FILE id="OVAOjP" name="Registers.h" compile="0" resource="0" file="Source/JucyBoy/Registers.h"/>
         <FILE id="wKyaMj" name="Sprite.h" compile="0" resource="0" file="Source/JucyBoy/Sprite.h"/>
         <FILE id="goh0Iq" name="Timer.cpp" compile="1" resource="0" file="Source/JucyBoy/Timer.cpp"/>

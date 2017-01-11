@@ -69,8 +69,6 @@ void CPU::RunningLoopFunction()
 {
 	try
 	{
-		MachineCycles cycles{ 0 };
-
 		//TODO: only check exit_loop_ once per frame (during VBlank), in order to increase performance
 		//TODO: precompute the next breakpoint instead of iterating the whole set every time. This "next breakpoint" would need to be updated after every Jump instruction.
 		while (!exit_loop_.load())
@@ -79,12 +77,12 @@ void CPU::RunningLoopFunction()
 			{
 			case State::Running:
 				previous_pc_ = registers_.pc;
-				cycles = ExecuteInstruction(FetchOpcode());
-				NotifyCyclesLapsed(cycles);
+				ExecuteInstruction(FetchOpcode());
 				break;
 			case State::Halted:
 				// NOP instructions are executed until Halted state ends
-				NotifyCyclesLapsed(ExecuteInstruction(0x00));
+				ExecuteInstruction(0x00);
+				NotifyMachineCycleLapse();
 				break;
 			case State::Stopped:
 				//TODO check for joypad input, since that is the only thing that can finish Stopped state
@@ -118,41 +116,52 @@ void CPU::StepOver()
 	if (IsRunning()) { throw std::logic_error{ "Trying to call StepOver while RunningLoopFunction thread is running" }; }
 
 	previous_pc_ = registers_.pc;
-	const auto cycles = ExecuteInstruction(FetchOpcode());
-	NotifyCyclesLapsed(cycles);
+	ExecuteInstruction(FetchOpcode());
 
 	CheckInterrupts();
 }
 
-CPU::MachineCycles CPU::ExecuteInstruction(OpCode opcode)
-{
-	return instructions_[opcode]();
-}
-
+#pragma region Memory R/W
 uint8_t CPU::FetchByte()
 {
-	return mmu_->ReadByte(registers_.pc++);
+	const auto value = ReadByte(registers_.pc);
+	registers_.pc += 1;
+	return value;
 }
 
 uint16_t CPU::FetchWord()
 {
-	const auto value = mmu_->ReadWord(registers_.pc);
-	registers_.pc += 2;
+	uint16_t value{ FetchByte() };
+	value += (FetchByte() << 8);
 	return value;
 }
 
-#pragma region Stack R/W
-uint16_t CPU::ReadWordFromStack()
+uint16_t CPU::PopWordFromStack()
 {
-	const auto value = mmu_->ReadWord(registers_.sp);
-	registers_.sp += 2;
+	uint16_t value{ ReadByte(registers_.sp) };
+	registers_.sp += 1;
+	value += (ReadByte(registers_.sp) << 8);
+	registers_.sp += 1;
 	return value;
 }
 
-void CPU::WriteWordToStack(uint16_t value)
+void CPU::PushWordToStack(uint16_t value)
 {
-	registers_.sp -= 2;
-	mmu_->WriteWord(registers_.sp, value);
+	NotifyMachineCycleLapse();
+	WriteByte(--registers_.sp, (value >> 8) & 0xFF);
+	WriteByte(--registers_.sp, value & 0xFF);
+}
+
+uint8_t CPU::ReadByte(uint16_t address) const
+{
+	NotifyMachineCycleLapse();
+	return mmu_->ReadByte(address);
+}
+
+void CPU::WriteByte(uint16_t address, uint8_t value) const
+{
+	NotifyMachineCycleLapse();
+	mmu_->WriteByte(address, value);
 }
 #pragma endregion
 
@@ -174,6 +183,10 @@ void CPU::CheckInterrupts()
 				current_state_ = State::Running;
 
 				if (!interrupt_master_enable_) { break; }
+
+				// There are 2 additional machine cycles spent here
+				NotifyMachineCycleLapse();
+				NotifyMachineCycleLapse();
 
 				// Call appropriate Interrupt Service Routine
 				Call(Memory::isr_start_ + (interrupt * 0x08));
@@ -201,9 +214,6 @@ void CPU::CheckInterrupts()
 					mmu_->ClearBit<Interrupt::Joypad>(Memory::interrupt_flags_register_, false);
 					break;
 				}
-
-				//TODO: how many cycles are spent here???
-				NotifyCyclesLapsed(4);
 
 				// Interrupts are processed one at a time, therefore exit the loop now
 				break;
@@ -325,13 +335,8 @@ void CPU::AddToHl(uint16_t value)
 
 void CPU::Call(Memory::Address address)
 {
-	WriteWordToStack(registers_.pc);
+	PushWordToStack(registers_.pc);
 	registers_.pc = address;
-}
-
-void CPU::Return()
-{
-	registers_.pc = ReadWordFromStack();
 }
 #pragma endregion
 
@@ -470,11 +475,11 @@ void CPU::NotifyRunningLoopInterruption() const
 	}
 }
 
-void CPU::NotifyCyclesLapsed(MachineCycles cycles) const
+void CPU::NotifyMachineCycleLapse() const
 {
 	for (auto& listener : listeners_)
 	{
-		listener->OnCyclesLapsed(cycles);
+		listener->OnMachineCycleLapse();
 	}
 }
 #pragma endregion

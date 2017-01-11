@@ -7,6 +7,7 @@
 #include "JucyBoy/MMU.h"
 #include "JucyBoy/GPU.h"
 #include "JucyBoy/Timer.h"
+#include "JucyBoy/OamDma.h"
 #include "JucyBoy/Joypad.h"
 #include "GameScreenComponent.h"
 #include "CpuStatusComponent.h"
@@ -55,6 +56,7 @@ private:
 	CPU cpu_{ mmu_ };
 	GPU gpu_{ mmu_ };
 	jb::Timer timer_{ mmu_ };
+	OamDma oam_dma_{ mmu_ };
 	Joypad joypad_{ mmu_ };
 
 	std::vector<std::function<void()>> listener_deregister_functions_;

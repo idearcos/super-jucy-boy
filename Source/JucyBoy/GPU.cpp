@@ -1,7 +1,6 @@
 #include "GPU.h"
 #include <string>
 #include <cassert>
-#include <algorithm>
 #include "MMU.h"
 
 GPU::GPU(MMU &mmu) :
@@ -17,17 +16,17 @@ GPU::~GPU()
 
 }
 
-void GPU::OnCyclesLapsed(CPU::MachineCycles cycles)
+void GPU::OnMachineCycleLapse()
 {
 	if (!lcd_on_) return;
 
-	cycles_lapsed_in_state_ += cycles;
+	cycles_lapsed_in_state_ += 1;
 	switch (current_state_)
 	{
 	case State::OAM:
-		if (cycles_lapsed_in_state_ >= 20)
+		if (cycles_lapsed_in_state_ >= 21)
 		{
-			cycles_lapsed_in_state_ -= 20;
+			cycles_lapsed_in_state_ -= 21;
 			SetLcdState(State::VRAM);
 		}
 		break;
@@ -43,9 +42,9 @@ void GPU::OnCyclesLapsed(CPU::MachineCycles cycles)
 		}
 		break;
 	case State::HBLANK:
-		if (cycles_lapsed_in_state_ >= 51)
+		if (cycles_lapsed_in_state_ >= 50)
 		{
-			cycles_lapsed_in_state_ -= 51;
+			cycles_lapsed_in_state_ -= 50;
 			if (IncrementLine() == 144)
 			{
 				SetLcdState(State::VBLANK);
@@ -76,7 +75,7 @@ void GPU::OnCyclesLapsed(CPU::MachineCycles cycles)
 		}
 		break;
 	default:
-		throw std::logic_error("Invalid current mode in OnCyclesLapsed: " + std::to_string(cycles_lapsed_in_state_));
+		throw std::logic_error("Invalid current mode in OnMachineCycleLapse: " + std::to_string(cycles_lapsed_in_state_));
 	}
 }
 
@@ -100,7 +99,7 @@ void GPU::RenderBackground(uint8_t line_number)
 
 		framebuffer_[160 * line_number + i] = bg_palette_[color_numbers_buffer_[160 * line_number + i]];
 
-		++scrolled_x;
+		scrolled_x += 1;
 	}
 }
 
@@ -383,13 +382,6 @@ void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		line_compare_ = value;
 		UpdateLineComparison();
 		break;
-	case Memory::dma_transfer_source_register_: // DMA
-		if (value > 0xF1) throw std::invalid_argument("Invalid DMA transfer source: " + std::to_string(int{ value }));
-		for (uint16_t i = 0; i < 160; ++i)
-		{
-			mmu_->WriteByte(Memory::oam_start_ + i, mmu_->ReadByte((value << 8) + i));
-		}
-		break;
 	case Memory::bg_palette_register_: // BGP
 		SetPaletteData(bg_palette_, value);
 		break;
@@ -404,6 +396,8 @@ void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		break;
 	case Memory::window_x_minus_seven_register_: // WX
 		window_x_ = value - 7;
+		break;
+	default:
 		break;
 	}
 }

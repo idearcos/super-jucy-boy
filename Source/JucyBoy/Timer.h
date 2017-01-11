@@ -15,14 +15,14 @@ public:
 	~Timer() = default;
 
 	// CPU::Listener overrides
-	void OnCyclesLapsed(CPU::MachineCycles cycles) override;
+	void OnMachineCycleLapse() override;
 
 	// MMU listener functions
 	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
 
 private:
-	void LapseCyclesOnDivider(CPU::MachineCycles cycles);
-	void LapseCyclesOnTimer(CPU::MachineCycles cycles);
+	void LapseMachineCycleOnDivider();
+	void LapseMachineCycleOnTimer();
 
 private:
 	// Divider logic

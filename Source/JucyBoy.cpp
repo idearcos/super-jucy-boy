@@ -19,8 +19,9 @@ JucyBoy::JucyBoy()
 	listener_deregister_functions_.emplace_back(AddListener(cpu_status_component_, &CpuStatusComponent::OnStatusUpdateRequested));
 	listener_deregister_functions_.emplace_back(AddListener(memory_map_component_, &MemoryMapComponent::OnStatusUpdateRequested));
 
-	cpu_.AddListener(gpu_);
 	cpu_.AddListener(timer_);
+	cpu_.AddListener(gpu_);
+	cpu_.AddListener(oam_dma_);
 	cpu_.AddListener(cpu_status_component_);
 	cpu_.AddListener(*this);
 

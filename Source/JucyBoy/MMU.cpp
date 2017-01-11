@@ -64,20 +64,17 @@ void MMU::Reset()
 
 uint8_t MMU::ReadByte(Memory::Address address) const
 {
+	if (is_oam_dma_active_) return 0xFF;
+
 	const auto region_and_relative_address = Memory::GetRegionAndRelativeAddress(address);
 
 	return memory_[region_and_relative_address.first][region_and_relative_address.second];
 }
 
-uint16_t MMU::ReadWord(Memory::Address address) const
-{
-	uint16_t value{ ReadByte(address) };
-	value += (ReadByte(++address) << 8);
-	return value;
-}
-
 void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 {
+	if (is_oam_dma_active_) return; //TODO: write to OAM start still has an effect
+
 	const auto region_and_relative_address = Memory::GetRegionAndRelativeAddress(address);
 
 	switch (region_and_relative_address.first)
@@ -103,12 +100,6 @@ void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 	memory_[region_and_relative_address.first][region_and_relative_address.second] = value;
 
 	if (notify) NotifyMemoryWrite(region_and_relative_address.first, address, value);
-}
-
-void MMU::WriteWord(Memory::Address address, uint16_t value, bool notify)
-{
-	WriteByte(address, (value & 0xFF), notify);
-	WriteByte(++address, ((value >> 8) & 0xFF), notify);
 }
 
 void MMU::LoadRom(const std::string &rom_file_path)

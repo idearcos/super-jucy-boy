@@ -42,7 +42,7 @@ public:
 	State GetCurrentState() { return current_state_; }
 
 	// CPU::Listener overrides
-	void OnCyclesLapsed(CPU::MachineCycles cycles) override;
+	void OnMachineCycleLapse() override;
 
 	// MMU listener functions
 	void OnVramWritten(Memory::Address address, uint8_t value);
@@ -59,11 +59,7 @@ private:
 	void RenderWindow(uint8_t line_number);
 	void RenderSprites(uint8_t line_number);
 
-	uint8_t IncrementLine() { return SetLineNumber(current_line_ + 1); }
-	uint8_t SetLineNumber(uint8_t line_number);
-	void UpdateLineComparison();
-
-	// Register write callback functions
+	// Register write functions
 	void SetLcdControl(uint8_t value);
 	void SetLcdStatus(uint8_t value);
 	using Palette = std::array<Color, 4>;
@@ -72,6 +68,9 @@ private:
 	// Helper functions
 	void EnableLcd(bool enabled);
 	void SetLcdState(State state);
+	uint8_t IncrementLine() { return SetLineNumber(current_line_ + 1); }
+	uint8_t SetLineNumber(uint8_t line_number);
+	void UpdateLineComparison();
 
 	// Listener notification
 	void NotifyNewFrame() const;
