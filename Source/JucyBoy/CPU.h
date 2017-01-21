@@ -104,6 +104,7 @@ private:
 	inline void ExecuteInstruction(OpCode opcode) { instructions_[opcode](); }
 	void RunningLoopFunction();
 	bool IsBreakpointHit() const;
+	bool IsWatchpointHit(OpCode next_opcode) const;
 
 	// Memory R/W
 	uint8_t FetchByte();

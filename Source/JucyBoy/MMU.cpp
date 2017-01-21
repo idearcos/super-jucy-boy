@@ -185,6 +185,19 @@ void MMU::LoadRamBank(size_t external_ram_bank_number)
 	loaded_external_ram_bank_ = external_ram_bank_number;
 }
 
+#pragma region Watchpoints
+bool MMU::IsReadWatchpointHit(Memory::Address address) const
+{
+	return read_watchpoints_.count(address) != 0;
+}
+
+bool MMU::IsWriteWatchpointHit(Memory::Address address) const
+{
+	return write_watchpoints_.count(address) != 0;
+}
+#pragma endregion
+
+#pragma region GUI interaction
 Memory::Map MMU::GetMemoryMap() const
 {
 	Memory::Map memory_map{};
@@ -200,6 +213,51 @@ Memory::Map MMU::GetMemoryMap() const
 	
 	return memory_map;
 }
+
+std::vector<Memory::Watchpoint> MMU::GetWatchpointList() const
+{
+	std::vector<Memory::Watchpoint> watchpoints;
+	for (auto watchpoint_address : read_watchpoints_)
+	{
+		watchpoints.emplace_back(watchpoint_address, Memory::Watchpoint::Type::Read);
+	}
+	for (auto watchpoint_address : write_watchpoints_)
+	{
+		watchpoints.emplace_back(watchpoint_address, Memory::Watchpoint::Type::Write);
+	}
+	return watchpoints;
+}
+
+void MMU::AddWatchpoint(Memory::Watchpoint watchpoint)
+{
+	switch (watchpoint.type)
+	{
+	case Memory::Watchpoint::Type::Read:
+		read_watchpoints_.emplace(watchpoint.address);
+		break;
+	case Memory::Watchpoint::Type::Write:
+		write_watchpoints_.emplace(watchpoint.address);
+		break;
+	default:
+		break;
+	}
+}
+
+void MMU::RemoveWatchpoint(Memory::Watchpoint watchpoint)
+{
+	switch (watchpoint.type)
+	{
+	case Memory::Watchpoint::Type::Read:
+		read_watchpoints_.erase(watchpoint.address);
+		break;
+	case Memory::Watchpoint::Type::Write:
+		write_watchpoints_.erase(watchpoint.address);
+		break;
+	default:
+		break;
+	}
+}
+#pragma endregion
 
 #pragma region Listener notification
 void MMU::NotifyMemoryWrite(Memory::Region region, Memory::Address address, uint8_t value)

@@ -42,10 +42,10 @@
       <FILE id="dhem0M" name="JucyBoy.cpp" compile="1" resource="0" file="Source/JucyBoy.cpp"/>
       <FILE id="TQFnBn" name="JucyBoy.h" compile="0" resource="0" file="Source/JucyBoy.h"/>
       <FILE id="uh1Uzk" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
-      <FILE id="LtPoBP" name="MemoryMapComponent.cpp" compile="1" resource="0"
-            file="Source/MemoryMapComponent.cpp"/>
-      <FILE id="t8fWH8" name="MemoryMapComponent.h" compile="0" resource="0"
-            file="Source/MemoryMapComponent.h"/>
+      <FILE id="LtPoBP" name="MemoryDebugComponent.cpp" compile="1" resource="0"
+            file="Source/MemoryDebugComponent.cpp"/>
+      <FILE id="t8fWH8" name="MemoryDebugComponent.h" compile="0" resource="0"
+            file="Source/MemoryDebugComponent.h"/>
     </GROUP>
     <FILE id="IxbJmR" name="README.md" compile="0" resource="1" file="README.md"/>
   </MAINGROUP>

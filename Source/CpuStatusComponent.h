@@ -45,6 +45,7 @@ private:
 	CPU::Registers previous_registers_state_;
 	CPU::Flags previous_cpu_flags_state_;
 
+	// Breakpoints
 	std::vector<Memory::Address> breakpoints_;
 	Label breakpoint_list_header_;
 	ListBox breakpoint_list_box_;

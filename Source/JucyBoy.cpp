@@ -12,12 +12,12 @@ JucyBoy::JucyBoy()
 	cpu_status_component_.addMouseListener(this, true);
 	addAndMakeVisible(cpu_status_component_);
 
-	memory_map_component_.addMouseListener(this, true);
-	addAndMakeVisible(memory_map_component_);
+	memory_debug_component_.addMouseListener(this, true);
+	addAndMakeVisible(memory_debug_component_);
 
 	// Add listeners
 	listener_deregister_functions_.emplace_back(AddListener(cpu_status_component_, &CpuStatusComponent::OnStatusUpdateRequested));
-	listener_deregister_functions_.emplace_back(AddListener(memory_map_component_, &MemoryMapComponent::OnStatusUpdateRequested));
+	listener_deregister_functions_.emplace_back(AddListener(memory_debug_component_, &MemoryDebugComponent::OnStatusUpdateRequested));
 
 	cpu_.AddListener(timer_);
 	cpu_.AddListener(gpu_);
@@ -98,7 +98,7 @@ void JucyBoy::resized()
 	cpu_status_component_.setBounds(cpu_status_area);
 
 	auto memory_map_area = working_area.removeFromLeft(memory_map_width_);
-	memory_map_component_.setBounds(memory_map_area);
+	memory_debug_component_.setBounds(memory_map_area);
 }
 
 void JucyBoy::mouseDown( const MouseEvent &event)

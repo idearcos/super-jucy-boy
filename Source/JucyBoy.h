@@ -11,7 +11,7 @@
 #include "JucyBoy/Joypad.h"
 #include "GameScreenComponent.h"
 #include "CpuStatusComponent.h"
-#include "MemoryMapComponent.h"
+#include "MemoryDebugComponent.h"
 
 class JucyBoy final : public Component, public CPU::Listener, public AsyncUpdater
 {
@@ -49,7 +49,7 @@ private:
 
 private:
 	static const size_t cpu_status_width_{ 150 };
-	static const size_t memory_map_width_{ 150 };
+	static const size_t memory_map_width_{ 380 };
 
 private:
 	MMU mmu_{};
@@ -64,7 +64,7 @@ private:
 	GameScreenComponent game_screen_component_;
 	Rectangle<int> usage_instructions_area_;
 	CpuStatusComponent cpu_status_component_{ cpu_ };
-	MemoryMapComponent memory_map_component_{ mmu_ };
+	MemoryDebugComponent memory_debug_component_{ mmu_ };
 
 	using Listener = std::function<void(bool)>;
 	std::list<Listener> listeners_;

@@ -8,6 +8,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <set>
 #include "Memory.h"
 #include "IMbc.h"
 
@@ -22,6 +23,8 @@ public:
 
 	uint8_t ReadByte(Memory::Address address) const;
 	void WriteByte(Memory::Address address, uint8_t value, bool notify = true);
+	bool IsReadWatchpointHit(Memory::Address address) const;
+	bool IsWriteWatchpointHit(Memory::Address address) const;
 
 	template <int BitNum>
 	void SetBit(Memory::Address address, bool notify = true) { WriteByte(address, (1 << BitNum) | ReadByte(address), notify); }
@@ -41,7 +44,11 @@ public:
 	// Functions called by OamDma
 	void OamDmaActive(bool is_active) { is_oam_dma_active_ = is_active; }
 
+	// GUI interaction
 	Memory::Map GetMemoryMap() const;
+	std::vector<Memory::Watchpoint> GetWatchpointList() const;
+	void AddWatchpoint(Memory::Watchpoint watchpoint);
+	void RemoveWatchpoint(Memory::Watchpoint watchpoint);
 
 	// AddListener returns a deregister function that can be called with no arguments
 	template <typename T>
@@ -68,6 +75,10 @@ private:
 	bool external_ram_enabled_{ false };
 
 	bool is_oam_dma_active_{ false };
+
+	// Watchpoints
+	std::set<Memory::Address> read_watchpoints_;
+	std::set<Memory::Address> write_watchpoints_;
 
 	using Listener = std::function<void(Memory::Address address, uint8_t value)>;
 	std::map<Memory::Region, std::list<Listener>> listeners_;

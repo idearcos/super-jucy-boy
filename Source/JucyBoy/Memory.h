@@ -25,6 +25,20 @@ namespace Memory
 		Interrupts	// 0xFFFF - 0xFFFF
 	};
 
+	struct Watchpoint
+	{
+		enum class Type
+		{
+			Read,
+			Write
+		};
+
+		Watchpoint(Address address, Type type) : address(address), type(type) {}
+
+		Address address{ 0x0000 };
+		Type type{ Type::Write };
+	};
+
 	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address);
 
 	static const size_t rom_bank_size_{ 0x4000 };
