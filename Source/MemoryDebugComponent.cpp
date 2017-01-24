@@ -68,17 +68,16 @@ void MemoryMapComponent::paintListBoxItem(int rowNumber, Graphics& g, int width,
 
 	AttributedString row_text;
 	row_text.setJustification(Justification::centred);
-	row_text.setFont(Font{ Font::getDefaultMonospacedFontName(), 12.0f, Font::plain });
 
 	std::stringstream address;
 	address << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << 16 * rowNumber << " ";
-	row_text.append(address.str(), Colours::grey);
+	row_text.append(address.str(), Font{ Font::getDefaultMonospacedFontName(), 12.0f, Font::plain }, Colours::grey);
 
 	for (int i = 0; i < 16; ++i)
 	{
 		std::stringstream value;
 		value << " " << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << static_cast<int>(memory_map_[16 * rowNumber + i]);
-		row_text.append(value.str(), memory_map_colours_[16 * rowNumber + i]);
+		row_text.append(value.str(), Font{ Font::getDefaultMonospacedFontName(), 12.0f, Font::plain }, memory_map_colours_[16 * rowNumber + i]);
 	}
 
 	row_text.draw(g, Rectangle<int>{ width, height }.toFloat());
@@ -133,9 +132,8 @@ void MemoryWatchpointsComponent::resized()
 	watchpoint_list_box_.setBounds(working_area.reduced(1, 1));
 
 	working_area = watchpoint_add_area_;
-	watchpoint_add_editor_.setBounds(working_area.removeFromLeft(working_area.getWidth() / 3));
-	const auto watchpoint_type_area_width = working_area.getWidth();
-	watchpoint_type_read_.setBounds(working_area.removeFromLeft(watchpoint_type_area_width / 2));
+	watchpoint_add_editor_.setBounds(working_area.removeFromLeft(working_area.getWidth() / 2));
+	watchpoint_type_read_.setBounds(working_area.removeFromLeft(working_area.getWidth() / 2));
 	watchpoint_type_write_.setBounds(working_area);
 
 	const auto vertical_indent = (watchpoint_add_editor_.getHeight() - watchpoint_add_editor_.getFont().getHeight()) / 2.0;

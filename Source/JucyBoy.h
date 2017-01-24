@@ -49,7 +49,7 @@ private:
 
 private:
 	static const size_t cpu_status_width_{ 150 };
-	static const size_t memory_map_width_{ 380 };
+	static const size_t memory_map_width_{ 430 };
 
 private:
 	MMU mmu_{};
