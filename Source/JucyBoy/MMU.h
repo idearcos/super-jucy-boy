@@ -42,6 +42,7 @@ public:
 	void LoadRamBank(size_t ram_bank_number);
 
 	// Functions called by OamDma
+	bool IsOamDmaActive() const { return is_oam_dma_active_; }
 	void OamDmaActive(bool is_active) { is_oam_dma_active_ = is_active; }
 
 	// GUI interaction

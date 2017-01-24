@@ -19,8 +19,9 @@ public:
 private:
 	enum class State
 	{
-		Requested,
-		Active,
+		Startup, // 1 cycle
+		Active, // 160 cycles
+		Teardown, // 1 cycle
 		Inactive
 	};
 	State oam_dma_state_{ State::Inactive };
