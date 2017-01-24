@@ -418,6 +418,9 @@ void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		{
 			requested_interrupts_[i] = (value & (1 << i)) != 0;
 		}
+		mmu_->WriteByte(Memory::interrupt_flags_register_, 0xE0 | value, false);
+		break;
+	default:
 		break;
 	}
 }
@@ -428,18 +431,21 @@ void CPU::OnInterruptsRegisterWritten(Memory::Address, uint8_t value)
 	{
 		enabled_interrupts_[i] = (value & (1 << i)) != 0;
 	}
+	mmu_->WriteByte(Memory::interrupt_enable_register_, 0xE0 | value, false);
 }
 #pragma endregion
 
 #pragma region Breakpoints
 void CPU::AddBreakpoint(Memory::Address address)
 {
+	//TODO: allow only when not running!
 	breakpoints_.insert(address);
 	NotifyBreakpointsChange();
 }
 
 void CPU::RemoveBreakpoint(Memory::Address address)
 {
+	//TODO: allow only when not running!
 	breakpoints_.erase(address);
 	NotifyBreakpointsChange();
 }
@@ -459,6 +465,7 @@ bool CPU::IsBreakpointHit() const
 
 bool CPU::IsWatchpointHit(OpCode next_opcode) const
 {
+	//TODO: also check OAM DMA for watchpoints
 	Memory::Address address{ 0 };
 	switch (next_opcode)
 	{
