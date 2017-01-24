@@ -29,53 +29,54 @@ void MMU::Reset()
 	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::HRAM), 0);
 	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::Interrupts), 0);
 
-	WriteByte(0xFF05, 0x00); //TIMA
-	WriteByte(0xFF06, 0x00); //TMA
-	WriteByte(0xFF07, 0x00); //TAC
-	WriteByte(0xFF10, 0x80); //NR10
-	WriteByte(0xFF11, 0xBF); //NR11
-	WriteByte(0xFF12, 0xF3); //NR12
-	WriteByte(0xFF14, 0xBF); //NR14
-	WriteByte(0xFF16, 0x3F); //NR21
-	WriteByte(0xFF17, 0x00); //NR22
-	WriteByte(0xFF19, 0xBF); //NR24
-	WriteByte(0xFF1A, 0x7F); //NR30
-	WriteByte(0xFF1B, 0xFF); //NR31
-	WriteByte(0xFF1C, 0x9F); //NR32
-	WriteByte(0xFF1E, 0xBF); //NR33
-	WriteByte(0xFF20, 0xFF); //NR41
-	WriteByte(0xFF21, 0x00); //NR42
-	WriteByte(0xFF22, 0x00); //NR43
-	WriteByte(0xFF23, 0xBF); //NR30
-	WriteByte(0xFF24, 0x77); //NR50
-	WriteByte(0xFF25, 0xF3); //NR51
-	WriteByte(0xFF26, 0xF1); //NR52
-	WriteByte(0xFF40, 0x91); //LCDC
-	WriteByte(0xFF42, 0x00); //SCY
-	WriteByte(0xFF43, 0x00); //SCX
-	WriteByte(0xFF45, 0x00); //LYC
-	WriteByte(0xFF47, 0xFC); //BGP
-	WriteByte(0xFF48, 0xFF); //OBP0
-	WriteByte(0xFF49, 0xFF); //OBP1
-	WriteByte(0xFF4A, 0x00); //WY
-	WriteByte(0xFF4B, 0x00); //WX
-	WriteByte(0xFFFF, 0x00); //IE
+	WriteByte(Memory::joypad_register_, 0xCF);
+	WriteByte(Memory::timer_counter_register_, 0x00);
+	WriteByte(Memory::timer_modulo_register_, 0x00);
+	WriteByte(Memory::timer_control_register_, 0x00);
+	WriteByte(0xFF10, 0x80); // NR10
+	WriteByte(0xFF11, 0xBF); // NR11
+	WriteByte(0xFF12, 0xF3); // NR12
+	WriteByte(0xFF14, 0xBF); // NR14
+	WriteByte(0xFF16, 0x3F); // NR21
+	WriteByte(0xFF17, 0x00); // NR22
+	WriteByte(0xFF19, 0xBF); // NR24
+	WriteByte(0xFF1A, 0x7F); // NR30
+	WriteByte(0xFF1B, 0xFF); // NR31
+	WriteByte(0xFF1C, 0x9F); // NR32
+	WriteByte(0xFF1E, 0xBF); // NR33
+	WriteByte(0xFF20, 0xFF); // NR41
+	WriteByte(0xFF21, 0x00); // NR42
+	WriteByte(0xFF22, 0x00); // NR43
+	WriteByte(0xFF23, 0xBF); // NR30
+	WriteByte(0xFF24, 0x77); // NR50
+	WriteByte(0xFF25, 0xF3); // NR51
+	WriteByte(0xFF26, 0xF1); // NR52
+	WriteByte(Memory::lcd_control_register_, 0x91);
+	WriteByte(Memory::scroll_y_register_, 0x00);
+	WriteByte(Memory::scroll_x_register_, 0x00);
+	WriteByte(Memory::line_compare_register_, 0x00);
+	WriteByte(Memory::bg_palette_register_, 0xFC);
+	WriteByte(Memory::obj_palette_0_register_, 0xFF);
+	WriteByte(Memory::obj_palette_1_register_, 0xFF);
+	WriteByte(Memory::window_y_register_, 0x00);
+	WriteByte(Memory::window_x_minus_seven_register_, 0x00);
+	WriteByte(Memory::interrupt_enable_register_, 0x00);
 }
 
 uint8_t MMU::ReadByte(Memory::Address address) const
 {
-	if (is_oam_dma_active_) return 0xFF;
-
 	const auto region_and_relative_address = Memory::GetRegionAndRelativeAddress(address);
+
+	if (is_oam_dma_active_ && (region_and_relative_address.first == Memory::Region::OAM)) return 0xFF;
 
 	return memory_[region_and_relative_address.first][region_and_relative_address.second];
 }
 
 void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 {
-	if (is_oam_dma_active_) return; //TODO: write to OAM start still has an effect
-
 	const auto region_and_relative_address = Memory::GetRegionAndRelativeAddress(address);
+
+	if (is_oam_dma_active_ && (region_and_relative_address.first == Memory::Region::OAM)) return;
 
 	switch (region_and_relative_address.first)
 	{
