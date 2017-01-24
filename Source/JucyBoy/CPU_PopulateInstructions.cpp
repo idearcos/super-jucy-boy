@@ -10,7 +10,7 @@ void CPU::PopulateInstructions()
 		instructions_[ii] = [this, ii]() {
 			registers_.pc = previous_pc_;
 			std::stringstream error;
-			error << "Instruction not yet implemented: 0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << ii
+			error << "Instruction not implemented: 0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << ii
 				<< " [" << instruction_names_[ii] << "]" << std::endl
 				<< "(PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << registers_.pc << ")";
 			throw std::runtime_error(error.str());
@@ -1130,7 +1130,6 @@ void CPU::PopulateInstructions()
 
 	// RET
 	instructions_[0xC9] = [this]() {
-		NotifyMachineCycleLapse();
 		Return();
 	};
 
@@ -1234,7 +1233,6 @@ void CPU::PopulateInstructions()
 
 	// RETI
 	instructions_[0xD9] = [this]() {
-		NotifyMachineCycleLapse();
 		Return();
 		interrupt_master_enable_ = true;
 	};
