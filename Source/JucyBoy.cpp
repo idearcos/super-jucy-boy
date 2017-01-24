@@ -32,6 +32,7 @@ JucyBoy::JucyBoy()
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnIoMemoryWritten, Memory::Region::IO));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(timer_, &jb::Timer::OnIoMemoryWritten, Memory::Region::IO));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(joypad_, &Joypad::OnIoMemoryWritten, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener(oam_dma_, &OamDma::OnIoMemoryWritten, Memory::Region::IO));
 
 	gpu_.AddListener(game_screen_component_);
 

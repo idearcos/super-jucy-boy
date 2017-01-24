@@ -47,19 +47,18 @@ namespace Memory
 	static const std::vector<size_t> region_sizes_{ rom_bank_size_, rom_bank_size_, 0x2000, external_ram_bank_size_, 0x2000, 0x1E00, 0x00A0, 0x0060, 0x0080, 0x007F, 0x0001 };
 	size_t inline GetSizeOfRegion(Region region) { return region_sizes_[static_cast<size_t>(region)]; }
 
+#pragma region Region start addresses
 	static const Address isr_start_{ 0x0040 };
-
 	static const Address tile_sets_start_{ 0x8000 };
 	static const Address tile_map_0_start_{ 0x9800 };
 	static const Address tile_map_1_start_{ 0x9C00 };
-
 	static const Address external_ram_start_{ 0xA000 };
-
 	static const Address oam_start_{ 0xFE00 };
+#pragma endregion
 
 #pragma region IO addresses
 	static const Address io_region_start_{ 0xFF00 };
-	static const Address joypad_register_{ 0xFF00 };
+	static const Address joypad_register_{ 0xFF00 };				// JOYP
 
 	// Timer
 	static const Address divider_register_{ 0xFF04 };				// DIV
@@ -82,5 +81,7 @@ namespace Memory
 	static const Address obj_palette_1_register_{ 0xFF49 };			// OBP1
 	static const Address window_y_register_{ 0xFF4A };				// WY
 	static const Address window_x_minus_seven_register_{ 0xFF4B };	// WX
+
+	static const Address interrupt_enable_register_{ 0xFFFF };		// IE
 #pragma endregion
 }
