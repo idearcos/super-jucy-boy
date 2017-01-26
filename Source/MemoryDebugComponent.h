@@ -6,7 +6,7 @@
 
 class MMU;
 
-class MemoryMapComponent : public Component, public ListBoxModel
+class MemoryMapComponent final : public Component, public ListBoxModel
 {
 public:
 	MemoryMapComponent(MMU &mmu);
@@ -34,7 +34,7 @@ private:
 	MMU* mmu_{ nullptr };
 };
 
-class MemoryWatchpointsComponent : public Component, public ListBoxModel, public TextEditor::Listener
+class MemoryWatchpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener
 {
 public:
 	MemoryWatchpointsComponent(MMU &mmu);
@@ -46,6 +46,7 @@ public:
 	// ListBoxModel overrides
 	int getNumRows() override;
 	void paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected) override;
+	void deleteKeyPressed(int lastRowSelected) override;
 
 	// TextEditor::Listener overrides
 	void textEditorReturnKeyPressed(TextEditor &) override;
@@ -63,7 +64,7 @@ private:
 	MMU* mmu_{ nullptr };
 };
 
-class MemoryDebugComponent : public Component
+class MemoryDebugComponent final : public Component
 {
 public:
 	MemoryDebugComponent(MMU &mmu);

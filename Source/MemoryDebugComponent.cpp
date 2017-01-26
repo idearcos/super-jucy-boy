@@ -191,6 +191,15 @@ void MemoryWatchpointsComponent::textEditorReturnKeyPressed(TextEditor &)
 	watchpoint_list_box_.repaint();
 }
 
+void MemoryWatchpointsComponent::deleteKeyPressed(int lastRowSelected)
+{
+	mmu_->RemoveWatchpoint(watchpoints_[lastRowSelected]);
+
+	watchpoints_ = mmu_->GetWatchpointList();
+	watchpoint_list_box_.updateContent();
+	watchpoint_list_box_.repaint();
+}
+
 MemoryDebugComponent::MemoryDebugComponent(MMU &mmu) :
 	memory_map_component_{ mmu },
 	memory_watchpoints_component_{ mmu }
