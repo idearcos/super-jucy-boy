@@ -124,8 +124,7 @@ void CPU::StepOver()
 #pragma region Memory R/W
 uint8_t CPU::FetchByte()
 {
-	const auto value = ReadByte(registers_.pc);
-	registers_.pc += 1;
+	const auto value = ReadByte(registers_.pc++);
 	return value;
 }
 
@@ -138,10 +137,8 @@ uint16_t CPU::FetchWord()
 
 uint16_t CPU::PopWordFromStack()
 {
-	uint16_t value{ ReadByte(registers_.sp) };
-	registers_.sp += 1;
-	value += (ReadByte(registers_.sp) << 8);
-	registers_.sp += 1;
+	uint16_t value{ ReadByte(registers_.sp++) };
+	value += (ReadByte(registers_.sp++) << 8);
 	return value;
 }
 
@@ -154,14 +151,15 @@ void CPU::PushWordToStack(uint16_t value)
 
 uint8_t CPU::ReadByte(uint16_t address) const
 {
+	const auto value = mmu_->ReadByte(address);
 	NotifyMachineCycleLapse();
-	return mmu_->ReadByte(address);
+	return value;
 }
 
 void CPU::WriteByte(uint16_t address, uint8_t value) const
 {
-	NotifyMachineCycleLapse();
 	mmu_->WriteByte(address, value);
+	NotifyMachineCycleLapse();
 }
 #pragma endregion
 
