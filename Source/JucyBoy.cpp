@@ -9,20 +9,19 @@ JucyBoy::JucyBoy()
 	game_screen_component_.addMouseListener(this, true);
 	addAndMakeVisible(game_screen_component_);
 
-	cpu_status_component_.addMouseListener(this, true);
-	addAndMakeVisible(cpu_status_component_);
+	cpu_debug_component_.addMouseListener(this, true);
+	addAndMakeVisible(cpu_debug_component_);
 
 	memory_debug_component_.addMouseListener(this, true);
 	addAndMakeVisible(memory_debug_component_);
 
 	// Add listeners
-	listener_deregister_functions_.emplace_back(AddListener(cpu_status_component_, &CpuStatusComponent::OnStatusUpdateRequested));
+	listener_deregister_functions_.emplace_back(AddListener(cpu_debug_component_, &CpuDebugComponent::OnStatusUpdateRequested));
 	listener_deregister_functions_.emplace_back(AddListener(memory_debug_component_, &MemoryDebugComponent::OnStatusUpdateRequested));
 
 	cpu_.AddListener(timer_);
 	cpu_.AddListener(gpu_);
 	cpu_.AddListener(oam_dma_);
-	cpu_.AddListener(cpu_status_component_);
 	cpu_.AddListener(*this);
 
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(cpu_, &CPU::OnIoMemoryWritten, Memory::Region::IO));
@@ -45,7 +44,6 @@ JucyBoy::~JucyBoy()
 
 	// Remove listeners
 	cpu_.RemoveListener(gpu_);
-	cpu_.RemoveListener(cpu_status_component_);
 	cpu_.RemoveListener(*this);
 	gpu_.RemoveListener(game_screen_component_);
 
@@ -94,12 +92,12 @@ void JucyBoy::resized()
 	auto working_area = getLocalBounds();
 	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
 
-	auto cpu_status_area = working_area.removeFromLeft(cpu_status_width_);
-	usage_instructions_area_ = cpu_status_area.removeFromTop(getHeight() / 10);
-	cpu_status_component_.setBounds(cpu_status_area);
+	auto cpu_debug_area = working_area.removeFromLeft(cpu_status_width_);
+	usage_instructions_area_ = cpu_debug_area.removeFromTop(getHeight() / 10);
+	cpu_debug_component_.setBounds(cpu_debug_area);
 
-	auto memory_map_area = working_area.removeFromLeft(memory_map_width_);
-	memory_debug_component_.setBounds(memory_map_area);
+	auto memory_debug_area = working_area.removeFromLeft(memory_map_width_);
+	memory_debug_component_.setBounds(memory_debug_area);
 }
 
 void JucyBoy::mouseDown( const MouseEvent &event)

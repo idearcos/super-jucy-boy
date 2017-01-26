@@ -10,7 +10,7 @@
 #include "JucyBoy/OamDma.h"
 #include "JucyBoy/Joypad.h"
 #include "GameScreenComponent.h"
-#include "CpuStatusComponent.h"
+#include "CpuDebugComponent.h"
 #include "MemoryDebugComponent.h"
 
 class JucyBoy final : public Component, public CPU::Listener, public AsyncUpdater
@@ -63,7 +63,7 @@ private:
 
 	GameScreenComponent game_screen_component_;
 	Rectangle<int> usage_instructions_area_;
-	CpuStatusComponent cpu_status_component_{ cpu_ };
+	CpuDebugComponent cpu_debug_component_{ cpu_ };
 	MemoryDebugComponent memory_debug_component_{ mmu_ };
 
 	using Listener = std::function<void(bool)>;

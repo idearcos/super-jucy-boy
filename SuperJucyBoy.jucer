@@ -31,10 +31,10 @@
         <FILE id="goh0Iq" name="Timer.cpp" compile="1" resource="0" file="Source/JucyBoy/Timer.cpp"/>
         <FILE id="FS65Rs" name="Timer.h" compile="0" resource="0" file="Source/JucyBoy/Timer.h"/>
       </GROUP>
-      <FILE id="l7KWIo" name="CpuStatusComponent.cpp" compile="1" resource="0"
-            file="Source/CpuStatusComponent.cpp"/>
-      <FILE id="a26fGe" name="CpuStatusComponent.h" compile="0" resource="0"
-            file="Source/CpuStatusComponent.h"/>
+      <FILE id="l7KWIo" name="CpuDebugComponent.cpp" compile="1" resource="0"
+            file="Source/CpuDebugComponent.cpp"/>
+      <FILE id="a26fGe" name="CpuDebugComponent.h" compile="0" resource="0"
+            file="Source/CpuDebugComponent.h"/>
       <FILE id="ssoaqj" name="GameScreenComponent.cpp" compile="1" resource="0"
             file="Source/GameScreenComponent.cpp"/>
       <FILE id="LO3og2" name="GameScreenComponent.h" compile="0" resource="0"
