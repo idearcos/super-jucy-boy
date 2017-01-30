@@ -10,7 +10,7 @@
 #include "JucyBoy/OamDma.h"
 #include "JucyBoy/Joypad.h"
 #include "GameScreenComponent.h"
-#include "CpuDebugComponent.h"
+#include "CpuDebugComponents/CpuDebugComponent.h"
 #include "MemoryDebugComponent.h"
 
 class JucyBoy final : public Component, public CPU::Listener, public AsyncUpdater

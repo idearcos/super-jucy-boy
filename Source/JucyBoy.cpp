@@ -93,7 +93,7 @@ void JucyBoy::resized()
 	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
 
 	auto cpu_debug_area = working_area.removeFromLeft(cpu_status_width_);
-	usage_instructions_area_ = cpu_debug_area.removeFromTop(getHeight() / 10);
+	usage_instructions_area_ = cpu_debug_area.removeFromTop(40);
 	cpu_debug_component_.setBounds(cpu_debug_area);
 
 	auto memory_debug_area = working_area.removeFromLeft(memory_map_width_);

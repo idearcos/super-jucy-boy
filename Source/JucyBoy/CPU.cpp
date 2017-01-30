@@ -5,7 +5,6 @@
 CPU::CPU(MMU &mmu) :
 	mmu_{ &mmu }
 {
-	PopulateInstructionNames();
 	PopulateCbInstructionNames();
 	PopulateInstructions();
 	PopulateCbInstructions();
@@ -81,7 +80,6 @@ void CPU::RunningLoopFunction()
 				break;
 			case State::Halted:
 				// NOP instructions are executed until Halted state ends
-				ExecuteInstruction(0x00);
 				NotifyMachineCycleLapse();
 				break;
 			case State::Stopped:
@@ -91,7 +89,7 @@ void CPU::RunningLoopFunction()
 
 			CheckInterrupts();
 
-			if (IsBreakpointHit() || IsWatchpointHit(mmu_->ReadByte(registers_.pc)))
+			if (IsBreakpointHit() || IsInstructionBreakpointHit() || IsWatchpointHit(mmu_->ReadByte(registers_.pc)))
 			{
 				NotifyRunningLoopInterruption();
 				break;
@@ -124,8 +122,7 @@ void CPU::StepOver()
 #pragma region Memory R/W
 uint8_t CPU::FetchByte()
 {
-	const auto value = ReadByte(registers_.pc++);
-	return value;
+	return ReadByte(registers_.pc++);
 }
 
 uint16_t CPU::FetchWord()
@@ -448,11 +445,36 @@ void CPU::RemoveBreakpoint(Memory::Address address)
 	NotifyBreakpointsChange();
 }
 
+void CPU::AddInstructionBreakpoint(OpCode opcode)
+{
+	instruction_breakpoints_.insert(opcode);
+	NotifyInstructionBreakpointsChange();
+}
+
+void CPU::RemoveInstructionBreakpoint(OpCode opcode)
+{
+	instruction_breakpoints_.erase(opcode);
+	NotifyInstructionBreakpointsChange();
+}
+
 bool CPU::IsBreakpointHit() const
 {
 	for (const auto breakpoint : breakpoints_)
 	{
 		if (breakpoint == registers_.pc)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool CPU::IsInstructionBreakpointHit() const
+{
+	for (const auto instruction_breakpoint : instruction_breakpoints_)
+	{
+		if (instruction_breakpoint == mmu_->ReadByte(registers_.pc))
 		{
 			return true;
 		}
@@ -549,6 +571,14 @@ void CPU::NotifyBreakpointsChange() const
 	for (auto& listener : listeners_)
 	{
 		listener->OnBreakpointsChanged(breakpoints_);
+	}
+}
+
+void CPU::NotifyInstructionBreakpointsChange() const
+{
+	for (auto& listener : listeners_)
+	{
+		listener->OnInstructionBreakpointsChanged(instruction_breakpoints_);
 	}
 }
 

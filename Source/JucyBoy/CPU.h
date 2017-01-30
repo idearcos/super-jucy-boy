@@ -17,6 +17,7 @@ public:
 	using OpCode = uint8_t;
 	using Instruction = std::function<void()>;
 	using BreakpointList = std::set<uint16_t>;
+	using InstructionBreakpointList = std::set<OpCode>;
 
 	struct Registers
 	{
@@ -61,6 +62,7 @@ public:
 		virtual void OnRunningLoopInterrupted() {}
 		virtual void OnMachineCycleLapse() {}
 		virtual void OnBreakpointsChanged(const BreakpointList &/*breakpoint_list*/) {}
+		virtual void OnInstructionBreakpointsChanged(const InstructionBreakpointList &/*instruction_breakpoint_list*/) {}
 	};
 
 public:
@@ -83,6 +85,8 @@ public:
 	// Breakpoints
 	void AddBreakpoint(Memory::Address address);
 	void RemoveBreakpoint(Memory::Address address);
+	void AddInstructionBreakpoint(OpCode opcode);
+	void RemoveInstructionBreakpoint(OpCode opcode);
 
 	// Status retrieval
 	Registers GetRegistersState() const { return registers_; }
@@ -95,7 +99,6 @@ public:
 private:
 	// Initialization of instructions_ array
 	void PopulateInstructions();
-	void PopulateInstructionNames();
 	void PopulateCbInstructions();
 	void PopulateCbInstructionNames();
 
@@ -104,6 +107,7 @@ private:
 	inline void ExecuteInstruction(OpCode opcode) { instructions_[opcode](); }
 	void RunningLoopFunction();
 	bool IsBreakpointHit() const;
+	bool IsInstructionBreakpointHit() const;
 	bool IsWatchpointHit(OpCode next_opcode) const;
 
 	// Memory R/W
@@ -160,6 +164,7 @@ private:
 	void NotifyRunningLoopInterruption() const;
 	void NotifyMachineCycleLapse() const;
 	void NotifyBreakpointsChange() const;
+	void NotifyInstructionBreakpointsChange() const;
 
 private:
 	Registers registers_;
@@ -168,7 +173,6 @@ private:
 	State current_state_{ State::Running };
 
 	std::array<Instruction, 256> instructions_;
-	std::array<std::string, 256> instruction_names_;
 	std::array<Instruction, 256> cb_instructions_;
 	std::array<std::string, 256> cb_instruction_names_;
 
@@ -181,6 +185,7 @@ private:
 	std::array<bool, 5> requested_interrupts_{ true,false,false,false,false };
 
 	BreakpointList breakpoints_;
+	InstructionBreakpointList instruction_breakpoints_;
 
 	MMU *mmu_{ nullptr };
 	std::set<Listener*> listeners_;

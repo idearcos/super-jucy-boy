@@ -5,6 +5,25 @@
               jucerVersion="4.3.0" defines="JUCE_OPENGL_ALLOW_NON_POWER_OF_TWO_TEXTURES&#10;JUCE_OPENGL3">
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
+      <GROUP id="{174E98B6-764B-A504-3F51-E1BAFF97243C}" name="MemoryDebugComponents"/>
+      <GROUP id="{7B44982A-A8DE-A4A1-AEFE-1F851375A75C}" name="CpuDebugComponents">
+        <FILE id="l7KWIo" name="CpuDebugComponent.cpp" compile="1" resource="0"
+              file="Source/CpuDebugComponents/CpuDebugComponent.cpp"/>
+        <FILE id="a26fGe" name="CpuDebugComponent.h" compile="0" resource="0"
+              file="Source/CpuDebugComponents/CpuDebugComponent.h"/>
+        <FILE id="RRejek" name="CpuBreakpointsComponent.cpp" compile="1" resource="0"
+              file="Source/CpuDebugComponents/CpuBreakpointsComponent.cpp"/>
+        <FILE id="u2Cypc" name="CpuBreakpointsComponent.h" compile="0" resource="0"
+              file="Source/CpuDebugComponents/CpuBreakpointsComponent.h"/>
+        <FILE id="SczVYQ" name="CpuInstructionBreakpointsComponent.cpp" compile="1"
+              resource="0" file="Source/CpuDebugComponents/CpuInstructionBreakpointsComponent.cpp"/>
+        <FILE id="w7AQPy" name="CpuInstructionBreakpointsComponent.h" compile="0"
+              resource="0" file="Source/CpuDebugComponents/CpuInstructionBreakpointsComponent.h"/>
+        <FILE id="WGtcuq" name="CpuRegistersComponent.cpp" compile="1" resource="0"
+              file="Source/CpuDebugComponents/CpuRegistersComponent.cpp"/>
+        <FILE id="PessTL" name="CpuRegistersComponent.h" compile="0" resource="0"
+              file="Source/CpuDebugComponents/CpuRegistersComponent.h"/>
+      </GROUP>
       <GROUP id="{F134FA3D-DA88-4DFD-F9D2-E3EF84037505}" name="JucyBoy">
         <FILE id="kZEcqM" name="CPU.cpp" compile="1" resource="0" file="Source/JucyBoy/CPU.cpp"/>
         <FILE id="YypB1H" name="CPU.h" compile="0" resource="0" file="Source/JucyBoy/CPU.h"/>
@@ -16,6 +35,10 @@
         <FILE id="P09DZp" name="GPU.h" compile="0" resource="0" file="Source/JucyBoy/GPU.h"/>
         <FILE id="CzTdhN" name="IMbc.cpp" compile="1" resource="0" file="Source/JucyBoy/IMbc.cpp"/>
         <FILE id="KgXXuQ" name="IMbc.h" compile="0" resource="0" file="Source/JucyBoy/IMbc.h"/>
+        <FILE id="z6EfSH" name="InstructionMnemonics.cpp" compile="1" resource="0"
+              file="Source/JucyBoy/InstructionMnemonics.cpp"/>
+        <FILE id="ISXFZa" name="InstructionMnemonics.h" compile="0" resource="0"
+              file="Source/JucyBoy/InstructionMnemonics.h"/>
         <FILE id="nlYzBQ" name="Joypad.cpp" compile="1" resource="0" file="Source/JucyBoy/Joypad.cpp"/>
         <FILE id="zo27Nc" name="Joypad.h" compile="0" resource="0" file="Source/JucyBoy/Joypad.h"/>
         <FILE id="CunjaQ" name="Mbc1.cpp" compile="1" resource="0" file="Source/JucyBoy/Mbc1.cpp"/>
@@ -31,10 +54,6 @@
         <FILE id="goh0Iq" name="Timer.cpp" compile="1" resource="0" file="Source/JucyBoy/Timer.cpp"/>
         <FILE id="FS65Rs" name="Timer.h" compile="0" resource="0" file="Source/JucyBoy/Timer.h"/>
       </GROUP>
-      <FILE id="l7KWIo" name="CpuDebugComponent.cpp" compile="1" resource="0"
-            file="Source/CpuDebugComponent.cpp"/>
-      <FILE id="a26fGe" name="CpuDebugComponent.h" compile="0" resource="0"
-            file="Source/CpuDebugComponent.h"/>
       <FILE id="ssoaqj" name="GameScreenComponent.cpp" compile="1" resource="0"
             file="Source/GameScreenComponent.cpp"/>
       <FILE id="LO3og2" name="GameScreenComponent.h" compile="0" resource="0"
