@@ -492,8 +492,8 @@ bool CPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0x02:
 		return mmu_->IsWriteWatchpointHit(registers_.bc);
 	case 0x08:
-		address = ReadByte(registers_.pc + 1);
-		address += (ReadByte(registers_.pc + 2) << 8);
+		address = mmu_->ReadByte(registers_.pc + 1);
+		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
 		return mmu_->IsWriteWatchpointHit(address);
 	case 0x0A:
 		return mmu_->IsReadWatchpointHit(registers_.bc);
@@ -548,16 +548,16 @@ bool CPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0xE2:
 		return mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
 	case 0xEA:
-		address = ReadByte(registers_.pc + 1);
-		address += (ReadByte(registers_.pc + 2) << 8);
+		address = mmu_->ReadByte(registers_.pc + 1);
+		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
 		return mmu_->IsWriteWatchpointHit(address);
 	case 0xF0:
 		return mmu_->IsReadWatchpointHit(Memory::io_region_start_ + mmu_->ReadByte(registers_.pc + 1));
 	case 0xF2:
 		return mmu_->IsReadWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
 	case 0xFA:
-		address = ReadByte(registers_.pc + 1);
-		address += (ReadByte(registers_.pc + 2) << 8);
+		address = mmu_->ReadByte(registers_.pc + 1);
+		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
 		return mmu_->IsReadWatchpointHit(address);
 	default:
 		return false;
