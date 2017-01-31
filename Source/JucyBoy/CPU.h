@@ -5,6 +5,7 @@
 #include <atomic>
 #include <future>
 #include <set>
+#include <bitset>
 #include "Registers.h"
 #include "Memory.h"
 
@@ -52,6 +53,7 @@ public:
 	{
 		Running,
 		Halted,
+		HaltBug,
 		Stopped
 	};
 
@@ -181,8 +183,8 @@ private:
 
 	bool interrupt_master_enable_{ true };
 	bool ime_requested_{ false }; // Used to delay IME one instruction, since EI enables the interrupts for the instruction AFTER itself
-	std::array<bool, 5> enabled_interrupts_{ false,false,false,false,false };
-	std::array<bool, 5> requested_interrupts_{ true,false,false,false,false };
+	std::bitset<5> enabled_interrupts_{ 0 };
+	std::bitset<5> requested_interrupts_{ 0 };
 
 	BreakpointList breakpoints_;
 	InstructionBreakpointList instruction_breakpoints_;

@@ -82,6 +82,12 @@ void CPU::RunningLoopFunction()
 				// NOP instructions are executed until Halted state ends
 				NotifyMachineCycleLapse();
 				break;
+			case State::HaltBug:
+				// PC increment is skipped once when fetching the next opcode (no extra cycles are lapsed)
+				current_state_ = State::Running;
+				previous_pc_ = registers_.pc;
+				ExecuteInstruction(mmu_->ReadByte(registers_.pc));
+				break;
 			case State::Stopped:
 				//TODO check for joypad input, since that is the only thing that can finish Stopped state
 				continue;
@@ -217,6 +223,12 @@ void CPU::CheckInterrupts()
 		break;
 	case State::Stopped:
 		break;
+	case State::HaltBug:
+		// HaltBug is only reached when IME is disabled, therefore interrupt servicing is not needed
+		// (The state will change to Running in the next CPU step)
+		break;
+	default:
+		throw std::runtime_error{ "Invalid CPU state in interrupt check: " + std::to_string(static_cast<int>(current_state_)) };
 	}
 
 	// EI enables the interrupts for the instruction AFTER itself
@@ -409,10 +421,7 @@ void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 	switch (address)
 	{
 	case Memory::interrupt_flags_register_:
-		for (int i = 0; i < requested_interrupts_.size(); ++i)
-		{
-			requested_interrupts_[i] = (value & (1 << i)) != 0;
-		}
+		requested_interrupts_ = value;
 		mmu_->WriteByte(Memory::interrupt_flags_register_, 0xE0 | value, false);
 		break;
 	default:
@@ -422,10 +431,7 @@ void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 
 void CPU::OnInterruptsRegisterWritten(Memory::Address, uint8_t value)
 {
-	for (int i = 0; i < enabled_interrupts_.size(); ++i)
-	{
-		enabled_interrupts_[i] = (value & (1 << i)) != 0;
-	}
+	enabled_interrupts_ = value;
 	mmu_->WriteByte(Memory::interrupt_enable_register_, 0xE0 | value, false);
 }
 #pragma endregion

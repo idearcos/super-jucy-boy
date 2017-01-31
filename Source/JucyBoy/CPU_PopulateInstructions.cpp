@@ -690,7 +690,14 @@ void CPU::PopulateInstructions()
 
 	// HALT
 	instructions_[0x76] = [this]() {
-		current_state_ = State::Halted;
+		if (interrupt_master_enable_ || ((enabled_interrupts_.to_ulong() & requested_interrupts_.to_ulong()) == 0))
+		{
+			current_state_ = State::Halted;
+		}
+		else
+		{
+			current_state_ = State::HaltBug;
+		}
 	};
 
 	// LD (HL), A
