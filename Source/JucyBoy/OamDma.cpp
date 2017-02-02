@@ -47,7 +47,7 @@ void OamDma::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
 	switch (address)
 	{
-	case Memory::dma_transfer_source_register_: // DMA
+	case Memory::DMA:
 		if (value > 0xF1) throw std::invalid_argument("Invalid DMA transfer source: " + std::to_string(int{ value }));
 
 		oam_dma_state_ = State::Startup;

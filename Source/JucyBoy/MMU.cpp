@@ -29,10 +29,10 @@ void MMU::Reset()
 	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::HRAM), 0);
 	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::Interrupts), 0);
 
-	WriteByte(Memory::joypad_register_, 0xCF);
-	WriteByte(Memory::timer_counter_register_, 0x00);
-	WriteByte(Memory::timer_modulo_register_, 0x00);
-	WriteByte(Memory::timer_control_register_, 0x00);
+	WriteByte(Memory::JOYP, 0xCF);
+	WriteByte(Memory::TIMA, 0x00);
+	WriteByte(Memory::TMA, 0x00);
+	WriteByte(Memory::TAC, 0x00);
 	WriteByte(0xFF10, 0x80); // NR10
 	WriteByte(0xFF11, 0xBF); // NR11
 	WriteByte(0xFF12, 0xF3); // NR12
@@ -51,16 +51,16 @@ void MMU::Reset()
 	WriteByte(0xFF24, 0x77); // NR50
 	WriteByte(0xFF25, 0xF3); // NR51
 	WriteByte(0xFF26, 0xF1); // NR52
-	WriteByte(Memory::lcd_control_register_, 0x91);
-	WriteByte(Memory::scroll_y_register_, 0x00);
-	WriteByte(Memory::scroll_x_register_, 0x00);
-	WriteByte(Memory::line_compare_register_, 0x00);
-	WriteByte(Memory::bg_palette_register_, 0xFC);
-	WriteByte(Memory::obj_palette_0_register_, 0xFF);
-	WriteByte(Memory::obj_palette_1_register_, 0xFF);
-	WriteByte(Memory::window_y_register_, 0x00);
-	WriteByte(Memory::window_x_minus_seven_register_, 0x00);
-	WriteByte(Memory::interrupt_enable_register_, 0x00);
+	WriteByte(Memory::LCDC, 0x91);
+	WriteByte(Memory::SCY, 0x00);
+	WriteByte(Memory::SCX, 0x00);
+	WriteByte(Memory::LYC, 0x00);
+	WriteByte(Memory::BGP, 0xFC);
+	WriteByte(Memory::OBP0, 0xFF);
+	WriteByte(Memory::OBP1, 0xFF);
+	WriteByte(Memory::WY, 0x00);
+	WriteByte(Memory::WX, 0x00);
+	WriteByte(Memory::IE, 0x00);
 }
 
 uint8_t MMU::ReadByte(Memory::Address address) const
@@ -69,7 +69,7 @@ uint8_t MMU::ReadByte(Memory::Address address) const
 
 	if (is_oam_dma_active_ && (region_and_relative_address.first == Memory::Region::OAM)) return 0xFF;
 
-	return memory_[region_and_relative_address.first][region_and_relative_address.second];
+	return memory_[static_cast<size_t>(region_and_relative_address.first)][region_and_relative_address.second];
 }
 
 void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
@@ -89,7 +89,7 @@ void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 		break;
 	case Memory::Region::ERAM:
 		if (!external_ram_enabled_) return;
-		if ((address - Memory::external_ram_start_) > memory_[Memory::Region::ERAM].size()) return;
+		if ((address - Memory::external_ram_start_) > memory_[static_cast<size_t>(Memory::Region::ERAM)].size()) return;
 		break;
 	case Memory::Region::OAM:
 		//TODO: ignore writes during OAM and VRAM GPU states
@@ -98,7 +98,7 @@ void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 		break;
 	}
 
-	memory_[region_and_relative_address.first][region_and_relative_address.second] = value;
+	memory_[static_cast<size_t>(region_and_relative_address.first)][region_and_relative_address.second] = value;
 
 	if (notify) NotifyMemoryWrite(region_and_relative_address.first, address, value);
 }
@@ -118,10 +118,10 @@ void MMU::LoadRom(const std::string &rom_file_path)
 	rom_read_stream.seekg(0, std::ios::beg);
 
 	//TODO: check byte 0x147 for number of ROM banks
-	for (auto i = 0; i < file_size / Memory::GetSizeOfRegion(Memory::ROM_Bank0); ++i)
+	for (auto i = 0; i < file_size / Memory::GetSizeOfRegion(Memory::Region::ROM_Bank0); ++i)
 	{
 		rom_banks.emplace_back();
-		rom_banks.back().resize(Memory::GetSizeOfRegion(Memory::ROM_Bank0));
+		rom_banks.back().resize(Memory::GetSizeOfRegion(Memory::Region::ROM_Bank0));
 		rom_read_stream.read(reinterpret_cast<char*>(rom_banks.back().data()), rom_banks.back().size());
 	}
 
@@ -129,12 +129,12 @@ void MMU::LoadRom(const std::string &rom_file_path)
 	rom_loaded_ = true;
 
 	// Map ROM banks 0 and 1
-	memory_[Memory::ROM_Bank0].swap(rom_banks[0]);
-	memory_[Memory::ROM_OtherBanks].swap(rom_banks[1]);
+	memory_[static_cast<size_t>(Memory::Region::ROM_Bank0)].swap(rom_banks[0]);
+	memory_[static_cast<size_t>(Memory::Region::ROM_OtherBanks)].swap(rom_banks[1]);
 	loaded_rom_bank_ = 1;
 
 	// Create the appropriate MBC
-	switch (memory_[Memory::ROM_Bank0][0x147])
+	switch (memory_[static_cast<size_t>(Memory::Region::ROM_Bank0)][0x147])
 	{
 	case 0:
 		// No MBC
@@ -145,14 +145,14 @@ void MMU::LoadRom(const std::string &rom_file_path)
 		mbc_ = std::make_unique<Mbc1>(*this);
 		break;
 	default:
-		throw std::logic_error{ "Unsupported MBC:" + std::to_string(static_cast<int>(memory_[Memory::ROM_Bank0][0x147])) };
+		throw std::logic_error{ "Unsupported MBC:" + std::to_string(static_cast<int>(memory_[static_cast<size_t>(Memory::Region::ROM_Bank0)][0x147])) };
 	}
 
 	// Create the necessary number of external RAM banks
-	if (mbc_) external_ram_banks = mbc_->GetExternalRamBanks(memory_[Memory::ROM_Bank0][0x149]);
+	if (mbc_) external_ram_banks = mbc_->GetExternalRamBanks(memory_[static_cast<size_t>(Memory::Region::ROM_Bank0)][0x149]);
 
 	// Map the first external RAM bank
-	if (!external_ram_banks.empty()) memory_[Memory::ERAM].swap(external_ram_banks[0]);
+	if (!external_ram_banks.empty()) memory_[static_cast<size_t>(Memory::Region::ERAM)].swap(external_ram_banks[0]);
 }
 
 void MMU::LoadRomBank(size_t rom_bank_number)
@@ -163,10 +163,10 @@ void MMU::LoadRomBank(size_t rom_bank_number)
 	if (rom_bank_number == loaded_rom_bank_) return;
 
 	// Swap the currently loaded ROM bank back into its original slot
-	memory_[Memory::ROM_OtherBanks].swap(rom_banks[loaded_rom_bank_]);
+	memory_[static_cast<size_t>(Memory::Region::ROM_OtherBanks)].swap(rom_banks[loaded_rom_bank_]);
 
 	// Then load the requested ROM bank into the main memory slot
-	memory_[Memory::ROM_OtherBanks].swap(rom_banks[rom_bank_number]);
+	memory_[static_cast<size_t>(Memory::Region::ROM_OtherBanks)].swap(rom_banks[rom_bank_number]);
 
 	loaded_rom_bank_ = rom_bank_number;
 }
@@ -178,10 +178,10 @@ void MMU::LoadRamBank(size_t external_ram_bank_number)
 	if (external_ram_bank_number == loaded_external_ram_bank_) return;
 
 	// Swap the currently loaded external RAM bank back into its original slot
-	memory_[Memory::ERAM].swap(external_ram_banks[loaded_external_ram_bank_]);
+	memory_[static_cast<size_t>(Memory::Region::ERAM)].swap(external_ram_banks[loaded_external_ram_bank_]);
 
 	// Then load the requested external RAM bank into the main memory slot
-	memory_[Memory::ERAM].swap(external_ram_banks[external_ram_bank_number]);
+	memory_[static_cast<size_t>(Memory::Region::ERAM)].swap(external_ram_banks[external_ram_bank_number]);
 
 	loaded_external_ram_bank_ = external_ram_bank_number;
 }

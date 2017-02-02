@@ -200,19 +200,19 @@ void CPU::CheckInterrupts()
 				switch (interrupt)
 				{
 				case Interrupt::VBlank:
-					mmu_->ClearBit<Interrupt::VBlank>(Memory::interrupt_flags_register_, false);
+					mmu_->ClearBit<Interrupt::VBlank>(Memory::IF, false);
 					break;
 				case Interrupt::LcdStat:
-					mmu_->ClearBit<Interrupt::LcdStat>(Memory::interrupt_flags_register_, false);
+					mmu_->ClearBit<Interrupt::LcdStat>(Memory::IF, false);
 					break;
 				case Interrupt::Timer:
-					mmu_->ClearBit<Interrupt::Timer>(Memory::interrupt_flags_register_, false);
+					mmu_->ClearBit<Interrupt::Timer>(Memory::IF, false);
 					break;
 				case Interrupt::Serial:
-					mmu_->ClearBit<Interrupt::Serial>(Memory::interrupt_flags_register_, false);
+					mmu_->ClearBit<Interrupt::Serial>(Memory::IF, false);
 					break;
 				case Interrupt::Joypad:
-					mmu_->ClearBit<Interrupt::Joypad>(Memory::interrupt_flags_register_, false);
+					mmu_->ClearBit<Interrupt::Joypad>(Memory::IF, false);
 					break;
 				}
 
@@ -420,9 +420,9 @@ void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
 	switch (address)
 	{
-	case Memory::interrupt_flags_register_:
+	case Memory::IF:
 		requested_interrupts_ = value;
-		mmu_->WriteByte(Memory::interrupt_flags_register_, 0xE0 | value, false);
+		mmu_->WriteByte(Memory::IF, 0xE0 | value, false);
 		break;
 	default:
 		break;
@@ -432,7 +432,7 @@ void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 void CPU::OnInterruptsRegisterWritten(Memory::Address, uint8_t value)
 {
 	enabled_interrupts_ = value;
-	mmu_->WriteByte(Memory::interrupt_enable_register_, 0xE0 | value, false);
+	mmu_->WriteByte(Memory::IE, 0xE0 | value, false);
 }
 #pragma endregion
 

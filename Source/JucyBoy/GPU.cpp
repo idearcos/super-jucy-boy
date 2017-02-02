@@ -52,7 +52,7 @@ void GPU::OnMachineCycleLapse()
 				NotifyNewFrame();
 
 				// Request VBlank interrupt
-				mmu_->SetBit<0>(Memory::interrupt_flags_register_);
+				mmu_->SetBit<0>(Memory::IF);
 			}
 			else
 			{
@@ -202,7 +202,7 @@ uint8_t GPU::SetLineNumber(uint8_t line_number)
 		current_line_ = 0;
 	}
 
-	mmu_->WriteByte(Memory::current_line_register_, current_line_, false);
+	mmu_->WriteByte(Memory::LY, current_line_, false);
 
 	UpdateLineComparison();
 
@@ -213,14 +213,14 @@ void GPU::UpdateLineComparison()
 {
 	if (current_line_ == line_compare_)
 	{
-		mmu_->SetBit<2>(Memory::lcd_status_register_, false);
+		mmu_->SetBit<2>(Memory::STAT, false);
 
 		// Request interrupt if enabled
-		if (line_coincidence_interrupt_enabled_) { mmu_->SetBit<1>(Memory::interrupt_flags_register_); }
+		if (line_coincidence_interrupt_enabled_) { mmu_->SetBit<1>(Memory::IF); }
 	}
 	else
 	{
-		mmu_->ClearBit<2>(Memory::lcd_status_register_, false);
+		mmu_->ClearBit<2>(Memory::STAT, false);
 	}
 }
 
@@ -288,13 +288,13 @@ void GPU::SetLcdState(State state)
 	switch (current_state_)
 	{
 	case State::HBLANK:
-		if (hblank_interrupt_enabled_) { mmu_->SetBit<1>(Memory::interrupt_flags_register_); }
+		if (hblank_interrupt_enabled_) { mmu_->SetBit<1>(Memory::IF); }
 		break;
 	case State::VBLANK:
-		if (vblank_interrupt_enabled_) { mmu_->SetBit<1>(Memory::interrupt_flags_register_); }
+		if (vblank_interrupt_enabled_) { mmu_->SetBit<1>(Memory::IF); }
 		break;
 	case State::OAM:
-		if (oam_interrupt_enabled_) { mmu_->SetBit<1>(Memory::interrupt_flags_register_); }
+		if (oam_interrupt_enabled_) { mmu_->SetBit<1>(Memory::IF); }
 		break;
 	default:
 		break;
@@ -358,19 +358,19 @@ void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
 	switch (address)
 	{
-	case Memory::lcd_control_register_: // LCDC
+	case Memory::LCDC:
 		SetLcdControl(value);
 		break;
-	case Memory::lcd_status_register_: // STAT
+	case Memory::STAT:
 		SetLcdStatus(value);
 		break;
-	case Memory::scroll_y_register_: // SCY
+	case Memory::SCY:
 		scroll_y_ = value;
 		break;
-	case Memory::scroll_x_register_: // SCX
+	case Memory::SCX:
 		scroll_x_ = value;
 		break;
-	case Memory::current_line_register_: // LY
+	case Memory::LY:
 		// Writing into this register resets the line counter
 		SetLineNumber(0);
 
@@ -378,23 +378,23 @@ void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		cycles_lapsed_in_state_ = 0;
 		current_state_ = State::OAM;
 		break;
-	case Memory::line_compare_register_: // LYC
+	case Memory::LYC:
 		line_compare_ = value;
 		UpdateLineComparison();
 		break;
-	case Memory::bg_palette_register_: // BGP
+	case Memory::BGP:
 		SetPaletteData(bg_palette_, value);
 		break;
-	case Memory::obj_palette_0_register_: // OBP0
+	case Memory::OBP0:
 		SetPaletteData(obj_palettes_[0], value);
 		break;
-	case Memory::obj_palette_1_register_: // OBP1
+	case Memory::OBP1:
 		SetPaletteData(obj_palettes_[1], value);
 		break;
-	case Memory::window_y_register_: // WY
+	case Memory::WY:
 		window_y_ = value;
 		break;
-	case Memory::window_x_minus_seven_register_: // WX
+	case Memory::WX:
 		window_x_ = value - 7;
 		break;
 	default:

@@ -10,19 +10,19 @@ namespace Memory
 	using Address = uint16_t;
 	using Map = std::array<uint8_t, std::numeric_limits<Address>::max() + 1>;
 
-	enum Region
+	enum class Region
 	{
 		ROM_Bank0,		// 0x0000 - 0x3FFF
 		ROM_OtherBanks,	// 0x4000 - 0x7FFF
-		VRAM,		// 0x8000 - 0x9FFF
-		ERAM,		// 0xA000 - 0xBFFF
-		WRAM,		// 0xC000 - 0xDFFF
-		WRAM_Echo,	// 0xE000 - 0xFDFF
-		OAM,		// 0xFE00 - 0xFE9F
-		Unused,		// 0xFEA0 - 0xFEFF
-		IO,			// 0xFF00 - 0xFF7F
-		HRAM,		// 0xFF80 - 0xFFFE
-		Interrupts	// 0xFFFF - 0xFFFF
+		VRAM,			// 0x8000 - 0x9FFF
+		ERAM,			// 0xA000 - 0xBFFF
+		WRAM,			// 0xC000 - 0xDFFF
+		WRAM_Echo,		// 0xE000 - 0xFDFF
+		OAM,			// 0xFE00 - 0xFE9F
+		Unused,			// 0xFEA0 - 0xFEFF
+		IO,				// 0xFF00 - 0xFF7F
+		HRAM,			// 0xFF80 - 0xFFFE
+		Interrupts		// 0xFFFF - 0xFFFF
 	};
 
 	struct Watchpoint
@@ -40,48 +40,46 @@ namespace Memory
 	};
 
 	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address);
+	size_t GetSizeOfRegion(Region region);
 
-	static const size_t rom_bank_size_{ 0x4000 };
-	static const size_t external_ram_bank_size_{ 0x2000 };
-
-	static const std::vector<size_t> region_sizes_{ rom_bank_size_, rom_bank_size_, 0x2000, external_ram_bank_size_, 0x2000, 0x1E00, 0x00A0, 0x0060, 0x0080, 0x007F, 0x0001 };
-	size_t inline GetSizeOfRegion(Region region) { return region_sizes_[static_cast<size_t>(region)]; }
+	static constexpr size_t rom_bank_size_			{ 0x4000 };
+	static constexpr size_t external_ram_bank_size_	{ 0x2000 };
 
 #pragma region Region start addresses
-	static const Address isr_start_{ 0x0040 };
-	static const Address tile_sets_start_{ 0x8000 };
-	static const Address tile_map_0_start_{ 0x9800 };
-	static const Address tile_map_1_start_{ 0x9C00 };
-	static const Address external_ram_start_{ 0xA000 };
-	static const Address oam_start_{ 0xFE00 };
+	static constexpr Address isr_start_			{ 0x0040 };
+	static constexpr Address tile_sets_start_	{ 0x8000 };
+	static constexpr Address tile_map_0_start_	{ 0x9800 };
+	static constexpr Address tile_map_1_start_	{ 0x9C00 };
+	static constexpr Address external_ram_start_{ 0xA000 };
+	static constexpr Address oam_start_			{ 0xFE00 };
+	static constexpr Address io_region_start_	{ 0xFF00 };
 #pragma endregion
 
 #pragma region IO addresses
-	static const Address io_region_start_{ 0xFF00 };
-	static const Address joypad_register_{ 0xFF00 };				// JOYP
+	static constexpr Address JOYP	{ 0xFF00 };
 
 	// Timer
-	static const Address divider_register_{ 0xFF04 };				// DIV
-	static const Address timer_counter_register_{ 0xFF05 };			// TIMA
-	static const Address timer_modulo_register_{ 0xFF06 };			// TMA
-	static const Address timer_control_register_{ 0xFF07 };			// TAC
+	static constexpr Address DIV	{ 0xFF04 };
+	static constexpr Address TIMA	{ 0xFF05 };
+	static constexpr Address TMA	{ 0xFF06 };
+	static constexpr Address TAC	{ 0xFF07 };
 
-	static const Address interrupt_flags_register_{ 0xFF0F };		// IF
+	static constexpr Address IF		{ 0xFF0F };
 
 	// GPU
-	static const Address lcd_control_register_{ 0xFF40 };			// LCDC
-	static const Address lcd_status_register_{ 0xFF41 };			// STAT
-	static const Address scroll_y_register_{ 0xFF42 };				//SCY
-	static const Address scroll_x_register_{ 0xFF43 };				// SCX
-	static const Address current_line_register_{ 0xFF44 };			// LY
-	static const Address line_compare_register_{ 0xFF45 };			// LYC
-	static const Address dma_transfer_source_register_{ 0xFF46 };	// DMA
-	static const Address bg_palette_register_{ 0xFF47 };			// BGP
-	static const Address obj_palette_0_register_{ 0xFF48 };			// OBP0
-	static const Address obj_palette_1_register_{ 0xFF49 };			// OBP1
-	static const Address window_y_register_{ 0xFF4A };				// WY
-	static const Address window_x_minus_seven_register_{ 0xFF4B };	// WX
+	static constexpr Address LCDC	{ 0xFF40 };
+	static constexpr Address STAT	{ 0xFF41 };
+	static constexpr Address SCY	{ 0xFF42 };
+	static constexpr Address SCX	{ 0xFF43 };
+	static constexpr Address LY		{ 0xFF44 };
+	static constexpr Address LYC	{ 0xFF45 };
+	static constexpr Address DMA	{ 0xFF46 };
+	static constexpr Address BGP	{ 0xFF47 };
+	static constexpr Address OBP0	{ 0xFF48 };
+	static constexpr Address OBP1	{ 0xFF49 };
+	static constexpr Address WY		{ 0xFF4A };
+	static constexpr Address WX		{ 0xFF4B };
 
-	static const Address interrupt_enable_register_{ 0xFFFF };		// IE
+	static constexpr Address IE		{ 0xFFFF };
 #pragma endregion
 }

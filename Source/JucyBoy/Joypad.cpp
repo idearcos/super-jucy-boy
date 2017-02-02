@@ -9,7 +9,7 @@ Joypad::Joypad(MMU &mmu) :
 
 void Joypad::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
-	if (address != Memory::joypad_register_) return;
+	if (address != Memory::JOYP) return;
 	
 	const auto direction_keys_requested = (value & (1 << 4)) == 0;
 	const auto button_keys_requested = (value & (1 << 5)) == 0;
@@ -18,7 +18,7 @@ void Joypad::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 	if (direction_keys_requested) pressed_keys &= pressed_directions_.load();
 	if (button_keys_requested) pressed_keys &= pressed_buttons_.load();
 
-	mmu_->WriteByte(Memory::joypad_register_, pressed_keys, false);
+	mmu_->WriteByte(Memory::JOYP, pressed_keys, false);
 }
 
 void Joypad::UpdatePressedKeys(std::vector<Keys> pressed_keys)

@@ -26,7 +26,7 @@ private:
 	};
 	State oam_dma_state_{ State::Inactive };
 	Memory::Address oam_dma_source_{ 0x0000 };
-	size_t current_oam_dma_byte_index_{ 0 };
+	uint8_t current_oam_dma_byte_index_{ 0 };
 
 	MMU* mmu_;
 };

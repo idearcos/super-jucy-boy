@@ -20,8 +20,8 @@ void Timer::OnMachineCycleLapse()
 		if (timer_counter_ == 0)
 		{
 			timer_counter_ = timer_modulo_;
-			mmu_->WriteByte(Memory::timer_counter_register_, timer_counter_, false);
-			mmu_->SetBit<2>(Memory::interrupt_flags_register_);
+			mmu_->WriteByte(Memory::TIMA, timer_counter_, false);
+			mmu_->SetBit<2>(Memory::IF);
 			timer_overflow_state_ = TimerOverflowState::JustReloaded;
 		}
 		else
@@ -41,7 +41,7 @@ void Timer::OnMachineCycleLapse()
 
 	if ((internal_counter_ & (divider_period_ - 1)) == 0)
 	{
-		mmu_->WriteByte(Memory::divider_register_, (internal_counter_ >> 8), false);
+		mmu_->WriteByte(Memory::DIV, (internal_counter_ >> 8), false);
 	}
 
 	if (timer_enabled_ && ((internal_counter_ & (timer_period_ - 1)) == 0))
@@ -54,12 +54,12 @@ void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
 	switch (address)
 	{
-	case Memory::divider_register_:
+	case Memory::DIV:
 		{const auto previous_internal_counter = internal_counter_;
 
 		// Writing any value to this register resets it to 0x00
 		internal_counter_ = 0;
-		mmu_->WriteByte(Memory::divider_register_, 0, false);
+		mmu_->WriteByte(Memory::DIV, 0, false);
 
 		// Obscure timer behavior
 		if (timer_enabled_ && (previous_internal_counter & (timer_period_ >> 1)) != 0)
@@ -67,27 +67,27 @@ void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 			IncreaseTimer();
 		}}
 		break;
-	case Memory::timer_counter_register_:
+	case Memory::TIMA:
 		// Timer overflow obscure behavior: the cycle when TIMA is reloaded with TMA, writing to TIMA has no effect (TMA prevails)
 		if (timer_overflow_state_ == TimerOverflowState::JustReloaded)
 		{
-			mmu_->WriteByte(Memory::timer_counter_register_, timer_counter_, false);
+			mmu_->WriteByte(Memory::TIMA, timer_counter_, false);
 			break;
 		}
 
 		timer_counter_ = value;
 		break;
-	case Memory::timer_modulo_register_:
+	case Memory::TMA:
 		timer_modulo_ = value;
 
 		// Timer overflow obscure behavior: the cycle when TIMA is reloaded with TMA, writing to TMA has effect and the new TMA will be loaded into TIMA
 		if (timer_overflow_state_ == TimerOverflowState::JustReloaded)
 		{
 			timer_counter_ = timer_modulo_;
-			mmu_->WriteByte(Memory::timer_counter_register_, timer_counter_, false);
+			mmu_->WriteByte(Memory::TIMA, timer_counter_, false);
 		}
 		break;
-	case Memory::timer_control_register_:
+	case Memory::TAC:
 		{const auto previous_timer_enabled = timer_enabled_;
 		const auto previous_timer_period = timer_period_;
 
@@ -111,7 +111,7 @@ void Timer::IncreaseTimer()
 	{
 		timer_overflow_state_ = TimerOverflowState::JustOverflowed;
 	}
-	mmu_->WriteByte(Memory::timer_counter_register_, timer_counter_, false);
+	mmu_->WriteByte(Memory::TIMA, timer_counter_, false);
 }
 
 }
