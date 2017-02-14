@@ -66,6 +66,29 @@ namespace Memory
 
 	static constexpr Address IF		{ 0xFF0F };
 
+	// APU
+	static constexpr Address NR10	{ 0xFF10 };
+	static constexpr Address NR11	{ 0xFF11 };
+	static constexpr Address NR12	{ 0xFF12 };
+	static constexpr Address NR13	{ 0xFF13 };
+	static constexpr Address NR14	{ 0xFF14 };
+	static constexpr Address NR21	{ 0xFF16 };
+	static constexpr Address NR22	{ 0xFF17 };
+	static constexpr Address NR23	{ 0xFF18 };
+	static constexpr Address NR24	{ 0xFF19 };
+	static constexpr Address NR30	{ 0xFF1A };
+	static constexpr Address NR31	{ 0xFF1B };
+	static constexpr Address NR32	{ 0xFF1C };
+	static constexpr Address NR33	{ 0xFF1D };
+	static constexpr Address NR34	{ 0xFF1E };
+	static constexpr Address NR41	{ 0xFF20 };
+	static constexpr Address NR42	{ 0xFF21 };
+	static constexpr Address NR43	{ 0xFF22 };
+	static constexpr Address NR44	{ 0xFF23 };
+	static constexpr Address NR50	{ 0xFF24 };
+	static constexpr Address NR51	{ 0xFF25 };
+	static constexpr Address NR52	{ 0xFF26 };
+
 	// GPU
 	static constexpr Address LCDC	{ 0xFF40 };
 	static constexpr Address STAT	{ 0xFF41 };

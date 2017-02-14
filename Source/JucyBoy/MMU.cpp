@@ -33,24 +33,24 @@ void MMU::Reset()
 	WriteByte(Memory::TIMA, 0x00);
 	WriteByte(Memory::TMA, 0x00);
 	WriteByte(Memory::TAC, 0x00);
-	WriteByte(0xFF10, 0x80); // NR10
-	WriteByte(0xFF11, 0xBF); // NR11
-	WriteByte(0xFF12, 0xF3); // NR12
-	WriteByte(0xFF14, 0xBF); // NR14
-	WriteByte(0xFF16, 0x3F); // NR21
-	WriteByte(0xFF17, 0x00); // NR22
-	WriteByte(0xFF19, 0xBF); // NR24
-	WriteByte(0xFF1A, 0x7F); // NR30
-	WriteByte(0xFF1B, 0xFF); // NR31
-	WriteByte(0xFF1C, 0x9F); // NR32
-	WriteByte(0xFF1E, 0xBF); // NR33
-	WriteByte(0xFF20, 0xFF); // NR41
-	WriteByte(0xFF21, 0x00); // NR42
-	WriteByte(0xFF22, 0x00); // NR43
-	WriteByte(0xFF23, 0xBF); // NR30
-	WriteByte(0xFF24, 0x77); // NR50
-	WriteByte(0xFF25, 0xF3); // NR51
-	WriteByte(0xFF26, 0xF1); // NR52
+	WriteByte(Memory::NR10, 0x80);
+	WriteByte(Memory::NR11, 0xBF);
+	WriteByte(Memory::NR12, 0xF3);
+	WriteByte(Memory::NR14, 0xBF);
+	WriteByte(Memory::NR21, 0x3F);
+	WriteByte(Memory::NR22, 0x00);
+	WriteByte(Memory::NR24, 0xBF);
+	WriteByte(Memory::NR30, 0x7F);
+	WriteByte(Memory::NR31, 0xFF);
+	WriteByte(Memory::NR32, 0x9F);
+	WriteByte(Memory::NR33, 0xBF);
+	WriteByte(Memory::NR41, 0xFF);
+	WriteByte(Memory::NR42, 0x00);
+	WriteByte(Memory::NR43, 0x00);
+	WriteByte(Memory::NR44, 0xBF);
+	WriteByte(Memory::NR50, 0x77);
+	WriteByte(Memory::NR51, 0xF3);
+	WriteByte(Memory::NR52, 0xF1);
 	WriteByte(Memory::LCDC, 0x91);
 	WriteByte(Memory::SCY, 0x00);
 	WriteByte(Memory::SCX, 0x00);

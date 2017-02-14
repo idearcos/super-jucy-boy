@@ -6,10 +6,12 @@
 #include "JucyBoy/CPU.h"
 #include "JucyBoy/MMU.h"
 #include "JucyBoy/GPU.h"
+#include "JucyBoy/APU.h"
 #include "JucyBoy/Timer.h"
 #include "JucyBoy/OamDma.h"
 #include "JucyBoy/Joypad.h"
 #include "GameScreenComponent.h"
+#include "AudioPlayerComponent.h"
 #include "CpuDebugComponents/CpuDebugComponent.h"
 #include "MemoryDebugComponent.h"
 
@@ -55,6 +57,7 @@ private:
 	MMU mmu_{};
 	CPU cpu_{ mmu_ };
 	GPU gpu_{ mmu_ };
+	APU apu_{ mmu_ };
 	jb::Timer timer_{ mmu_ };
 	OamDma oam_dma_{ mmu_ };
 	Joypad joypad_{ mmu_ };
@@ -62,6 +65,8 @@ private:
 	std::vector<std::function<void()>> listener_deregister_functions_;
 
 	GameScreenComponent game_screen_component_;
+	AudioPlayerComponent audio_player_component_{ apu_ };
+
 	Rectangle<int> usage_instructions_area_;
 	CpuDebugComponent cpu_debug_component_{ cpu_ };
 	MemoryDebugComponent memory_debug_component_{ mmu_ };

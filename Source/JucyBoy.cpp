@@ -9,6 +9,8 @@ JucyBoy::JucyBoy()
 	game_screen_component_.addMouseListener(this, true);
 	addAndMakeVisible(game_screen_component_);
 
+	addChildComponent(audio_player_component_);
+
 	cpu_debug_component_.addMouseListener(this, true);
 	addAndMakeVisible(cpu_debug_component_);
 
@@ -21,6 +23,7 @@ JucyBoy::JucyBoy()
 
 	cpu_.AddListener(timer_);
 	cpu_.AddListener(gpu_);
+	cpu_.AddListener(apu_);
 	cpu_.AddListener(oam_dma_);
 	cpu_.AddListener(*this);
 
@@ -29,11 +32,14 @@ JucyBoy::JucyBoy()
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnVramWritten, Memory::Region::VRAM));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnOamWritten, Memory::Region::OAM));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnIoMemoryWritten, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener(apu_, &APU::OnIoMemoryWritten, Memory::Region::IO));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(timer_, &jb::Timer::OnIoMemoryWritten, Memory::Region::IO));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(joypad_, &Joypad::OnIoMemoryWritten, Memory::Region::IO));
 	listener_deregister_functions_.emplace_back(mmu_.AddListener(oam_dma_, &OamDma::OnIoMemoryWritten, Memory::Region::IO));
 
 	gpu_.AddListener(game_screen_component_);
+
+	apu_.AddListener(std::bind(&AudioPlayerComponent::OnNewSampleBlock, &audio_player_component_, std::placeholders::_1, std::placeholders::_2));
 
 	NotifyStatusUpdateRequest(false);
 }

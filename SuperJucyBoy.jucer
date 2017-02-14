@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="TfnRnX" name="SuperJucyBoy" projectType="guiapp" version="1.0.0"
-              bundleIdentifier="com.yourcompany.SuperJucyBoy" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.0" defines="JUCE_OPENGL_ALLOW_NON_POWER_OF_TWO_TEXTURES&#10;JUCE_OPENGL3">
+              bundleIdentifier="com.idearcos.SuperJucyBoy" includeBinaryInAppConfig="1"
+              jucerVersion="4.3.1" defines="JUCE_OPENGL_ALLOW_NON_POWER_OF_TWO_TEXTURES&#10;JUCE_OPENGL3">
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
-      <GROUP id="{174E98B6-764B-A504-3F51-E1BAFF97243C}" name="MemoryDebugComponents"/>
       <GROUP id="{7B44982A-A8DE-A4A1-AEFE-1F851375A75C}" name="CpuDebugComponents">
         <FILE id="l7KWIo" name="CpuDebugComponent.cpp" compile="1" resource="0"
               file="Source/CpuDebugComponents/CpuDebugComponent.cpp"/>
@@ -25,6 +24,9 @@
               file="Source/CpuDebugComponents/CpuRegistersComponent.h"/>
       </GROUP>
       <GROUP id="{F134FA3D-DA88-4DFD-F9D2-E3EF84037505}" name="JucyBoy">
+        <FILE id="TPGff6" name="APU.cpp" compile="1" resource="0" file="Source/JucyBoy/APU.cpp"/>
+        <FILE id="lQvxJL" name="APU.h" compile="0" resource="0" file="Source/JucyBoy/APU.h"/>
+        <FILE id="MBpuLo" name="ClockDivider.h" compile="0" resource="0" file="Source/JucyBoy/ClockDivider.h"/>
         <FILE id="kZEcqM" name="CPU.cpp" compile="1" resource="0" file="Source/JucyBoy/CPU.cpp"/>
         <FILE id="YypB1H" name="CPU.h" compile="0" resource="0" file="Source/JucyBoy/CPU.h"/>
         <FILE id="ArciXF" name="CPU_PopulateCbInstructions.cpp" compile="1"
@@ -51,9 +53,18 @@
         <FILE id="QsSx1X" name="OamDma.h" compile="0" resource="0" file="Source/JucyBoy/OamDma.h"/>
         <FILE id="OVAOjP" name="Registers.h" compile="0" resource="0" file="Source/JucyBoy/Registers.h"/>
         <FILE id="wKyaMj" name="Sprite.h" compile="0" resource="0" file="Source/JucyBoy/Sprite.h"/>
+        <FILE id="CMUBPw" name="SquareWaveChannel.cpp" compile="1" resource="0"
+              file="Source/JucyBoy/SquareWaveChannel.cpp"/>
+        <FILE id="kEfCYc" name="SquareWaveChannel.h" compile="0" resource="0"
+              file="Source/JucyBoy/SquareWaveChannel.h"/>
         <FILE id="goh0Iq" name="Timer.cpp" compile="1" resource="0" file="Source/JucyBoy/Timer.cpp"/>
         <FILE id="FS65Rs" name="Timer.h" compile="0" resource="0" file="Source/JucyBoy/Timer.h"/>
       </GROUP>
+      <GROUP id="{174E98B6-764B-A504-3F51-E1BAFF97243C}" name="MemoryDebugComponents"/>
+      <FILE id="FAyFIX" name="AudioPlayerComponent.cpp" compile="1" resource="0"
+            file="Source/AudioPlayerComponent.cpp"/>
+      <FILE id="FgXLWz" name="AudioPlayerComponent.h" compile="0" resource="0"
+            file="Source/AudioPlayerComponent.h"/>
       <FILE id="ssoaqj" name="GameScreenComponent.cpp" compile="1" resource="0"
             file="Source/GameScreenComponent.cpp"/>
       <FILE id="LO3og2" name="GameScreenComponent.h" compile="0" resource="0"
@@ -77,19 +88,18 @@
                        isDebug="0" optimisation="3" targetName="SuperJucyBoy"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_core" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_events" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_graphics" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_data_structures" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_gui_basics" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_gui_extra" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_cryptography" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_video" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_opengl" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_audio_basics" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_audio_devices" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_audio_formats" path="..\JUCE\modules"/>
-        <MODULEPATH id="juce_audio_processors" path="..\JUCE\modules"/>
+        <MODULEPATH id="juce_events" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
       </MODULEPATHS>
     </VS2015>
   </EXPORTFORMATS>
@@ -98,15 +108,14 @@
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_video" showAllCode="1" useLocalCopy="0"/>
   </MODULES>
   <JUCEOPTIONS/>
   <LIVE_SETTINGS>
