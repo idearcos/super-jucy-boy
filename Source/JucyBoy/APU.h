@@ -39,7 +39,7 @@ private:
 	void NotifyNewSampleBlock();
 
 private:
-	ClockDivider frame_sequencer_divider_{ 512, std::bind(&APU::OnFrameSequencerClocked, this) };
+	ClockDivider frame_sequencer_divider_{ 4194304 / 512, std::bind(&APU::OnFrameSequencerClocked, this) };
 	size_t frame_sequencer_step_{ 0 };
 
 	SquareWaveChannelWithSweep channel_1_;

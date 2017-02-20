@@ -12,6 +12,8 @@ void APU::OnMachineCycleLapse()
 	channel_1_.OnMachineCycleLapse();
 	channel_2_.OnMachineCycleLapse();
 
+	frame_sequencer_divider_.OnInputClockCyclesLapsed(4);
+
 	size_t right_sample{ 0 };
 	right_sample += right_channels_enabled_[0] * channel_1_.GetSample();
 	right_sample += right_channels_enabled_[1] * channel_2_.GetSample();
@@ -33,7 +35,7 @@ void APU::OnMachineCycleLapse()
 	}
 	NotifyNewSampleBlock();
 
-	// Calculate how many APU samples will be used for next sample block and reset sample counter
+	// Calculate how many APU samples will be used for the next sample block, and reset sample counter
 	num_samples_in_current_block_ = 0;
 	apu_samples_in_next_block_ = apu_samples_per_block_integer_part_;
 	last_block_apu_samples_remainder_ += (samples_per_second_ % sample_blocks_per_second_);
@@ -84,7 +86,7 @@ void APU::OnFrameSequencerClocked()
 
 void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
-	//if (apu_enabled_ && (address < 0xFF30 || address > 0xFF3F)) return;
+	if (!apu_enabled_ && (address < Memory::NR52 || address > 0xFF3F)) return;
 
 	switch (address)
 	{
