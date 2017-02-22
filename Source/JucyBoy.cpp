@@ -39,7 +39,7 @@ JucyBoy::JucyBoy()
 
 	gpu_.AddListener(game_screen_component_);
 
-	apu_.AddListener(std::bind(&AudioPlayerComponent::OnNewSampleBlock, &audio_player_component_, std::placeholders::_1, std::placeholders::_2));
+	apu_.AddListener(std::bind(&AudioPlayerComponent::OnNewSample, &audio_player_component_, std::placeholders::_1, std::placeholders::_2));
 
 	NotifyStatusUpdateRequest(false);
 }
@@ -66,6 +66,7 @@ void JucyBoy::Reset()
 	cpu_.Stop();
 	cpu_.Reset();
 	mmu_.Reset();
+	audio_player_component_.ClearBuffer();
 }
 
 void JucyBoy::LoadRom(const juce::File &file)

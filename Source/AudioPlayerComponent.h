@@ -2,9 +2,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <cstdint>
-#include <vector>
-#include <queue>
-#include <mutex>
+#include <array>
 
 class APU;
 
@@ -13,6 +11,8 @@ class AudioPlayerComponent final : public juce::AudioAppComponent
 public:
 	AudioPlayerComponent(APU &apu);
 	~AudioPlayerComponent();
+
+	void ClearBuffer();
 
 	void paint(Graphics&) override {}
 	void resized() override {}
@@ -23,13 +23,26 @@ public:
 	void getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) override;
 
 	// APU Listener functions
-	void OnNewSampleBlock(const std::vector<uint8_t> &right, const std::vector<uint8_t> &left);
+	void OnNewSample(size_t right_sample, size_t left_sample);
 
 private:
-	std::queue<std::vector<uint8_t>> right_channel_sample_blocks_;
-	std::queue<std::vector<uint8_t>> left_channel_sample_blocks_;
-	std::mutex sample_blocks_mutex_;
+	struct OutputBuffer
+	{
+		std::array<size_t, 1024> samples{};
+		juce::AbstractFifo abstract_fifo{ static_cast<int>(samples.size()) };
+	};
 	
+	std::array<OutputBuffer, 2> output_buffers_;
+
+	// Downsampling
+	size_t output_sample_rate_{ 0 };
+	size_t downsampling_ratio_integer_part_{ 0 };
+	size_t downsampling_ratio_remainder_{ 0 };
+
+	std::array<size_t, 2> input_sample_accumulators_{};
+	size_t num_accumulated_apu_samples_{ 0 };
+	size_t num_apu_samples_in_next_output_sample_{ 0 };
+
 	APU* apu_{ nullptr };
 
 private:

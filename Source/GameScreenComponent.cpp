@@ -1,5 +1,4 @@
 #include "GameScreenComponent.h"
-#include <string>
 
 GameScreenComponent::GameScreenComponent() :
 	vertices_{ Vertex{ { -1.0f, 1.0f },{ 1.0f, 0.0f, 0.0f },{ 0.0f, 0.0f } },
@@ -121,27 +120,22 @@ uint8_t GameScreenComponent::GpuColorToIntensity(GPU::Color color)
 	}
 }
 
-void GameScreenComponent::OnNewFrame(const GPU::Framebuffer &gb_framebuffer)
+void GameScreenComponent::OnNewFrame(const GPU::Framebuffer &gpu_framebuffer)
 {
-	for (int i = 0; i < gb_framebuffer.size(); ++i)
+	std::unique_lock<std::mutex> lock{ framebuffer_mutex_ };
+
+	for (int i = 0; i < gpu_framebuffer.size(); ++i)
 	{
-		framebuffer_[3 * i] = GpuColorToIntensity(gb_framebuffer[i]);
-		framebuffer_[3 * i + 1] = GpuColorToIntensity(gb_framebuffer[i]);
-		framebuffer_[3 * i + 2] = GpuColorToIntensity(gb_framebuffer[i]);
+		framebuffer_[3 * i] = GpuColorToIntensity(gpu_framebuffer[i]);
+		framebuffer_[3 * i + 1] = GpuColorToIntensity(gpu_framebuffer[i]);
+		framebuffer_[3 * i + 2] = GpuColorToIntensity(gpu_framebuffer[i]);
 	}
 
-	std::unique_lock<std::mutex> lock{ last_frame_rendered_mutex_ };
-	last_frame_rendered_cv_.wait(lock, [this]() { return last_frame_rendered_; });
-	last_frame_rendered_ = false;
-	
 	openGLContext.triggerRepaint();
 }
 
 void GameScreenComponent::render()
 {
-	// Return if there is nothing new to render
-	if (last_frame_rendered_) return;
-
 	const auto desktopScale = openGLContext.getRenderingScale();
 
 	OpenGLHelpers::clear(Colour::greyLevel(0.1f));
@@ -153,7 +147,8 @@ void GameScreenComponent::render()
 	// Bind and draw texture
 	openGLContext.extensions.glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture_);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 160, 144, GL_RGB, GL_UNSIGNED_BYTE, framebuffer_.data());
+	{std::unique_lock<std::mutex> lock{ framebuffer_mutex_ };
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 160, 144, GL_RGB, GL_UNSIGNED_BYTE, framebuffer_.data()); }
 
 	// Bind VAO
 	openGLContext.extensions.glBindVertexArray(vertex_array_object_);
@@ -164,10 +159,6 @@ void GameScreenComponent::render()
 	// Unbind VAO and texture
 	openGLContext.extensions.glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	std::unique_lock<std::mutex> lock{ last_frame_rendered_mutex_ };
-	last_frame_rendered_ = true;
-	last_frame_rendered_cv_.notify_one();
 }
 
 void GameScreenComponent::paint (Graphics&)

@@ -1,8 +1,9 @@
 #include "SquareWaveChannel.h"
+#include <stdexcept>
 
 size_t SquareWaveChannel::GetSample() const
 {
-	return duty_cycles_[selected_duty_cycle_][duty_cycle_step_] ? envelope_.current_volume : 0;
+	return ((duty_cycles_[selected_duty_cycle_] >> duty_cycle_step_) & 0x01) * envelope_.current_volume;
 }
 
 void SquareWaveChannel::OnMachineCycleLapse()

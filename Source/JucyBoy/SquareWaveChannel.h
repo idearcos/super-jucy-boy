@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <array>
-#include <bitset>
 #include "ClockDivider.h"
 
 class SquareWaveChannel
@@ -59,7 +57,7 @@ private:
 	size_t frequency_{ 0x7FF };
 	ClockDivider clock_divider_{ (2048 - frequency_) * 4, std::bind(&SquareWaveChannel::OnClockDividerTicked, this) };
 
-	static constexpr std::array<std::bitset<8>, 4> duty_cycles_{ 0x01, 0x81, 0x87, 0x7E };
+	static constexpr uint8_t duty_cycles_[4]{ 0x01, 0x81, 0x87, 0x7E };
 };
 
 struct SquareWaveChannelWithSweep final : public SquareWaveChannel

@@ -13,7 +13,16 @@ class MMU;
 
 class APU final : public CPU::Listener
 {
+	static constexpr size_t num_channels_{ 4 };
+	static constexpr size_t max_channel_volume_{ 15 };
+	static constexpr size_t max_master_volume_{ 8 };
+	static constexpr size_t gb_clock_frequency_{ 4194304 };
+	static constexpr size_t frame_sequencer_frequency_{ 512 };
+
 public:
+	static constexpr size_t sample_rate_{ 4194304 / 4 };
+	static constexpr size_t max_amplitude_{ max_master_volume_ * num_channels_ * max_channel_volume_ };
+
 	APU(MMU &mmu);
 	~APU() = default;
 
@@ -26,20 +35,18 @@ public:
 	// MMU listener functions
 	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
 
-	void SetExpectedSampleRate(size_t sample_blocks_per_second, size_t expected_samples_per_block);
-
 	// AddListener returns a deregister function that can be called with no arguments
-	using Listener = std::function<void(const std::vector<uint8_t> &right, const std::vector<uint8_t> &left)>;
+	using Listener = std::function<void(size_t right_sample, size_t left_sample)>;
 	std::function<void()> AddListener(Listener listener);
 
 private:
 	void ClockLengthCounters();
 
 	// Listener notification
-	void NotifyNewSampleBlock();
+	void NotifyNewSample(size_t right_sample, size_t left_sample);
 
 private:
-	ClockDivider frame_sequencer_divider_{ 4194304 / 512, std::bind(&APU::OnFrameSequencerClocked, this) };
+	ClockDivider frame_sequencer_divider_{ gb_clock_frequency_ / frame_sequencer_frequency_, std::bind(&APU::OnFrameSequencerClocked, this) };
 	size_t frame_sequencer_step_{ 0 };
 
 	SquareWaveChannelWithSweep channel_1_;
@@ -51,21 +58,6 @@ private:
 	size_t left_volume_{ 0 };
 	std::bitset<4> right_channels_enabled_{ 0 };
 	std::bitset<4> left_channels_enabled_{ 0 };
-
-	std::vector<uint8_t> right_channel_apu_samples_;
-	std::vector<uint8_t> left_channel_apu_samples_;
-	std::vector<uint8_t> right_channel_expected_samples_;
-	std::vector<uint8_t> left_channel_expected_samples_;
-	size_t num_samples_in_current_block_{ 0 };
-
-	// Downsampling APU sample rate -> expected sample rate
-	static constexpr size_t samples_per_frame_{ 70224 / 4 };
-	static constexpr size_t frame_rate_{ 60 }; //TODO: might not always be the case
-	static constexpr size_t samples_per_second_{ samples_per_frame_ * frame_rate_ };
-	size_t sample_blocks_per_second_{ 0 };
-	size_t apu_samples_per_block_integer_part_{ 0 };
-	size_t apu_samples_in_next_block_{ 0 };
-	size_t last_block_apu_samples_remainder_{ 0 };
 
 	MMU* mmu_{ nullptr };
 

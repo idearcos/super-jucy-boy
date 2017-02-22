@@ -1,7 +1,6 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioPlayerComponent.h"
 #include "JucyBoy/APU.h"
-#include <cassert>
 
 AudioPlayerComponent::AudioPlayerComponent(APU &apu) :
 	apu_{ &apu }
@@ -14,9 +13,21 @@ AudioPlayerComponent::~AudioPlayerComponent()
 	shutdownAudio();
 }
 
+void AudioPlayerComponent::ClearBuffer()
+{
+	for (auto &output_buffer : output_buffers_)
+	{
+		output_buffer.abstract_fifo.reset();
+	}
+}
+
 void AudioPlayerComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-	apu_->SetExpectedSampleRate(sampleRate / samplesPerBlockExpected, samplesPerBlockExpected);
+	output_sample_rate_ = static_cast<size_t>(sampleRate);
+	downsampling_ratio_integer_part_ = APU::sample_rate_ / output_sample_rate_;
+	downsampling_ratio_remainder_ = APU::sample_rate_ % output_sample_rate_;
+
+	num_apu_samples_in_next_output_sample_ = downsampling_ratio_integer_part_;
 }
 
 void AudioPlayerComponent::releaseResources()
@@ -26,56 +37,73 @@ void AudioPlayerComponent::releaseResources()
 
 void AudioPlayerComponent::getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill)
 {
-	std::unique_lock<std::mutex> lock{ sample_blocks_mutex_ };
-	if (right_channel_sample_blocks_.empty() || left_channel_sample_blocks_.empty())
+	if (output_buffers_[0].abstract_fifo.getNumReady() < bufferToFill.numSamples || output_buffers_[1].abstract_fifo.getNumReady()  < bufferToFill.numSamples)
 	{
 		bufferToFill.clearActiveBufferRegion();
 		return;
 	}
-	
-	const auto right_sample_block = right_channel_sample_blocks_.front();
-	right_channel_sample_blocks_.pop();
-	const auto left_sample_block = left_channel_sample_blocks_.front();
-	left_channel_sample_blocks_.pop();
 
-	lock.unlock();
+	// Convert APU amplitude from [0, APU::max_amplitude_] to [0, +0.50], then to [-0.25, +0.25]
+	const auto amplitude_divisor = APU::max_amplitude_ * 2.0f;
 
-	assert(right_sample_block.size() == bufferToFill.numSamples);
-	assert(left_sample_block.size() == bufferToFill.numSamples);
-
-	// Volume decreasing:
-	// Max APU sample volume = 0x0F = 15
-	// Decrease amplitude to the -0.125 - 0.125 range: A = A / 15 * 0.25 - 0.125;
-
-	switch (bufferToFill.buffer->getNumChannels())
+	for (int channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
 	{
-	case 0:
-		break;
-	case 1:
-		{float* const buffer = bufferToFill.buffer->getWritePointer(0, bufferToFill.startSample);
-		for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
+		const auto output_index = channel % output_buffers_.size();
+		int startIndex1{ 0 }, blockSize1{ 0 }, startIndex2{ 0 }, blockSize2{ 0 };
+		output_buffers_[output_index].abstract_fifo.prepareToRead(bufferToFill.numSamples, startIndex1, blockSize1, startIndex2, blockSize2);
+
+		float* const buffer = bufferToFill.buffer->getWritePointer(channel, bufferToFill.startSample);
+
+		for (int sample = 0; sample < blockSize1; ++sample)
 		{
-			buffer[sample] = static_cast<float>(right_sample_block[sample]) / 60.0 - 0.125;
-		}}
-		break;
-	case 2:
-		{float* const buffer = bufferToFill.buffer->getWritePointer(0, bufferToFill.startSample);
-		for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
+			buffer[sample] = output_buffers_[output_index].samples[startIndex1 + sample] / amplitude_divisor - 0.25f;
+		}
+		for (int sample = 0; sample < blockSize2; ++sample)
 		{
-			buffer[sample] = static_cast<float>(right_sample_block[sample]) / 60.0 - 0.125;
-		}}
-		{float* const buffer = bufferToFill.buffer->getWritePointer(1, bufferToFill.startSample);
-		for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
-		{
-			buffer[sample] = static_cast<float>(left_sample_block[sample]) / 60.0 - 0.125;
-		}}
-		break;
+			buffer[blockSize1 + sample] = output_buffers_[output_index].samples[startIndex2 + sample] / amplitude_divisor - 0.25f;
+		}
+	}
+
+	for (auto &output_buffer : output_buffers_)
+	{
+		output_buffer.abstract_fifo.finishedRead(bufferToFill.numSamples);
 	}
 }
 
-void AudioPlayerComponent::OnNewSampleBlock(const std::vector<uint8_t> &right, const std::vector<uint8_t> &left)
+void AudioPlayerComponent::OnNewSample(size_t right_sample, size_t left_sample)
 {
-	std::unique_lock<std::mutex> lock{ sample_blocks_mutex_ };
-	right_channel_sample_blocks_.emplace(right);
-	left_channel_sample_blocks_.emplace(left);
+	input_sample_accumulators_[0] += left_sample;
+	input_sample_accumulators_[1] += right_sample;
+
+	if (++num_accumulated_apu_samples_ < num_apu_samples_in_next_output_sample_) return;
+
+	while (output_buffers_[0].abstract_fifo.getFreeSpace() == 0 || output_buffers_[0].abstract_fifo.getFreeSpace() == 0)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds{ 15 });
+	}
+
+	for (int i = 0; i < output_buffers_.size(); ++i)
+	{
+		int startIndex1{ 0 }, blockSize1{ 0 }, startIndex2{ 0 }, blockSize2{ 0 };
+		output_buffers_[i].abstract_fifo.prepareToWrite(1, startIndex1, blockSize1, startIndex2, blockSize2);
+		output_buffers_[i].samples[startIndex1] = input_sample_accumulators_[i] / num_accumulated_apu_samples_;
+	}
+
+	input_sample_accumulators_[0] = 0;
+	input_sample_accumulators_[1] = 0;
+	num_accumulated_apu_samples_ = 0;
+
+	// Calculate how many APU samples will be used for the next output sample
+	num_apu_samples_in_next_output_sample_ = downsampling_ratio_integer_part_;
+	downsampling_ratio_remainder_ += APU::sample_rate_ % output_sample_rate_;
+	if (downsampling_ratio_remainder_ > output_sample_rate_)
+	{
+		num_apu_samples_in_next_output_sample_ += 1;
+		downsampling_ratio_remainder_ -= output_sample_rate_;
+	}
+
+	for (auto &output_buffer : output_buffers_)
+	{
+		output_buffer.abstract_fifo.finishedWrite(1);
+	}
 }

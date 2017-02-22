@@ -9,44 +9,26 @@ APU::APU(MMU &mmu) :
 
 void APU::OnMachineCycleLapse()
 {
-	channel_1_.OnMachineCycleLapse();
-	channel_2_.OnMachineCycleLapse();
+	if (apu_enabled_)
+	{
+		channel_1_.OnMachineCycleLapse();
+		channel_2_.OnMachineCycleLapse();
 
-	frame_sequencer_divider_.OnInputClockCyclesLapsed(4);
+		frame_sequencer_divider_.OnInputClockCyclesLapsed(4);
+	}
 
 	size_t right_sample{ 0 };
 	right_sample += right_channels_enabled_[0] * channel_1_.GetSample();
 	right_sample += right_channels_enabled_[1] * channel_2_.GetSample();
-	right_channel_apu_samples_[num_samples_in_current_block_] = right_sample;
+	right_sample *= (right_volume_ + 1);
 
 	size_t left_sample{ 0 };
 	left_sample += left_channels_enabled_[0] * channel_1_.GetSample();
 	left_sample += left_channels_enabled_[1] * channel_2_.GetSample();
-	left_channel_apu_samples_[num_samples_in_current_block_] = left_sample;
+	left_sample *= (left_volume_ + 1);
 
-	if (++num_samples_in_current_block_ < apu_samples_in_next_block_) return;
-
-	// Downsample and notify listeners
-	const size_t downsampling_ratio{ num_samples_in_current_block_ / right_channel_expected_samples_.size() };
-	for (int i = 0; i < right_channel_expected_samples_.size(); ++i)
-	{
-		right_channel_expected_samples_[i] = right_channel_apu_samples_[i * downsampling_ratio];
-		left_channel_expected_samples_[i] = left_channel_apu_samples_[i * downsampling_ratio];
-	}
-	NotifyNewSampleBlock();
-
-	// Calculate how many APU samples will be used for the next sample block, and reset sample counter
-	num_samples_in_current_block_ = 0;
-	apu_samples_in_next_block_ = apu_samples_per_block_integer_part_;
-	last_block_apu_samples_remainder_ += (samples_per_second_ % sample_blocks_per_second_);
-	if (last_block_apu_samples_remainder_ > sample_blocks_per_second_)
-	{
-		apu_samples_in_next_block_ += 1;
-		last_block_apu_samples_remainder_ -= sample_blocks_per_second_;
-	}
-	
-	right_channel_apu_samples_.resize(apu_samples_in_next_block_);
-	left_channel_apu_samples_.resize(apu_samples_in_next_block_);
+	// Notify listeners
+	NotifyNewSample(right_sample, left_sample);
 }
 
 void APU::OnFrameSequencerClocked()
@@ -175,22 +157,6 @@ void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 	}
 }
 
-void APU::SetExpectedSampleRate(size_t sample_blocks_per_second, size_t expected_samples_per_block)
-{
-	sample_blocks_per_second_ = sample_blocks_per_second;
-
-	apu_samples_per_block_integer_part_ = samples_per_second_ / sample_blocks_per_second;
-
-	apu_samples_in_next_block_ = apu_samples_per_block_integer_part_;
-	last_block_apu_samples_remainder_ = samples_per_second_ % sample_blocks_per_second;
-
-	right_channel_apu_samples_.resize(apu_samples_in_next_block_);
-	left_channel_apu_samples_.resize(apu_samples_in_next_block_);
-
-	right_channel_expected_samples_.resize(expected_samples_per_block);
-	left_channel_expected_samples_.resize(expected_samples_per_block);
-}
-
 void APU::ClockLengthCounters()
 {
 	channel_1_.ClockLengthCounter();
@@ -203,13 +169,13 @@ void APU::ClockLengthCounters()
 std::function<void()> APU::AddListener(Listener listener)
 {
 	auto it = listeners_.emplace(listeners_.begin(), listener);
-	return [=, this]() { listeners_.erase(it); };
+	return [it, this]() { listeners_.erase(it); };
 }
 
-void APU::NotifyNewSampleBlock()
+void APU::NotifyNewSample(size_t right_sample, size_t left_sample)
 {
 	for (auto& listener : listeners_)
 	{
-		listener(right_channel_expected_samples_, left_channel_expected_samples_);
+		listener(right_sample, left_sample);
 	}
 }
