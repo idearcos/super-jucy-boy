@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <bitset>
 #include <functional>
 #include <vector>
 #include <list>
@@ -56,8 +55,8 @@ private:
 	bool apu_enabled_{ true };
 	size_t right_volume_{ 0 };
 	size_t left_volume_{ 0 };
-	std::bitset<4> right_channels_enabled_{ 0 };
-	std::bitset<4> left_channels_enabled_{ 0 };
+	uint8_t right_channels_enabled_{ 0 };
+	uint8_t left_channels_enabled_{ 0 };
 
 	MMU* mmu_{ nullptr };
 

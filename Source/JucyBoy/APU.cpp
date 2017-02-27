@@ -18,13 +18,13 @@ void APU::OnMachineCycleLapse()
 	}
 
 	size_t right_sample{ 0 };
-	right_sample += right_channels_enabled_[0] * channel_1_.GetSample();
-	right_sample += right_channels_enabled_[1] * channel_2_.GetSample();
+	right_sample += (right_channels_enabled_ & 0x01) * channel_1_.GetSample();
+	right_sample += ((right_channels_enabled_ >> 1) & 0x01) * channel_2_.GetSample();
 	right_sample *= (right_volume_ + 1);
 
 	size_t left_sample{ 0 };
-	left_sample += left_channels_enabled_[0] * channel_1_.GetSample();
-	left_sample += left_channels_enabled_[1] * channel_2_.GetSample();
+	left_sample += (left_channels_enabled_ & 0x01) * channel_1_.GetSample();
+	left_sample += ((left_channels_enabled_ >> 1) & 0x01) * channel_2_.GetSample();
 	left_sample *= (left_volume_ + 1);
 
 	// Notify listeners
@@ -41,8 +41,8 @@ void APU::OnFrameSequencerClocked()
 	case 1:
 		break;
 	case 2:
+		channel_1_.ClockFrequencySweep();
 		ClockLengthCounters();
-		// Clock frequency sweep
 		break;
 	case 3:
 		break;
@@ -52,8 +52,8 @@ void APU::OnFrameSequencerClocked()
 	case 5:
 		break;
 	case 6:
+		channel_1_.ClockFrequencySweep();
 		ClockLengthCounters();
-		// Clock frequency sweep
 		break;
 	case 7:
 		channel_1_.ClockVolumeEnvelope();
@@ -73,6 +73,7 @@ void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 	switch (address)
 	{
 	case Memory::NR10:
+		channel_1_.OnNR10Written(value);
 		mmu_->WriteByte(Memory::NR10, 0x80 | mmu_->ReadByte(Memory::NR10), false);
 		break;
 	case Memory::NR11:

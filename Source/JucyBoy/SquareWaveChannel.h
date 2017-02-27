@@ -25,15 +25,20 @@ public:
 
 	size_t GetSample() const;
 	bool IsChannelOn() const { return enabled_; }
+	void Reset();
 
-private:
+protected:
+	virtual void Trigger();
 	inline void UpdateClockDividerPeriod() { clock_divider_.SetPeriod((2048 - frequency_) * 4); }
 
-	void Trigger();
+private:
+	inline bool IsDacEnabled() const { return (envelope_.initial_volume != 0) || (envelope_.direction == Envelope::Direction::Amplify); }
+
+protected:
+	bool enabled_{ false };
+	size_t frequency_{ 0x7FF };
 
 private:
-	bool enabled_{ false };
-
 	size_t selected_duty_cycle_{ 0 };
 	size_t duty_cycle_step_{ 0 };
 
@@ -42,19 +47,19 @@ private:
 
 	struct Envelope
 	{
-		bool active{ false };
 		size_t initial_volume{ 0 };
-		size_t current_volume{ 0 };
 		enum class Direction
 		{
 			Attenuate,
 			Amplify
 		} direction{ Direction::Attenuate };
 		size_t period{ 0 };
+
+		bool active{ false };
+		size_t current_volume{ 0 };
 		size_t cycles_left{ 0 };
 	} envelope_;
 
-	size_t frequency_{ 0x7FF };
 	ClockDivider clock_divider_{ (2048 - frequency_) * 4, std::bind(&SquareWaveChannel::OnClockDividerTicked, this) };
 
 	static constexpr uint8_t duty_cycles_[4]{ 0x01, 0x81, 0x87, 0x7E };
@@ -65,4 +70,26 @@ struct SquareWaveChannelWithSweep final : public SquareWaveChannel
 public:
 	SquareWaveChannelWithSweep() : SquareWaveChannel() {}
 	~SquareWaveChannelWithSweep() = default;
+
+	// Interface with frame sequencer
+	void ClockFrequencySweep();
+
+	// Interface with memory registers
+	void OnNR10Written(uint8_t value);
+
+private:
+	void Trigger() override;
+	inline size_t CalculateNewFrequency() const { return frequency_sweep_.current_frequency + (frequency_sweep_.direction * (frequency_sweep_.current_frequency >> frequency_sweep_.shift)); }
+
+private:
+	struct FrequencySweep
+	{
+		size_t period{ 0 };
+		int direction{ 1 };
+		size_t shift{ 0 };
+
+		bool active{ false };
+		size_t current_frequency{ 0 };
+		size_t cycles_left{ 0 };
+	} frequency_sweep_;
 };
