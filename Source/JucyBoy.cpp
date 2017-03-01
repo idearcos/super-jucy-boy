@@ -17,29 +17,33 @@ JucyBoy::JucyBoy()
 	memory_debug_component_.addMouseListener(this, true);
 	addAndMakeVisible(memory_debug_component_);
 
-	// Add listeners
+	// JucyBoy listeners
 	listener_deregister_functions_.emplace_back(AddListener(cpu_debug_component_, &CpuDebugComponent::OnStatusUpdateRequested));
 	listener_deregister_functions_.emplace_back(AddListener(memory_debug_component_, &MemoryDebugComponent::OnStatusUpdateRequested));
 
-	cpu_.AddListener(timer_);
-	cpu_.AddListener(gpu_);
-	cpu_.AddListener(apu_);
-	cpu_.AddListener(oam_dma_);
-	cpu_.AddListener(*this);
+	// CPU listeners
+	cpu_.CPU::AddListener(timer_);
+	cpu_.CPU::AddListener(gpu_);
+	cpu_.CPU::AddListener(apu_);
+	cpu_.CPU::AddListener(oam_dma_);
+	cpu_.CPU::AddListener(*this);
 
-	listener_deregister_functions_.emplace_back(mmu_.AddListener(cpu_, &CPU::OnIoMemoryWritten, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener(cpu_, &CPU::OnInterruptsRegisterWritten, Memory::Region::Interrupts));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnVramWritten, Memory::Region::VRAM));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnOamWritten, Memory::Region::OAM));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener(gpu_, &GPU::OnIoMemoryWritten, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener(apu_, &APU::OnIoMemoryWritten, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener(timer_, &jb::Timer::OnIoMemoryWritten, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener(joypad_, &Joypad::OnIoMemoryWritten, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener(oam_dma_, &OamDma::OnIoMemoryWritten, Memory::Region::IO));
+	// MMU listeners
+	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { cpu_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { cpu_.OnInterruptsRegisterWritten(address, value); }, Memory::Region::Interrupts));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { gpu_.OnVramWritten(address, value); }, Memory::Region::VRAM));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { gpu_.OnOamWritten(address, value); }, Memory::Region::OAM));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { gpu_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { apu_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { timer_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { joypad_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
+	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { oam_dma_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
 
+	// GPU listeners
 	gpu_.AddListener(game_screen_component_);
 
-	apu_.AddListener(std::bind(&AudioPlayerComponent::OnNewSample, &audio_player_component_, std::placeholders::_1, std::placeholders::_2));
+	// APU listeners
+	listener_deregister_functions_.emplace_back(apu_.AddListener([this](size_t right_sample, size_t left_sample) { audio_player_component_.OnNewSample(right_sample, left_sample); }));
 
 	NotifyStatusUpdateRequest(false);
 }
@@ -49,8 +53,12 @@ JucyBoy::~JucyBoy()
 	cpu_.Stop();
 
 	// Remove listeners
-	cpu_.RemoveListener(gpu_);
-	cpu_.RemoveListener(*this);
+	cpu_.CPU::RemoveListener(timer_);
+	cpu_.CPU::RemoveListener(gpu_);
+	cpu_.CPU::RemoveListener(apu_);
+	cpu_.CPU::RemoveListener(oam_dma_);
+	cpu_.CPU::RemoveListener(*this);
+
 	gpu_.RemoveListener(game_screen_component_);
 
 	for (auto deregister_function : listener_deregister_functions_)

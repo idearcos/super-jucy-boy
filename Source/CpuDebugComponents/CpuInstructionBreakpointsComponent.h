@@ -1,12 +1,12 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JucyBoy/CPU.h"
+#include "../JucyBoy/Debug/DebugCPU.h"
 
-class CpuInstructionBreakpointsComponent final : public Component, public ListBoxModel, public ComboBox::Listener, public Button::Listener, public CPU::Listener
+class CpuInstructionBreakpointsComponent final : public Component, public ListBoxModel, public ComboBox::Listener, public Button::Listener, public DebugCPU::Listener
 {
 public:
-	CpuInstructionBreakpointsComponent(CPU &cpu);
+	CpuInstructionBreakpointsComponent(DebugCPU &cpu);
 	~CpuInstructionBreakpointsComponent() = default;
 
 	// ListBoxModel overrides
@@ -21,7 +21,7 @@ public:
 	void buttonClicked(Button*) override;
 
 	// CPU::Listener overrides
-	void OnInstructionBreakpointsChanged(const CPU::InstructionBreakpointList &instruction_breakpoint_list) override;
+	void OnInstructionBreakpointsChanged(const DebugCPU::InstructionBreakpointList &instruction_breakpoint_list) override;
 
 	// Component overrides
 	void paint(Graphics&) override;
@@ -38,5 +38,5 @@ private:
 	ComboBox instruction_breakpoint_add_combo_box_;
 	TextButton instruction_breakpoint_add_button_;
 
-	CPU* cpu_{ nullptr };
+	DebugCPU* cpu_{ nullptr };
 };

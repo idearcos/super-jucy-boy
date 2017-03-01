@@ -1,4 +1,5 @@
 #include "GameScreenComponent.h"
+#include <string>
 
 GameScreenComponent::GameScreenComponent() :
 	vertices_{ Vertex{ { -1.0f, 1.0f },{ 1.0f, 0.0f, 0.0f },{ 0.0f, 0.0f } },
@@ -154,7 +155,7 @@ void GameScreenComponent::render()
 	openGLContext.extensions.glBindVertexArray(vertex_array_object_);
 
 	// Draw triangles
-	glDrawElements(GL_TRIANGLES, elements_.size(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(elements_.size()), GL_UNSIGNED_INT, 0);
 
 	// Unbind VAO and texture
 	openGLContext.extensions.glBindVertexArray(0);

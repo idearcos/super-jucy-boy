@@ -90,7 +90,7 @@ void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 	case Memory::NR14:
 		channel_1_.OnNRx4Written(value);
 		mmu_->WriteByte(Memory::NR14, 0xBF | mmu_->ReadByte(Memory::NR14), false);
-		if (!channel_1_.IsChannelOn()) { mmu_->SetBit<0>(Memory::NR52, false); }
+		if (!channel_1_.IsChannelOn()) { mmu_->ClearBit(Memory::NR52, 0, false); }
 		break;
 	case Memory::NR21:
 		channel_2_.OnNRx1Written(value);
@@ -106,7 +106,7 @@ void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 	case Memory::NR24:
 		channel_2_.OnNRx4Written(value);
 		mmu_->WriteByte(Memory::NR24, 0xBF | mmu_->ReadByte(Memory::NR24), false);
-		if (!channel_2_.IsChannelOn()) { mmu_->SetBit<1>(Memory::NR52, false); }
+		if (!channel_2_.IsChannelOn()) { mmu_->ClearBit(Memory::NR52, 1, false); }
 		break;
 	case Memory::NR30:
 		//mmu_->WriteByte(Memory::NR30, 0x7F | mmu_->ReadByte(Memory::NR30), false);
@@ -122,7 +122,7 @@ void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		break;
 	case Memory::NR34:
 		//mmu_->WriteByte(Memory::NR34, 0xBF | mmu_->ReadByte(Memory::NR34), false);
-		//if (!channel_3_.IsChannelOn()) { mmu_->SetBit<2>(Memory::NR52, false); }
+		//if (!channel_3_.IsChannelOn()) { mmu_->ClearBit<2>(Memory::NR52, false); }
 		break;
 	case Memory::NR41:
 		//mmu_->WriteByte(Memory::NR41, 0xFF | mmu_->ReadByte(Memory::NR41), false);
@@ -133,7 +133,7 @@ void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		break;
 	case Memory::NR44:
 		//mmu_->WriteByte(Memory::NR44, 0xBF | mmu_->ReadByte(Memory::NR44), false);
-		//if (!channel_4_.IsChannelOn()) { mmu_->SetBit<3>(Memory::NR52, false); }
+		//if (!channel_4_.IsChannelOn()) { mmu_->ClearBit<3>(Memory::NR52, false); }
 		break;
 	case Memory::NR50:
 		right_volume_ = value & 0x07;
@@ -147,8 +147,8 @@ void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		apu_enabled_ = (value & 0x80) != 0;
 
 		mmu_->WriteByte(Memory::NR52, 0x7F | mmu_->ReadByte(Memory::NR52), false);
-		if (!channel_1_.IsChannelOn()) { mmu_->ClearBit<0>(Memory::NR52, false); }
-		if (!channel_2_.IsChannelOn()) { mmu_->ClearBit<1>(Memory::NR52, false); }
+		if (!channel_1_.IsChannelOn()) { mmu_->ClearBit(Memory::NR52, 0, false); }
+		if (!channel_2_.IsChannelOn()) { mmu_->ClearBit(Memory::NR52, 1, false); }
 		//if (!channel_3_.IsChannelOn()) { mmu_->ClearBit<2>(Memory::NR52, false); }
 		//if (!channel_4_.IsChannelOn()) { mmu_->ClearBit<3>(Memory::NR52, false); }
 
@@ -163,8 +163,8 @@ void APU::ClockLengthCounters()
 	channel_1_.ClockLengthCounter();
 	channel_2_.ClockLengthCounter();
 
-	if (!channel_1_.IsChannelOn()) { mmu_->ClearBit<0>(Memory::NR52, false); }
-	if (!channel_2_.IsChannelOn()) { mmu_->ClearBit<1>(Memory::NR52, false); }
+	if (!channel_1_.IsChannelOn()) { mmu_->ClearBit(Memory::NR52, 0, false); }
+	if (!channel_2_.IsChannelOn()) { mmu_->ClearBit(Memory::NR52, 1, false); }
 }
 
 std::function<void()> APU::AddListener(Listener listener)

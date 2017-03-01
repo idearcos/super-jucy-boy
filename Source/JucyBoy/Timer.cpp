@@ -21,7 +21,7 @@ void Timer::OnMachineCycleLapse()
 		{
 			timer_counter_ = timer_modulo_;
 			mmu_->WriteByte(Memory::TIMA, timer_counter_, false);
-			mmu_->SetBit<2>(Memory::IF);
+			mmu_->SetBit(Memory::IF, 2);
 			timer_overflow_state_ = TimerOverflowState::JustReloaded;
 		}
 		else

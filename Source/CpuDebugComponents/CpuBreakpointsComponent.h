@@ -1,12 +1,12 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JucyBoy/CPU.h"
+#include "../JucyBoy/Debug/DebugCPU.h"
 
-class CpuBreakpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener, public CPU::Listener
+class CpuBreakpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener, public DebugCPU::Listener
 {
 public:
-	CpuBreakpointsComponent(CPU &cpu);
+	CpuBreakpointsComponent(DebugCPU &cpu);
 	~CpuBreakpointsComponent();
 
 	// ListBoxModel overrides
@@ -18,7 +18,7 @@ public:
 	void textEditorReturnKeyPressed(TextEditor&) override;
 
 	// CPU::Listener overrides
-	void OnBreakpointsChanged(const CPU::BreakpointList &breakpoint_list) override;
+	void OnBreakpointsChanged(const DebugCPU::BreakpointList &breakpoint_list) override;
 
 	// Component overrides
 	void paint(Graphics& g) override;
@@ -34,5 +34,5 @@ private:
 
 	TextEditor breakpoint_add_editor_;
 
-	CPU* cpu_{ nullptr };
+	DebugCPU* cpu_{ nullptr };
 };

@@ -6,7 +6,7 @@
 
 void CPU::PopulateInstructions()
 {
-	for (size_t ii = 0; ii < instructions_.size(); ++ii)
+	for (int ii = 0; ii < instructions_.size(); ++ii)
 	{
 		instructions_[ii] = [this, ii]() {
 			registers_.pc = previous_pc_;
@@ -690,7 +690,7 @@ void CPU::PopulateInstructions()
 
 	// HALT
 	instructions_[0x76] = [this]() {
-		if (interrupt_master_enable_ || ((enabled_interrupts_.to_ulong() & requested_interrupts_.to_ulong()) == 0))
+		if (interrupt_master_enable_ || ((enabled_interrupts_ & requested_interrupts_) == 0))
 		{
 			current_state_ = State::Halted;
 		}

@@ -52,7 +52,7 @@ void GPU::OnMachineCycleLapse()
 				NotifyNewFrame();
 
 				// Request VBlank interrupt
-				mmu_->SetBit<0>(Memory::IF);
+				mmu_->SetBit(Memory::IF, 0);
 			}
 			else
 			{
@@ -213,14 +213,14 @@ void GPU::UpdateLineComparison()
 {
 	if (current_line_ == line_compare_)
 	{
-		mmu_->SetBit<2>(Memory::STAT, false);
+		mmu_->SetBit(Memory::STAT, 2, false);
 
 		// Request interrupt if enabled
-		if (line_coincidence_interrupt_enabled_) { mmu_->SetBit<1>(Memory::IF); }
+		if (line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
 	}
 	else
 	{
-		mmu_->ClearBit<2>(Memory::STAT, false);
+		mmu_->ClearBit(Memory::STAT, 2, false);
 	}
 }
 
@@ -284,17 +284,19 @@ void GPU::SetLcdState(State state)
 {
 	current_state_ = state;
 
+	mmu_->WriteByte(Memory::STAT, mmu_->ReadByte(Memory::STAT) & ~(0x03) | static_cast<uint8_t>(state));
+
 	// Request interrupt if enabled
 	switch (current_state_)
 	{
 	case State::HBLANK:
-		if (hblank_interrupt_enabled_) { mmu_->SetBit<1>(Memory::IF); }
+		if (hblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
 		break;
 	case State::VBLANK:
-		if (vblank_interrupt_enabled_) { mmu_->SetBit<1>(Memory::IF); }
+		if (vblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
 		break;
 	case State::OAM:
-		if (oam_interrupt_enabled_) { mmu_->SetBit<1>(Memory::IF); }
+		if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
 		break;
 	default:
 		break;

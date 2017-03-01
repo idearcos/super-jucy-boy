@@ -26,7 +26,7 @@ CpuRegistersComponent::CpuRegistersComponent()
 	addAndMakeVisible(zero_flag_toggle_);
 }
 
-void CpuRegistersComponent::paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected)
+void CpuRegistersComponent::paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool /*rowIsSelected*/)
 {
 	switch (rowNumber)
 	{

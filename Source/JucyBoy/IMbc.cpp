@@ -4,8 +4,8 @@
 IMbc::IMbc(MMU &mmu) :
 	mmu_{ &mmu }
 {
-	mmu_listener_deregister_functions_.emplace_back(mmu_->AddListener(*this, &IMbc::OnRomWritten, Memory::Region::ROM_Bank0));
-	mmu_listener_deregister_functions_.emplace_back(mmu_->AddListener(*this, &IMbc::OnRomWritten, Memory::Region::ROM_OtherBanks));
+	mmu_listener_deregister_functions_.emplace_back(mmu_->AddListener([this](Memory::Address address, uint8_t value) { this->OnRomWritten(address, value); }, Memory::Region::ROM_Bank0));
+	mmu_listener_deregister_functions_.emplace_back(mmu_->AddListener([this](Memory::Address address, uint8_t value) { this->OnRomWritten(address, value); }, Memory::Region::ROM_OtherBanks));
 }
 
 IMbc::~IMbc()

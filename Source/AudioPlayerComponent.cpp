@@ -2,8 +2,8 @@
 #include "AudioPlayerComponent.h"
 #include "JucyBoy/APU.h"
 
-AudioPlayerComponent::AudioPlayerComponent(APU &apu) :
-	apu_{ &apu }
+
+AudioPlayerComponent::AudioPlayerComponent()
 {
 	setAudioChannels(0, 2);
 }
@@ -21,7 +21,7 @@ void AudioPlayerComponent::ClearBuffer()
 	}
 }
 
-void AudioPlayerComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
+void AudioPlayerComponent::prepareToPlay(int /*samplesPerBlockExpected*/, double sampleRate)
 {
 	output_sample_rate_ = static_cast<size_t>(sampleRate);
 	downsampling_ratio_integer_part_ = APU::sample_rate_ / output_sample_rate_;

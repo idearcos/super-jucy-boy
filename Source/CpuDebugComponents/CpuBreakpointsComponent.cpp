@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iomanip>
 
-CpuBreakpointsComponent::CpuBreakpointsComponent(CPU &cpu) :
+CpuBreakpointsComponent::CpuBreakpointsComponent(DebugCPU &cpu) :
 	cpu_{ &cpu }
 {
 	cpu_->AddListener(*this);
@@ -73,7 +73,7 @@ void CpuBreakpointsComponent::UpdateHitBreakpoint(Memory::Address pc)
 	}
 }
 
-void CpuBreakpointsComponent::OnBreakpointsChanged(const CPU::BreakpointList &breakpoint_list)
+void CpuBreakpointsComponent::OnBreakpointsChanged(const DebugCPU::BreakpointList &breakpoint_list)
 {
 	breakpoints_ = std::vector<Memory::Address>{ breakpoint_list.cbegin(), breakpoint_list.cend() };
 	breakpoint_list_box_.updateContent();

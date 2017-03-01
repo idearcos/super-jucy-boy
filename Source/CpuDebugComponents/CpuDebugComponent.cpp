@@ -1,6 +1,6 @@
 #include "CpuDebugComponent.h"
 
-CpuDebugComponent::CpuDebugComponent(CPU &cpu) :
+CpuDebugComponent::CpuDebugComponent(DebugCPU &cpu) :
 	breakpoints_component_{ cpu },
 	instruction_breakpoints_component_{ cpu },
 	cpu_{ &cpu }

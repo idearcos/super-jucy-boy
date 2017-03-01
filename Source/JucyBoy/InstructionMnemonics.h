@@ -3,4 +3,5 @@
 #include <string>
 #include <cstdint>
 
-std::string GetInstructionMnemonic(uint8_t opcode);
+std::string GetInstructionMnemonic(int opcode);
+std::string GetCbInstructionMnemonic(int opcode);

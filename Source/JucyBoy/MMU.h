@@ -15,23 +15,20 @@
 class MMU
 {
 public:
+	using Listener = std::function<void(Memory::Address address, uint8_t value)>;
+
 	MMU();
-	~MMU();
+	virtual ~MMU();
 
 	// Sets certain memory registers' initial state
 	void Reset();
 
 	uint8_t ReadByte(Memory::Address address) const;
 	void WriteByte(Memory::Address address, uint8_t value, bool notify = true);
-	bool IsReadWatchpointHit(Memory::Address address) const;
-	bool IsWriteWatchpointHit(Memory::Address address) const;
 
-	template <int BitNum>
-	void SetBit(Memory::Address address, bool notify = true) { WriteByte(address, (1 << BitNum) | ReadByte(address), notify); }
-	template <int BitNum>
-	void ClearBit(Memory::Address address, bool notify = true) { WriteByte(address, ~(1 << BitNum) & ReadByte(address), notify); }
-	template <int BitNum>
-	bool IsBitSet(Memory::Address address) { return (ReadByte(address) & (1 << BitNum)) != 0; }
+	inline void SetBit(Memory::Address address, int bit_num, bool notify = true) { WriteByte(address, (1 << bit_num) | ReadByte(address), notify); }
+	inline void ClearBit(Memory::Address address, int bit_num, bool notify = true) { WriteByte(address, ~(1 << bit_num) & ReadByte(address), notify); }
+	inline bool IsBitSet(Memory::Address address, int bit_num) { return (ReadByte(address) & (1 << bit_num)) != 0; }
 
 	void LoadRom(const std::string &rom_file_path);
 	bool IsRomLoaded() const noexcept { return rom_loaded_; }
@@ -45,26 +42,21 @@ public:
 	bool IsOamDmaActive() const { return is_oam_dma_active_; }
 	void OamDmaActive(bool is_active) { is_oam_dma_active_ = is_active; }
 
-	// GUI interaction
-	Memory::Map GetMemoryMap() const;
-	std::vector<Memory::Watchpoint> GetWatchpointList() const;
-	void AddWatchpoint(Memory::Watchpoint watchpoint);
-	void RemoveWatchpoint(Memory::Watchpoint watchpoint);
-
 	// AddListener returns a deregister function that can be called with no arguments
-	template <typename T>
-	std::function<void()> AddListener(T &listener, void(T::*func)(Memory::Address, uint8_t), Memory::Region region)
+	std::function<void()> AddListener(Listener &&listener_function, Memory::Region region)
 	{
-		auto it = listeners_[region].emplace(listeners_[region].begin(), std::bind(func, std::ref(listener), std::placeholders::_1, std::placeholders::_2));
-		return [=, this]() { listeners_[region].erase(it); };
+		auto it = listeners_[region].emplace(listeners_[region].begin(), listener_function);
+		return [this, region, it]() { listeners_[region].erase(it); };
 	}
 
 private:
 	// Listener notification
 	void NotifyMemoryWrite(Memory::Region region, Memory::Address address, uint8_t value);
 
-private:
+protected:
 	std::vector<std::vector<uint8_t>> memory_;
+
+private:
 	std::vector<std::vector<uint8_t>> rom_banks;
 	std::vector<std::vector<uint8_t>> external_ram_banks;
 
@@ -77,10 +69,11 @@ private:
 
 	bool is_oam_dma_active_{ false };
 
-	// Watchpoints
-	std::set<Memory::Address> read_watchpoints_;
-	std::set<Memory::Address> write_watchpoints_;
-
-	using Listener = std::function<void(Memory::Address address, uint8_t value)>;
 	std::map<Memory::Region, std::list<Listener>> listeners_;
+
+private:
+	MMU(const MMU&) = delete;
+	MMU(MMU&&) = delete;
+	MMU& operator=(const MMU&) = delete;
+	MMU& operator=(MMU&&) = delete;
 };

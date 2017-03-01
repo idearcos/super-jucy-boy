@@ -3,7 +3,7 @@
 #include <iomanip>
 #include "../JucyBoy/InstructionMnemonics.h"
 
-CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent(CPU &cpu) :
+CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent(DebugCPU &cpu) :
 	cpu_{ &cpu }
 {
 	cpu_->AddListener(*this);
@@ -19,19 +19,19 @@ CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent(CPU &cpu)
 	addAndMakeVisible(instruction_breakpoint_list_header_);
 
 	// Add combo box for new instruction breakpoints
-	for (int i = 0; i <= 255; ++i)
+	for (int ii = 0; ii <= 255; ++ii)
 	{
-		if ((i % 16) == 0)
+		if ((ii % 16) == 0)
 		{
 			std::stringstream header_string;
-			header_string << "0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << i << " - 0x" << i + 16;
+			header_string << "0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << ii << " - 0x" << ii + 16;
 			instruction_breakpoint_add_combo_box_.addSectionHeading(header_string.str());
 		}
 
 		std::stringstream instruction_string;
-		instruction_string << "[0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << i << "] ";
-		instruction_string << GetInstructionMnemonic(i);
-		instruction_breakpoint_add_combo_box_.addItem(instruction_string.str(), i + 1);
+		instruction_string << "[0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << ii << "] ";
+		instruction_string << GetInstructionMnemonic(ii);
+		instruction_breakpoint_add_combo_box_.addItem(instruction_string.str(), ii + 1);
 	}
 	instruction_breakpoint_add_combo_box_.addListener(this);
 	addAndMakeVisible(instruction_breakpoint_add_combo_box_);
@@ -64,10 +64,10 @@ void CpuInstructionBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 
 void CpuInstructionBreakpointsComponent::buttonClicked(Button*)
 {
-	cpu_->AddInstructionBreakpoint(instruction_breakpoint_add_combo_box_.getSelectedId() - 1);
+	cpu_->AddInstructionBreakpoint(static_cast<CPU::OpCode>(instruction_breakpoint_add_combo_box_.getSelectedId() - 1));
 }
 
-void CpuInstructionBreakpointsComponent::OnInstructionBreakpointsChanged(const CPU::InstructionBreakpointList &instruction_breakpoint_list)
+void CpuInstructionBreakpointsComponent::OnInstructionBreakpointsChanged(const DebugCPU::InstructionBreakpointList &instruction_breakpoint_list)
 {
 	instruction_breakpoints_ = std::vector<CPU::OpCode>{ instruction_breakpoint_list.cbegin(), instruction_breakpoint_list.cend() };
 	instruction_breakpoint_list_box_.updateContent();

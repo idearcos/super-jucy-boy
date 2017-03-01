@@ -5,7 +5,6 @@
 CPU::CPU(MMU &mmu) :
 	mmu_{ &mmu }
 {
-	PopulateCbInstructionNames();
 	PopulateInstructions();
 	PopulateCbInstructions();
 	Reset();
@@ -72,34 +71,7 @@ void CPU::RunningLoopFunction()
 		//TODO: precompute the next breakpoint instead of iterating the whole set every time. This "next breakpoint" would need to be updated after every Jump instruction.
 		while (!exit_loop_.load())
 		{
-			switch (current_state_)
-			{
-			case State::Running:
-				previous_pc_ = registers_.pc;
-				ExecuteInstruction(FetchOpcode());
-				break;
-			case State::Halted:
-				// NOP instructions are executed until Halted state ends
-				NotifyMachineCycleLapse();
-				break;
-			case State::HaltBug:
-				// PC increment is skipped once when fetching the next opcode (no extra cycles are lapsed)
-				current_state_ = State::Running;
-				previous_pc_ = registers_.pc;
-				ExecuteInstruction(mmu_->ReadByte(registers_.pc));
-				break;
-			case State::Stopped:
-				//TODO check for joypad input, since that is the only thing that can finish Stopped state
-				continue;
-			}
-
-			CheckInterrupts();
-
-			if (IsBreakpointHit() || IsInstructionBreakpointHit() || IsWatchpointHit(mmu_->ReadByte(registers_.pc)))
-			{
-				NotifyRunningLoopInterruption();
-				break;
-			}
+			ExecuteOneInstruction();
 		}
 	}
 	catch (std::exception &)
@@ -119,8 +91,33 @@ void CPU::StepOver()
 	// Therefore, do not allow calling StepOver if Run has already been called.
 	if (IsRunning()) { throw std::logic_error{ "Trying to call StepOver while RunningLoopFunction thread is running" }; }
 
-	previous_pc_ = registers_.pc;
 	ExecuteInstruction(FetchOpcode());
+
+	CheckInterrupts();
+}
+
+void CPU::ExecuteOneInstruction()
+{
+	switch (current_state_)
+	{
+	case State::Running:
+		previous_pc_ = registers_.pc;
+		ExecuteInstruction(FetchOpcode());
+		break;
+	case State::Halted:
+		// NOP instructions are executed until Halted state ends
+		NotifyMachineCycleLapse();
+		break;
+	case State::HaltBug:
+		// PC increment is skipped once when fetching the next opcode (no extra cycles are lapsed)
+		current_state_ = State::Running;
+		previous_pc_ = registers_.pc;
+		ExecuteInstruction(mmu_->ReadByte(registers_.pc));
+		break;
+	case State::Stopped:
+		//TODO check for joypad input, since that is the only thing that can finish Stopped state
+		return;
+	}
 
 	CheckInterrupts();
 }
@@ -177,9 +174,9 @@ void CPU::CheckInterrupts()
 			break;
 		}
 	case State::Halted:
-		for (uint16_t interrupt = Interrupt::VBlank; interrupt <= Interrupt::Joypad; ++interrupt)
+		for (auto interrupt = static_cast<uint16_t>(Interrupt::VBlank); interrupt <= static_cast<uint16_t>(Interrupt::Joypad); ++interrupt)
 		{
-			if (enabled_interrupts_[interrupt] && requested_interrupts_[interrupt])
+			if ((enabled_interrupts_ & (1 << interrupt)) && (requested_interrupts_ & (1 << interrupt)))
 			{
 				current_state_ = State::Running;
 
@@ -194,27 +191,9 @@ void CPU::CheckInterrupts()
 
 				// Interrupt Master Enable and the corresponding bit in the IF register become cleared
 				interrupt_master_enable_ = false;
-				requested_interrupts_[interrupt] = false;
+				requested_interrupts_ &= (~(1 << interrupt));
 
-				// Switch needed due to template parameter of ClearBit
-				switch (interrupt)
-				{
-				case Interrupt::VBlank:
-					mmu_->ClearBit<Interrupt::VBlank>(Memory::IF, false);
-					break;
-				case Interrupt::LcdStat:
-					mmu_->ClearBit<Interrupt::LcdStat>(Memory::IF, false);
-					break;
-				case Interrupt::Timer:
-					mmu_->ClearBit<Interrupt::Timer>(Memory::IF, false);
-					break;
-				case Interrupt::Serial:
-					mmu_->ClearBit<Interrupt::Serial>(Memory::IF, false);
-					break;
-				case Interrupt::Joypad:
-					mmu_->ClearBit<Interrupt::Joypad>(Memory::IF, false);
-					break;
-				}
+				mmu_->ClearBit(Memory::IF, interrupt, false);
 
 				// Interrupts are processed one at a time, therefore exit the loop now
 				break;
@@ -345,6 +324,12 @@ void CPU::Call(Memory::Address address)
 	PushWordToStack(registers_.pc);
 	registers_.pc = address;
 }
+
+void CPU::Return()
+{
+	registers_.pc = PopWordFromStack();
+	NotifyMachineCycleLapse();
+}
 #pragma endregion
 
 #pragma region CB instruction helper functions
@@ -413,6 +398,13 @@ void CPU::Srl(uint8_t &reg)
 	reg >>= 1;
 	if (reg == 0) SetFlag(Flags::Z);
 }
+
+void CPU::TestBit(uint8_t reg, int bit_num)
+{
+	ClearFlag(Flags::N | Flags::Z);
+	SetFlag(Flags::H);
+	if ((reg & (1 << bit_num)) == 0) SetFlag(Flags::Z);
+}
 #pragma endregion
 
 #pragma region MMU listener functions
@@ -436,158 +428,7 @@ void CPU::OnInterruptsRegisterWritten(Memory::Address, uint8_t value)
 }
 #pragma endregion
 
-#pragma region Breakpoints
-void CPU::AddBreakpoint(Memory::Address address)
-{
-	//TODO: allow only when not running!
-	breakpoints_.insert(address);
-	NotifyBreakpointsChange();
-}
-
-void CPU::RemoveBreakpoint(Memory::Address address)
-{
-	//TODO: allow only when not running!
-	breakpoints_.erase(address);
-	NotifyBreakpointsChange();
-}
-
-void CPU::AddInstructionBreakpoint(OpCode opcode)
-{
-	instruction_breakpoints_.insert(opcode);
-	NotifyInstructionBreakpointsChange();
-}
-
-void CPU::RemoveInstructionBreakpoint(OpCode opcode)
-{
-	instruction_breakpoints_.erase(opcode);
-	NotifyInstructionBreakpointsChange();
-}
-
-bool CPU::IsBreakpointHit() const
-{
-	for (const auto breakpoint : breakpoints_)
-	{
-		if (breakpoint == registers_.pc)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool CPU::IsInstructionBreakpointHit() const
-{
-	for (const auto instruction_breakpoint : instruction_breakpoints_)
-	{
-		if (instruction_breakpoint == mmu_->ReadByte(registers_.pc))
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool CPU::IsWatchpointHit(OpCode next_opcode) const
-{
-	//TODO: also check OAM DMA for watchpoints
-	Memory::Address address{ 0 };
-	switch (next_opcode)
-	{
-	case 0x02:
-		return mmu_->IsWriteWatchpointHit(registers_.bc);
-	case 0x08:
-		address = mmu_->ReadByte(registers_.pc + 1);
-		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
-		return mmu_->IsWriteWatchpointHit(address);
-	case 0x0A:
-		return mmu_->IsReadWatchpointHit(registers_.bc);
-	case 0x12:
-		return mmu_->IsWriteWatchpointHit(registers_.de);
-	case 0x1A:
-		return mmu_->IsReadWatchpointHit(registers_.de);
-	case 0x22:
-	case 0x32:
-	case 0x36:
-	case 0x70:
-	case 0x71:
-	case 0x72:
-	case 0x73:
-	case 0x74:
-	case 0x75:
-	case 0x77:
-		return mmu_->IsWriteWatchpointHit(registers_.hl);
-	case 0x34:
-	case 0x35:
-		return mmu_->IsReadWatchpointHit(registers_.hl) || mmu_->IsWriteWatchpointHit(registers_.hl);
-	case 0x2A:
-	case 0x3A:
-	case 0x46:
-	case 0x4E:
-	case 0x56:
-	case 0x5E:
-	case 0x66:
-	case 0x6E:
-	case 0x7E:
-	case 0x86:
-	case 0x8E:
-	case 0x96:
-	case 0x9E:
-	case 0xA6:
-	case 0xAE:
-	case 0xB6:
-	case 0xBE:
-		return mmu_->IsReadWatchpointHit(registers_.hl);
-	case 0xC1:
-	case 0xD1:
-	case 0xE1:
-	case 0xF1:
-		return mmu_->IsReadWatchpointHit(registers_.sp);
-	case 0xC5:
-	case 0xD5:
-	case 0xE5:
-	case 0xF5:
-		return mmu_->IsWriteWatchpointHit(registers_.sp);
-	case 0xE0:
-		return mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + mmu_->ReadByte(registers_.pc + 1));
-	case 0xE2:
-		return mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
-	case 0xEA:
-		address = mmu_->ReadByte(registers_.pc + 1);
-		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
-		return mmu_->IsWriteWatchpointHit(address);
-	case 0xF0:
-		return mmu_->IsReadWatchpointHit(Memory::io_region_start_ + mmu_->ReadByte(registers_.pc + 1));
-	case 0xF2:
-		return mmu_->IsReadWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
-	case 0xFA:
-		address = mmu_->ReadByte(registers_.pc + 1);
-		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
-		return mmu_->IsReadWatchpointHit(address);
-	default:
-		return false;
-	}
-}
-#pragma endregion
-
 #pragma region Listener notification
-void CPU::NotifyBreakpointsChange() const
-{
-	for (auto& listener : listeners_)
-	{
-		listener->OnBreakpointsChanged(breakpoints_);
-	}
-}
-
-void CPU::NotifyInstructionBreakpointsChange() const
-{
-	for (auto& listener : listeners_)
-	{
-		listener->OnInstructionBreakpointsChanged(instruction_breakpoints_);
-	}
-}
-
 void CPU::NotifyRunningLoopInterruption() const
 {
 	for (auto& listener : listeners_)

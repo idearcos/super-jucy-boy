@@ -5,7 +5,6 @@
 #include <atomic>
 #include <future>
 #include <set>
-#include <bitset>
 #include "Registers.h"
 #include "Memory.h"
 
@@ -16,9 +15,6 @@ class CPU
 public:
 	using MachineCycles = size_t;
 	using OpCode = uint8_t;
-	using Instruction = std::function<void()>;
-	using BreakpointList = std::set<uint16_t>;
-	using InstructionBreakpointList = std::set<OpCode>;
 
 	struct Registers
 	{
@@ -40,7 +36,109 @@ public:
 		All = 0xF0
 	};
 
-	enum Interrupt
+	class Listener
+	{
+	public:
+		virtual ~Listener() {}
+		virtual void OnRunningLoopInterrupted() {}
+		virtual void OnMachineCycleLapse() {}
+	};
+
+public:
+	CPU(MMU &mmu);
+	virtual ~CPU();
+
+	// Set initial state of registers_
+	void Reset();
+
+	// Execution flow control
+	virtual void Run();
+	void Stop();
+	bool IsRunning() const noexcept;
+	virtual void StepOver();
+
+	// MMU listener functions
+	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
+	void OnInterruptsRegisterWritten(Memory::Address address, uint8_t value);
+
+	// Listeners management
+	void AddListener(Listener &listener) { listeners_.insert(&listener); }
+	void RemoveListener(Listener &listener) { listeners_.erase(&listener); }
+
+protected:
+	void ExecuteOneInstruction();
+
+	// Listener notification
+	void NotifyRunningLoopInterruption() const;
+
+	Flags ReadFlags() const;
+
+private:
+	// Initialization of instructions_ array
+	void PopulateInstructions();
+	void PopulateCbInstructions();
+
+	// Execution flow
+	inline OpCode FetchOpcode() { return FetchByte(); }
+	inline void ExecuteInstruction(OpCode opcode) { instructions_[opcode](); }
+	void RunningLoopFunction();
+
+	// Interrupts
+	void CheckInterrupts();
+
+	// Memory R/W
+	uint8_t FetchByte();
+	uint16_t FetchWord();
+	uint16_t PopWordFromStack();
+	void PushWordToStack(uint16_t value);
+	uint8_t ReadByte(uint16_t address) const;
+	void WriteByte(uint16_t address, uint8_t value) const;
+
+	// Instruction helper functions
+	void IncrementRegister(uint8_t &reg);
+	void DecrementRegister(uint8_t &reg);
+	void Add(uint8_t value);
+	void Adc(uint8_t value);
+	void Sub(uint8_t value);
+	void Sbc(uint8_t value);
+	void And(uint8_t value);
+	void Xor(uint8_t value);
+	void Or(uint8_t value);
+	void Compare(uint8_t value);
+	void AddToHl(uint16_t value);
+	void Call(Memory::Address address);
+	void Return();
+
+	// CB instruction helper functions
+	void Rlc(uint8_t &reg); // Rotate left
+	void Rrc(uint8_t &reg); // Rotate right
+	void Rl(uint8_t &reg); // Rotate left through carry
+	void Rr(uint8_t &reg); // Rotate right through carry
+	void Sla(uint8_t &reg); // Shift left arithmetic
+	void Sra(uint8_t &reg); // Shift right arithmetic
+	void Swap(uint8_t &reg); // Exchange low and high nibbles
+	void Srl(uint8_t &reg); // Shift right logical
+	void TestBit(uint8_t reg, int bit_num);
+
+	// Flag operations
+	void SetFlag(Flags flag);
+	void ClearFlag(Flags flag);
+	void ToggleFlag(Flags flag);
+	bool IsFlagSet(Flags flag) const;
+
+	// Listener notification
+	void NotifyMachineCycleLapse() const;
+
+protected:
+	Registers registers_;
+
+	std::atomic<bool> exit_loop_{ false };
+	std::future<void> loop_function_result_;
+
+private:
+	using Instruction = std::function<void()>;
+
+	enum class Interrupt
 	{
 		VBlank = 0,
 		LcdStat,
@@ -57,140 +155,21 @@ public:
 		Stopped
 	};
 
-	class Listener
-	{
-	public:
-		virtual ~Listener() {}
-		virtual void OnRunningLoopInterrupted() {}
-		virtual void OnMachineCycleLapse() {}
-		virtual void OnBreakpointsChanged(const BreakpointList &/*breakpoint_list*/) {}
-		virtual void OnInstructionBreakpointsChanged(const InstructionBreakpointList &/*instruction_breakpoint_list*/) {}
-	};
-
-public:
-	CPU(MMU &mmu);
-	~CPU();
-
-	// Set initial state of registers_
-	void Reset();
-
-	// Execution flow control
-	void Run();
-	void Stop();
-	bool IsRunning() const noexcept;
-	void StepOver();
-
-	// MMU listener functions
-	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
-	void OnInterruptsRegisterWritten(Memory::Address address, uint8_t value);
-
-	// Breakpoints
-	void AddBreakpoint(Memory::Address address);
-	void RemoveBreakpoint(Memory::Address address);
-	void AddInstructionBreakpoint(OpCode opcode);
-	void RemoveInstructionBreakpoint(OpCode opcode);
-
-	// Status retrieval
-	Registers GetRegistersState() const { return registers_; }
-	inline Flags GetFlagsState() const { return ReadFlags(); }
-
-	// Listeners management
-	void AddListener(Listener &listener) { listeners_.insert(&listener); }
-	void RemoveListener(Listener &listener) { listeners_.erase(&listener); }
-
-private:
-	// Initialization of instructions_ array
-	void PopulateInstructions();
-	void PopulateCbInstructions();
-	void PopulateCbInstructionNames();
-
-	// Execution flow
-	inline OpCode FetchOpcode() { return FetchByte(); }
-	inline void ExecuteInstruction(OpCode opcode) { instructions_[opcode](); }
-	void RunningLoopFunction();
-	bool IsBreakpointHit() const;
-	bool IsInstructionBreakpointHit() const;
-	bool IsWatchpointHit(OpCode next_opcode) const;
-
-	// Memory R/W
-	uint8_t FetchByte();
-	uint16_t FetchWord();
-	uint16_t PopWordFromStack();
-	void PushWordToStack(uint16_t value);
-	uint8_t ReadByte(uint16_t address) const;
-	void WriteByte(uint16_t address, uint8_t value) const;
-
-	// Interrupts
-	void CheckInterrupts();
-
-	// Instruction helper functions
-	void IncrementRegister(uint8_t &reg);
-	void DecrementRegister(uint8_t &reg);
-	void Add(uint8_t value);
-	void Adc(uint8_t value);
-	void Sub(uint8_t value);
-	void Sbc(uint8_t value);
-	void And(uint8_t value);
-	void Xor(uint8_t value);
-	void Or(uint8_t value);
-	void Compare(uint8_t value);
-	void AddToHl(uint16_t value);
-	void Call(Memory::Address address);
-	inline void Return() { registers_.pc = PopWordFromStack(); NotifyMachineCycleLapse(); }
-
-	// CB instruction helper functions
-	void Rlc(uint8_t &reg); // Rotate left
-	void Rrc(uint8_t &reg); // Rotate right
-	void Rl(uint8_t &reg); // Rotate left through carry
-	void Rr(uint8_t &reg); // Rotate right through carry
-	void Sla(uint8_t &reg); // Shift left arithmetic
-	void Sra(uint8_t &reg); // Shift right arithmetic
-	void Swap(uint8_t &reg); // Exchange low and high nibbles
-	void Srl(uint8_t &reg); // Shift right logical
-	template <int BitNum>
-	void TestBit(uint8_t reg)
-	{
-		ClearFlag(Flags::N | Flags::Z);
-		SetFlag(Flags::H);
-		if ((reg & (1 << BitNum)) == 0) SetFlag(Flags::Z);
-	}
-
-	// Flag operations
-	void SetFlag(Flags flag);
-	void ClearFlag(Flags flag);
-	void ToggleFlag(Flags flag);
-	bool IsFlagSet(Flags flag) const;
-	Flags ReadFlags() const;
-
-	// Listener notification
-	void NotifyRunningLoopInterruption() const;
-	void NotifyMachineCycleLapse() const;
-	void NotifyBreakpointsChange() const;
-	void NotifyInstructionBreakpointsChange() const;
-
-private:
-	Registers registers_;
 	uint16_t previous_pc_{ 0 };
 
 	State current_state_{ State::Running };
 
 	std::array<Instruction, 256> instructions_;
 	std::array<Instruction, 256> cb_instructions_;
-	std::array<std::string, 256> cb_instruction_names_;
-
-	std::atomic<bool> exit_loop_{ false };
-	std::future<void> loop_function_result_;
 
 	bool interrupt_master_enable_{ true };
 	bool ime_requested_{ false }; // Used to delay IME one instruction, since EI enables the interrupts for the instruction AFTER itself
-	std::bitset<5> enabled_interrupts_{ 0 };
-	std::bitset<5> requested_interrupts_{ 0 };
+	uint8_t enabled_interrupts_{ 0 };
+	uint8_t requested_interrupts_{ 0 };
 
-	BreakpointList breakpoints_;
-	InstructionBreakpointList instruction_breakpoints_;
+	std::set<Listener*> listeners_;
 
 	MMU *mmu_{ nullptr };
-	std::set<Listener*> listeners_;
 
 private:
 	CPU(const CPU&) = delete;

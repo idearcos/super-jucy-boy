@@ -1,12 +1,12 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "MemoryDebugComponent.h"
-#include "JucyBoy/MMU.h"
+#include "JucyBoy/Debug/DebugMMU.h"
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
 
-MemoryMapComponent::MemoryMapComponent(MMU &mmu) : 
-	mmu_{ &mmu }
+MemoryMapComponent::MemoryMapComponent(DebugMMU &debug_mmu) :
+	debug_mmu_{ &debug_mmu }
 {
 	// Add memory map list header
 	memory_map_list_header_.setJustificationType(Justification::centred);
@@ -21,7 +21,7 @@ MemoryMapComponent::MemoryMapComponent(MMU &mmu) :
 
 void MemoryMapComponent::UpdateMemoryMap(bool compute_diff)
 {
-	memory_map_ = mmu_->GetMemoryMap();
+	memory_map_ = debug_mmu_->GetMemoryMap();
 
 	if (compute_diff)
 	{
@@ -83,8 +83,8 @@ void MemoryMapComponent::paintListBoxItem(int rowNumber, Graphics& g, int width,
 	row_text.draw(g, Rectangle<int>{ width, height }.toFloat());
 }
 
-MemoryWatchpointsComponent::MemoryWatchpointsComponent(MMU &mmu) :
-	mmu_{ &mmu }
+MemoryWatchpointsComponent::MemoryWatchpointsComponent(DebugMMU &debug_mmu) :
+	debug_mmu_{ &debug_mmu }
 {
 	// Add list of watchpoints
 	watchpoint_list_box_.setModel(this);
@@ -178,14 +178,14 @@ void MemoryWatchpointsComponent::textEditorReturnKeyPressed(TextEditor &)
 
 	if (watchpoint_type_read_.getToggleState())
 	{
-		mmu_->AddWatchpoint(Memory::Watchpoint{ static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Read });
+		debug_mmu_->AddWatchpoint(Memory::Watchpoint{ static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Read });
 	}
 	else if (watchpoint_type_write_.getToggleState())
 	{
-		mmu_->AddWatchpoint(Memory::Watchpoint{ static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Write });
+		debug_mmu_->AddWatchpoint(Memory::Watchpoint{ static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Write });
 	}
 
-	watchpoints_ = mmu_->GetWatchpointList();
+	watchpoints_ = debug_mmu_->GetWatchpointList();
 
 	watchpoint_list_box_.updateContent();
 	watchpoint_list_box_.repaint();
@@ -193,16 +193,16 @@ void MemoryWatchpointsComponent::textEditorReturnKeyPressed(TextEditor &)
 
 void MemoryWatchpointsComponent::deleteKeyPressed(int lastRowSelected)
 {
-	mmu_->RemoveWatchpoint(watchpoints_[lastRowSelected]);
+	debug_mmu_->RemoveWatchpoint(watchpoints_[lastRowSelected]);
 
-	watchpoints_ = mmu_->GetWatchpointList();
+	watchpoints_ = debug_mmu_->GetWatchpointList();
 	watchpoint_list_box_.updateContent();
 	watchpoint_list_box_.repaint();
 }
 
-MemoryDebugComponent::MemoryDebugComponent(MMU &mmu) :
-	memory_map_component_{ mmu },
-	memory_watchpoints_component_{ mmu }
+MemoryDebugComponent::MemoryDebugComponent(DebugMMU &debug_mmu) :
+	memory_map_component_{ debug_mmu },
+	memory_watchpoints_component_{ debug_mmu }
 {
 	addAndMakeVisible(memory_map_component_);
 	addAndMakeVisible(memory_watchpoints_component_);

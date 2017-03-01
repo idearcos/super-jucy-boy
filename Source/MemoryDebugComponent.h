@@ -4,12 +4,12 @@
 #include "JucyBoy/Memory.h"
 #include <vector>
 
-class MMU;
+class DebugMMU;
 
 class MemoryMapComponent final : public Component, public ListBoxModel
 {
 public:
-	MemoryMapComponent(MMU &mmu);
+	MemoryMapComponent(DebugMMU &debug_mmu);
 	~MemoryMapComponent() = default;
 
 	void UpdateMemoryMap(bool compute_diff);
@@ -31,13 +31,13 @@ private:
 	Memory::Map previous_memory_map_state_{};
 	std::vector<Colour> memory_map_colours_{ memory_map_.size(), Colours::black };
 
-	MMU* mmu_{ nullptr };
+	DebugMMU* debug_mmu_{ nullptr };
 };
 
 class MemoryWatchpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener
 {
 public:
-	MemoryWatchpointsComponent(MMU &mmu);
+	MemoryWatchpointsComponent(DebugMMU &debug_mmu);
 	~MemoryWatchpointsComponent() = default;
 
 	void paint(Graphics&) override;
@@ -61,13 +61,13 @@ private:
 	ToggleButton watchpoint_type_write_{ "Write" };
 	Rectangle<int> watchpoint_add_area_;
 
-	MMU* mmu_{ nullptr };
+	DebugMMU* debug_mmu_{ nullptr };
 };
 
 class MemoryDebugComponent final : public Component
 {
 public:
-	MemoryDebugComponent(MMU &mmu);
+	MemoryDebugComponent(DebugMMU &debug_mmu);
 	~MemoryDebugComponent() = default;
 
 	// JucyBoy Listener functions

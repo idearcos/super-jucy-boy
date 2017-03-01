@@ -9,7 +9,7 @@ class APU;
 class AudioPlayerComponent final : public juce::AudioAppComponent
 {
 public:
-	AudioPlayerComponent(APU &apu);
+	AudioPlayerComponent();
 	~AudioPlayerComponent();
 
 	void ClearBuffer();
@@ -42,8 +42,6 @@ private:
 	std::array<size_t, 2> input_sample_accumulators_{};
 	size_t num_accumulated_apu_samples_{ 0 };
 	size_t num_apu_samples_in_next_output_sample_{ 0 };
-
-	APU* apu_{ nullptr };
 
 private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPlayerComponent)

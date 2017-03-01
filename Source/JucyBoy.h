@@ -3,8 +3,8 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <functional>
 #include <vector>
-#include "JucyBoy/CPU.h"
-#include "JucyBoy/MMU.h"
+#include "JucyBoy/Debug/DebugCPU.h"
+#include "JucyBoy/Debug/DebugMMU.h"
 #include "JucyBoy/GPU.h"
 #include "JucyBoy/APU.h"
 #include "JucyBoy/Timer.h"
@@ -54,8 +54,8 @@ private:
 	static const size_t memory_map_width_{ 430 };
 
 private:
-	MMU mmu_{};
-	CPU cpu_{ mmu_ };
+	DebugCPU cpu_{ mmu_ };
+	DebugMMU mmu_{};
 	GPU gpu_{ mmu_ };
 	APU apu_{ mmu_ };
 	jb::Timer timer_{ mmu_ };
@@ -65,7 +65,7 @@ private:
 	std::vector<std::function<void()>> listener_deregister_functions_;
 
 	GameScreenComponent game_screen_component_;
-	AudioPlayerComponent audio_player_component_{ apu_ };
+	AudioPlayerComponent audio_player_component_;
 
 	Rectangle<int> usage_instructions_area_;
 	CpuDebugComponent cpu_debug_component_{ cpu_ };
