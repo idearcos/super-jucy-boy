@@ -104,35 +104,35 @@ void GameScreenComponent::shutdown()
 	glDeleteTextures(1, &texture_);
 }
 
-uint8_t GameScreenComponent::GpuColorToIntensity(GPU::Color color)
-{
-	switch (color)
-	{
-	case GPU::Color::White:
-		return 255;
-	case GPU::Color::LightGrey:
-		return 192;
-	case GPU::Color::DarkGrey:
-		return 96;
-	case GPU::Color::Black:
-		return 0;
-	default:
-		throw std::invalid_argument("Invalid argument to GbColorToIntensity: " + std::to_string(static_cast<int>(color)));
-	}
-}
-
-void GameScreenComponent::OnNewFrame(const GPU::Framebuffer &gpu_framebuffer)
+void GameScreenComponent::OnNewFrame(const PPU::Framebuffer &ppu_framebuffer)
 {
 	std::unique_lock<std::mutex> lock{ framebuffer_mutex_ };
 
-	for (int i = 0; i < gpu_framebuffer.size(); ++i)
+	for (int i = 0; i < ppu_framebuffer.size(); ++i)
 	{
-		framebuffer_[3 * i] = GpuColorToIntensity(gpu_framebuffer[i]);
-		framebuffer_[3 * i + 1] = GpuColorToIntensity(gpu_framebuffer[i]);
-		framebuffer_[3 * i + 2] = GpuColorToIntensity(gpu_framebuffer[i]);
+		framebuffer_[3 * i] = PpuColorToIntensity(ppu_framebuffer[i]);
+		framebuffer_[3 * i + 1] = PpuColorToIntensity(ppu_framebuffer[i]);
+		framebuffer_[3 * i + 2] = PpuColorToIntensity(ppu_framebuffer[i]);
 	}
 
 	openGLContext.triggerRepaint();
+}
+
+uint8_t GameScreenComponent::PpuColorToIntensity(PPU::Color color)
+{
+	switch (color)
+	{
+	case PPU::Color::White:
+		return 255;
+	case PPU::Color::LightGrey:
+		return 192;
+	case PPU::Color::DarkGrey:
+		return 96;
+	case PPU::Color::Black:
+		return 0;
+	default:
+		throw std::invalid_argument("Invalid argument to PpuColorToIntensity: " + std::to_string(static_cast<int>(color)));
+	}
 }
 
 void GameScreenComponent::render()

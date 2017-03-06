@@ -1,7 +1,8 @@
 #include "DebugCPU.h"
 #include "DebugMMU.h"
 
-DebugCPU::DebugCPU(DebugMMU &debug_mmu) : CPU{ debug_mmu }
+DebugCPU::DebugCPU(DebugMMU &debug_mmu) : CPU{ debug_mmu },
+	debug_mmu_{ &debug_mmu }
 {
 
 }
@@ -37,7 +38,7 @@ void DebugCPU::DebugRunningLoopFunction()
 		{
 			ExecuteOneInstruction();
 
-			if (IsBreakpointHit() || IsInstructionBreakpointHit() || IsWatchpointHit(mmu_->ReadByte(registers_.pc)))
+			if (IsBreakpointHit() || IsInstructionBreakpointHit() || IsWatchpointHit(debug_mmu_->ReadByte(registers_.pc)))
 			{
 				NotifyRunningLoopInterruption();
 				break;
@@ -96,7 +97,7 @@ bool DebugCPU::IsInstructionBreakpointHit() const
 {
 	for (const auto instruction_breakpoint : instruction_breakpoints_)
 	{
-		if (instruction_breakpoint == mmu_->ReadByte(registers_.pc))
+		if (instruction_breakpoint == debug_mmu_->ReadByte(registers_.pc))
 		{
 			return true;
 		}
@@ -112,17 +113,17 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	switch (next_opcode)
 	{
 	case 0x02:
-		return mmu_->IsWriteWatchpointHit(registers_.bc);
+		return debug_mmu_->IsWriteWatchpointHit(registers_.bc);
 	case 0x08:
-		address = mmu_->ReadByte(registers_.pc + 1);
-		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
-		return mmu_->IsWriteWatchpointHit(address);
+		address = debug_mmu_->ReadByte(registers_.pc + 1);
+		address += (debug_mmu_->ReadByte(registers_.pc + 2) << 8);
+		return debug_mmu_->IsWriteWatchpointHit(address);
 	case 0x0A:
-		return mmu_->IsReadWatchpointHit(registers_.bc);
+		return debug_mmu_->IsReadWatchpointHit(registers_.bc);
 	case 0x12:
-		return mmu_->IsWriteWatchpointHit(registers_.de);
+		return debug_mmu_->IsWriteWatchpointHit(registers_.de);
 	case 0x1A:
-		return mmu_->IsReadWatchpointHit(registers_.de);
+		return debug_mmu_->IsReadWatchpointHit(registers_.de);
 	case 0x22:
 	case 0x32:
 	case 0x36:
@@ -133,10 +134,10 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0x74:
 	case 0x75:
 	case 0x77:
-		return mmu_->IsWriteWatchpointHit(registers_.hl);
+		return debug_mmu_->IsWriteWatchpointHit(registers_.hl);
 	case 0x34:
 	case 0x35:
-		return mmu_->IsReadWatchpointHit(registers_.hl) || mmu_->IsWriteWatchpointHit(registers_.hl);
+		return debug_mmu_->IsReadWatchpointHit(registers_.hl) || debug_mmu_->IsWriteWatchpointHit(registers_.hl);
 	case 0x2A:
 	case 0x3A:
 	case 0x46:
@@ -154,33 +155,33 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0xAE:
 	case 0xB6:
 	case 0xBE:
-		return mmu_->IsReadWatchpointHit(registers_.hl);
+		return debug_mmu_->IsReadWatchpointHit(registers_.hl);
 	case 0xC1:
 	case 0xD1:
 	case 0xE1:
 	case 0xF1:
-		return mmu_->IsReadWatchpointHit(registers_.sp);
+		return debug_mmu_->IsReadWatchpointHit(registers_.sp);
 	case 0xC5:
 	case 0xD5:
 	case 0xE5:
 	case 0xF5:
-		return mmu_->IsWriteWatchpointHit(registers_.sp);
+		return debug_mmu_->IsWriteWatchpointHit(registers_.sp);
 	case 0xE0:
-		return mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + mmu_->ReadByte(registers_.pc + 1));
+		return debug_mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + debug_mmu_->ReadByte(registers_.pc + 1));
 	case 0xE2:
-		return mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
+		return debug_mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
 	case 0xEA:
-		address = mmu_->ReadByte(registers_.pc + 1);
-		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
-		return mmu_->IsWriteWatchpointHit(address);
+		address = debug_mmu_->ReadByte(registers_.pc + 1);
+		address += (debug_mmu_->ReadByte(registers_.pc + 2) << 8);
+		return debug_mmu_->IsWriteWatchpointHit(address);
 	case 0xF0:
-		return mmu_->IsReadWatchpointHit(Memory::io_region_start_ + mmu_->ReadByte(registers_.pc + 1));
+		return debug_mmu_->IsReadWatchpointHit(Memory::io_region_start_ + debug_mmu_->ReadByte(registers_.pc + 1));
 	case 0xF2:
-		return mmu_->IsReadWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
+		return debug_mmu_->IsReadWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
 	case 0xFA:
-		address = mmu_->ReadByte(registers_.pc + 1);
-		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
-		return mmu_->IsReadWatchpointHit(address);
+		address = debug_mmu_->ReadByte(registers_.pc + 1);
+		address += (debug_mmu_->ReadByte(registers_.pc + 2) << 8);
+		return debug_mmu_->IsReadWatchpointHit(address);
 	default:
 		return false;
 	}

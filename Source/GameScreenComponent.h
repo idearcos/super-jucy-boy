@@ -3,9 +3,9 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <cstdint>
 #include <array>
-#include "JucyBoy/GPU.h"
+#include "JucyBoy/PPU.h"
 
-class GameScreenComponent final : public juce::OpenGLAppComponent, public GPU::Listener
+class GameScreenComponent final : public juce::OpenGLAppComponent, public PPU::Listener
 {
 public:
 	GameScreenComponent();
@@ -18,10 +18,10 @@ public:
 	void paint (Graphics&) override;
 	void resized() override;
 
-	void OnNewFrame(const GPU::Framebuffer &gb_framebuffer) override;
+	void OnNewFrame(const PPU::Framebuffer &ppu_framebuffer) override;
 
 private:
-	uint8_t GpuColorToIntensity(GPU::Color color);
+	uint8_t PpuColorToIntensity(PPU::Color color);
 
 private:
 	struct Vertex
@@ -46,6 +46,5 @@ private:
 	std::array<uint8_t, 160 * 144 * 3> framebuffer_;
 	std::mutex framebuffer_mutex_;
 
-private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GameScreenComponent)
 };

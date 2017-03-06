@@ -7,7 +7,7 @@
 
 class MMU;
 
-class GPU final : public CPU::Listener
+class PPU final : public CPU::Listener
 {
 public:
 	enum class State
@@ -36,8 +36,8 @@ public:
 	};
 
 public:
-	GPU(MMU &mmu);
-	~GPU();
+	PPU(MMU &mmu);
+	~PPU();
 
 	State GetCurrentState() { return current_state_; }
 
@@ -121,8 +121,8 @@ private:
 	std::set<Listener*> listeners_;
 
 private:
-	GPU(const GPU&) = delete;
-	GPU(GPU&&) = delete;
-	GPU& operator=(const GPU&) = delete;
-	GPU& operator=(GPU&&) = delete;
+	PPU(const PPU&) = delete;
+	PPU(PPU&&) = delete;
+	PPU& operator=(const PPU&) = delete;
+	PPU& operator=(PPU&&) = delete;
 };

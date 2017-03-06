@@ -24,7 +24,7 @@ CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent(DebugCPU 
 		if ((ii % 16) == 0)
 		{
 			std::stringstream header_string;
-			header_string << "0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << ii << " - 0x" << ii + 16;
+			header_string << "0x" << std::uppercase << std::setfill('0') << std::hex << std::setw(2) << ii << " - 0x" << std::setw(2) << ii + 0xF;
 			instruction_breakpoint_add_combo_box_.addSectionHeading(header_string.str());
 		}
 

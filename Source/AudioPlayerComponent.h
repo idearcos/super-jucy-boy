@@ -43,6 +43,5 @@ private:
 	size_t num_accumulated_apu_samples_{ 0 };
 	size_t num_apu_samples_in_next_output_sample_{ 0 };
 
-private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPlayerComponent)
 };

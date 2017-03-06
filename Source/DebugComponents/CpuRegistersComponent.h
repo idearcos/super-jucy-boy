@@ -34,4 +34,6 @@ private:
 	bool compute_diff_{ false };
 
 	CPU::Flags previous_cpu_flags_state_;
+
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CpuRegistersComponent)
 };

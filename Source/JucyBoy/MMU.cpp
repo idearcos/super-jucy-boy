@@ -85,14 +85,14 @@ void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
 		if (notify) NotifyMemoryWrite(region_and_relative_address.first, address, value);
 		return;
 	case Memory::Region::VRAM:
-		//TODO: ignore writes during VRAM GPU state
+		//TODO: ignore writes during VRAM PPU state
 		break;
 	case Memory::Region::ERAM:
 		if (!external_ram_enabled_) return;
 		if ((address - Memory::external_ram_start_) > memory_[static_cast<size_t>(Memory::Region::ERAM)].size()) return;
 		break;
 	case Memory::Region::OAM:
-		//TODO: ignore writes during OAM and VRAM GPU states
+		//TODO: ignore writes during OAM and VRAM PPU states
 		break;
 	default:
 		break;

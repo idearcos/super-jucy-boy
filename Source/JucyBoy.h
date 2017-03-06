@@ -5,7 +5,7 @@
 #include <vector>
 #include "JucyBoy/Debug/DebugCPU.h"
 #include "JucyBoy/Debug/DebugMMU.h"
-#include "JucyBoy/GPU.h"
+#include "JucyBoy/PPU.h"
 #include "JucyBoy/APU.h"
 #include "JucyBoy/Timer.h"
 #include "JucyBoy/OamDma.h"
@@ -54,9 +54,9 @@ private:
 	static const size_t memory_map_width_{ 430 };
 
 private:
-	DebugCPU cpu_{ mmu_ };
 	DebugMMU mmu_{};
-	GPU gpu_{ mmu_ };
+	DebugCPU cpu_{ mmu_ };
+	PPU ppu_{ mmu_ };
 	APU apu_{ mmu_ };
 	jb::Timer timer_{ mmu_ };
 	OamDma oam_dma_{ mmu_ };

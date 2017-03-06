@@ -55,7 +55,7 @@ private:
 
 	std::set<Listener*> listeners_;
 
-	DebugMMU *mmu_{ nullptr };
+	DebugMMU *debug_mmu_{ nullptr };
 
 private:
 	DebugCPU(const DebugCPU&) = delete;

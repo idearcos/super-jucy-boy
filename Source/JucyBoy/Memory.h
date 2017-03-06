@@ -89,7 +89,7 @@ namespace Memory
 	static constexpr Address NR51	{ 0xFF25 };
 	static constexpr Address NR52	{ 0xFF26 };
 
-	// GPU
+	// PPU
 	static constexpr Address LCDC	{ 0xFF40 };
 	static constexpr Address STAT	{ 0xFF41 };
 	static constexpr Address SCY	{ 0xFF42 };

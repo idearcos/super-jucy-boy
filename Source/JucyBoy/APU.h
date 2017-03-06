@@ -15,7 +15,7 @@ class APU final : public CPU::Listener
 	static constexpr size_t num_channels_{ 4 };
 	static constexpr size_t max_channel_volume_{ 15 };
 	static constexpr size_t max_master_volume_{ 8 };
-	static constexpr size_t gb_clock_frequency_{ 4194304 };
+	static constexpr size_t input_clock_frequency_{ 4194304 };
 	static constexpr size_t frame_sequencer_frequency_{ 512 };
 
 public:
@@ -45,7 +45,7 @@ private:
 	void NotifyNewSample(size_t right_sample, size_t left_sample);
 
 private:
-	ClockDivider frame_sequencer_divider_{ gb_clock_frequency_ / frame_sequencer_frequency_, std::bind(&APU::OnFrameSequencerClocked, this) };
+	ClockDivider frame_sequencer_divider_{ input_clock_frequency_ / frame_sequencer_frequency_, std::bind(&APU::OnFrameSequencerClocked, this) };
 	size_t frame_sequencer_step_{ 0 };
 
 	SquareWaveChannelWithSweep channel_1_;

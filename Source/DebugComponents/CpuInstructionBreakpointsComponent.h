@@ -39,4 +39,6 @@ private:
 	TextButton instruction_breakpoint_add_button_;
 
 	DebugCPU* cpu_{ nullptr };
+
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CpuInstructionBreakpointsComponent)
 };

@@ -1,9 +1,9 @@
-#include "GPU.h"
+#include "PPU.h"
 #include <string>
 #include <cassert>
 #include "MMU.h"
 
-GPU::GPU(MMU &mmu) :
+PPU::PPU(MMU &mmu) :
 	mmu_(&mmu)
 {
 	//TODO: Trigger correct initial values in memory
@@ -11,12 +11,12 @@ GPU::GPU(MMU &mmu) :
 	SetLcdState(State::OAM);
 }
 
-GPU::~GPU()
+PPU::~PPU()
 {
 
 }
 
-void GPU::OnMachineCycleLapse()
+void PPU::OnMachineCycleLapse()
 {
 	if (!lcd_on_) return;
 
@@ -79,7 +79,7 @@ void GPU::OnMachineCycleLapse()
 	}
 }
 
-void GPU::RenderBackground(uint8_t line_number)
+void PPU::RenderBackground(uint8_t line_number)
 {
 	if (!show_bg_) return;
 
@@ -103,7 +103,7 @@ void GPU::RenderBackground(uint8_t line_number)
 	}
 }
 
-void GPU::RenderWindow(uint8_t line_number)
+void PPU::RenderWindow(uint8_t line_number)
 {
 	if (!show_window_) return;
 
@@ -128,7 +128,7 @@ void GPU::RenderWindow(uint8_t line_number)
 	}
 }
 
-void GPU::RenderSprites(uint8_t line_number)
+void PPU::RenderSprites(uint8_t line_number)
 {
 	if (!show_sprites_) return;
 
@@ -194,7 +194,7 @@ void GPU::RenderSprites(uint8_t line_number)
 	}
 }
 
-uint8_t GPU::SetLineNumber(uint8_t line_number)
+uint8_t PPU::SetLineNumber(uint8_t line_number)
 {
 	current_line_ = line_number;
 	if (current_line_ >= 154)
@@ -209,7 +209,7 @@ uint8_t GPU::SetLineNumber(uint8_t line_number)
 	return current_line_;
 }
 
-void GPU::UpdateLineComparison()
+void PPU::UpdateLineComparison()
 {
 	if (current_line_ == line_compare_)
 	{
@@ -224,7 +224,7 @@ void GPU::UpdateLineComparison()
 	}
 }
 
-void GPU::SetLcdControl(uint8_t value)
+void PPU::SetLcdControl(uint8_t value)
 {
 	show_bg_ = (value & (1 << 0)) != 0;
 	show_sprites_ = (value & (1 << 1)) != 0;
@@ -236,7 +236,7 @@ void GPU::SetLcdControl(uint8_t value)
 	EnableLcd((value & (1 << 7)) != 0);
 }
 
-void GPU::SetLcdStatus(uint8_t value)
+void PPU::SetLcdStatus(uint8_t value)
 {
 	hblank_interrupt_enabled_ = (value & (1 << 3)) != 0;
 	vblank_interrupt_enabled_ = (value & (1 << 4)) != 0;
@@ -244,7 +244,7 @@ void GPU::SetLcdStatus(uint8_t value)
 	line_coincidence_interrupt_enabled_ = (value & (1 << 6)) != 0;
 }
 
-void GPU::SetPaletteData(Palette &palette, uint8_t value)
+void PPU::SetPaletteData(Palette &palette, uint8_t value)
 {
 	palette[0] = static_cast<Color>(value & 0x03);
 	palette[1] = static_cast<Color>((value >> 2) & 0x03);
@@ -253,7 +253,7 @@ void GPU::SetPaletteData(Palette &palette, uint8_t value)
 }
 
 #pragma region Helper functions
-void GPU::EnableLcd(bool enabled)
+void PPU::EnableLcd(bool enabled)
 {
 	if (lcd_on_ == enabled) return;
 
@@ -280,7 +280,7 @@ void GPU::EnableLcd(bool enabled)
 	//TODO: does any interrupt have to be requested when turning LCD on/off? I guess not
 }
 
-void GPU::SetLcdState(State state)
+void PPU::SetLcdState(State state)
 {
 	current_state_ = state;
 
@@ -305,7 +305,7 @@ void GPU::SetLcdState(State state)
 #pragma endregion
 
 #pragma region MMU listener functions
-void GPU::OnVramWritten(Memory::Address address, uint8_t value)
+void PPU::OnVramWritten(Memory::Address address, uint8_t value)
 {
 	if (address < Memory::tile_map_0_start_)
 	{
@@ -333,7 +333,7 @@ void GPU::OnVramWritten(Memory::Address address, uint8_t value)
 	}
 }
 
-void GPU::OnOamWritten(Memory::Address address, uint8_t value)
+void PPU::OnOamWritten(Memory::Address address, uint8_t value)
 {
 	// There are 40 sprites, 4 bytes each, held in OAM [0xFE00 - 0xFE9F]
 	const auto sprite_num = (address - Memory::oam_start_) >> 2;
@@ -356,7 +356,7 @@ void GPU::OnOamWritten(Memory::Address address, uint8_t value)
 	}
 }
 
-void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
+void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
 	switch (address)
 	{
@@ -406,7 +406,7 @@ void GPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 #pragma endregion
 
 #pragma region Listener notification
-void GPU::NotifyNewFrame() const
+void PPU::NotifyNewFrame() const
 {
 	for (auto& listener : listeners_)
 	{
