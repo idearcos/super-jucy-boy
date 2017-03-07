@@ -5,15 +5,16 @@
 #include <vector>
 #include "JucyBoy/Debug/DebugCPU.h"
 #include "JucyBoy/Debug/DebugMMU.h"
-#include "JucyBoy/PPU.h"
+#include "JucyBoy/Debug/DebugPPU.h"
 #include "JucyBoy/APU.h"
 #include "JucyBoy/Timer.h"
 #include "JucyBoy/OamDma.h"
 #include "JucyBoy/Joypad.h"
 #include "GameScreenComponent.h"
 #include "AudioPlayerComponent.h"
-#include "CpuDebugComponents/CpuDebugComponent.h"
-#include "MemoryDebugComponent.h"
+#include "DebugComponents/CpuDebugComponent.h"
+#include "DebugComponents/MemoryDebugComponent.h"
+#include "DebugComponents/PpuDebugComponent.h"
 
 class JucyBoy final : public Component, public CPU::Listener, public AsyncUpdater
 {
@@ -52,11 +53,12 @@ private:
 private:
 	static const size_t cpu_status_width_{ 150 };
 	static const size_t memory_map_width_{ 430 };
+	static const size_t ppu_tileset_width_{ 128 * 2 };
 
 private:
 	DebugMMU mmu_{};
 	DebugCPU cpu_{ mmu_ };
-	PPU ppu_{ mmu_ };
+	DebugPPU ppu_{ mmu_ };
 	APU apu_{ mmu_ };
 	jb::Timer timer_{ mmu_ };
 	OamDma oam_dma_{ mmu_ };
@@ -70,6 +72,7 @@ private:
 	Rectangle<int> usage_instructions_area_;
 	CpuDebugComponent cpu_debug_component_{ cpu_ };
 	MemoryDebugComponent memory_debug_component_{ mmu_ };
+	PpuDebugComponent ppu_debug_component_{ ppu_ };
 
 	using Listener = std::function<void(bool)>;
 	std::list<Listener> listeners_;

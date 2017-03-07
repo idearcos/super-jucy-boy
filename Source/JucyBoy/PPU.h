@@ -7,7 +7,7 @@
 
 class MMU;
 
-class PPU final : public CPU::Listener
+class PPU : public CPU::Listener
 {
 public:
 	enum class State
@@ -26,6 +26,8 @@ public:
 		Black = 3
 	};
 
+	using Palette = std::array<Color, 4>;
+	using Tile = std::array<uint8_t, 8 * 8>;
 	using Framebuffer = std::array<Color, 160 * 144>;
 
 	class Listener
@@ -37,9 +39,7 @@ public:
 
 public:
 	PPU(MMU &mmu);
-	~PPU();
-
-	State GetCurrentState() { return current_state_; }
+	virtual ~PPU();
 
 	// CPU::Listener overrides
 	void OnMachineCycleLapse() override;
@@ -62,7 +62,6 @@ private:
 	// Register write functions
 	void SetLcdControl(uint8_t value);
 	void SetLcdStatus(uint8_t value);
-	using Palette = std::array<Color, 4>;
 	void SetPaletteData(Palette &palette, uint8_t value);
 
 	// Helper functions
@@ -75,7 +74,7 @@ private:
 	// Listener notification
 	void NotifyNewFrame() const;
 
-private:
+protected:
 	// LCD mode state machine
 	State current_state_{ State::VBLANK };
 	CPU::MachineCycles cycles_lapsed_in_state_{ 0 };
@@ -106,7 +105,6 @@ private:
 	int window_y_{ 0 };
 	int window_x_{ 0 };
 
-	using Tile = std::array<uint8_t, 8 * 8>;
 	std::array<Tile, 384> tile_set_{};
 
 	using TileMap = std::array<uint8_t, 32 * 32>;

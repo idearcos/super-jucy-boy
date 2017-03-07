@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "JucyBoy/Memory.h"
+#include "../JucyBoy/Memory.h"
 #include <vector>
 
 class DebugMMU;

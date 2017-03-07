@@ -3,7 +3,7 @@
 
 JucyBoy::JucyBoy()
 {
-	setSize (160 * 4 + cpu_status_width_ + memory_map_width_, 144 * 4);
+	setSize (160 * 4 + cpu_status_width_ + memory_map_width_ + ppu_tileset_width_, 144 * 4);
 	setWantsKeyboardFocus(true);
 
 	game_screen_component_.addMouseListener(this, true);
@@ -17,9 +17,13 @@ JucyBoy::JucyBoy()
 	memory_debug_component_.addMouseListener(this, true);
 	addAndMakeVisible(memory_debug_component_);
 
+	memory_debug_component_.addMouseListener(this, true);
+	addAndMakeVisible(ppu_debug_component_);
+
 	// JucyBoy listeners
 	listener_deregister_functions_.emplace_back(AddListener(cpu_debug_component_, &CpuDebugComponent::OnStatusUpdateRequested));
 	listener_deregister_functions_.emplace_back(AddListener(memory_debug_component_, &MemoryDebugComponent::OnStatusUpdateRequested));
+	listener_deregister_functions_.emplace_back(AddListener(ppu_debug_component_, &PpuDebugComponent::OnStatusUpdateRequested));
 
 	// CPU listeners
 	cpu_.CPU::AddListener(timer_);
@@ -113,6 +117,9 @@ void JucyBoy::resized()
 
 	auto memory_debug_area = working_area.removeFromLeft(memory_map_width_);
 	memory_debug_component_.setBounds(memory_debug_area);
+
+	auto ppu_tileset_area = working_area.removeFromLeft(ppu_tileset_width_);
+	ppu_debug_component_.setBounds(ppu_tileset_area);
 }
 
 void JucyBoy::mouseDown( const MouseEvent &event)

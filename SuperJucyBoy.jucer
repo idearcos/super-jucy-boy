@@ -26,6 +26,10 @@
               file="Source/DebugComponents/MemoryDebugComponent.cpp"/>
         <FILE id="t8fWH8" name="MemoryDebugComponent.h" compile="0" resource="0"
               file="Source/DebugComponents/MemoryDebugComponent.h"/>
+        <FILE id="RYRThN" name="PpuDebugComponent.cpp" compile="1" resource="0"
+              file="Source/DebugComponents/PpuDebugComponent.cpp"/>
+        <FILE id="HFU7Bi" name="PpuDebugComponent.h" compile="0" resource="0"
+              file="Source/DebugComponents/PpuDebugComponent.h"/>
       </GROUP>
       <GROUP id="{F134FA3D-DA88-4DFD-F9D2-E3EF84037505}" name="JucyBoy">
         <GROUP id="{42EBD592-5F3D-594E-5324-472C819B4991}" name="Debug">
@@ -33,6 +37,8 @@
           <FILE id="aYJp6b" name="DebugCPU.h" compile="0" resource="0" file="Source/JucyBoy/Debug/DebugCPU.h"/>
           <FILE id="LzV7HF" name="DebugMMU.cpp" compile="1" resource="0" file="Source/JucyBoy/Debug/DebugMMU.cpp"/>
           <FILE id="fDUCfG" name="DebugMMU.h" compile="0" resource="0" file="Source/JucyBoy/Debug/DebugMMU.h"/>
+          <FILE id="mMyG2e" name="DebugPPU.cpp" compile="1" resource="0" file="Source/JucyBoy/Debug/DebugPPU.cpp"/>
+          <FILE id="vfvxSq" name="DebugPPU.h" compile="0" resource="0" file="Source/JucyBoy/Debug/DebugPPU.h"/>
         </GROUP>
         <FILE id="TPGff6" name="APU.cpp" compile="1" resource="0" file="Source/JucyBoy/APU.cpp"/>
         <FILE id="lQvxJL" name="APU.h" compile="0" resource="0" file="Source/JucyBoy/APU.h"/>
@@ -81,6 +87,10 @@
       <FILE id="dhem0M" name="JucyBoy.cpp" compile="1" resource="0" file="Source/JucyBoy.cpp"/>
       <FILE id="TQFnBn" name="JucyBoy.h" compile="0" resource="0" file="Source/JucyBoy.h"/>
       <FILE id="uh1Uzk" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="dIs3NE" name="OpenGl2DComponent.cpp" compile="1" resource="0"
+            file="Source/OpenGl2DComponent.cpp"/>
+      <FILE id="EkR43x" name="OpenGl2DComponent.h" compile="0" resource="0"
+            file="Source/OpenGl2DComponent.h"/>
     </GROUP>
     <FILE id="IxbJmR" name="README.md" compile="0" resource="1" file="README.md"/>
   </MAINGROUP>
