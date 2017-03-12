@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../OpenGl2DComponent.h"
+#include "../JuceLibraryCode/JuceHeader.h"
 #include "../JucyBoy/Debug/DebugPPU.h"
 
-class PpuDebugComponent final : public OpenGl2DComponent
+class PpuDebugComponent final : public OpenGLAppComponent
 {
 public:
 	PpuDebugComponent(DebugPPU &debug_ppu);
@@ -14,24 +14,46 @@ public:
 
 	// OpenGl2DComponent overrides
 	void render() override;
+	void initialise() override;
+	void shutdown() override;
 
 	// juce::Component overrides
 	void paint(Graphics&) override {}
 	void resized() override {}
 
 private:
-	uint8_t PpuColorNumberToIntensity(uint8_t color_number);
+	struct Vertex
+	{
+		float position[2];
+		float texCoord[3];
+	};
+
+	static std::vector<Vertex> InitializeVertices();
+	static std::vector<GLuint> InitializeElements();
+	static uint8_t PpuColorNumberToIntensity(uint8_t color_number);
 
 private:
-	static constexpr size_t num_tile_columns_{ 16 };
-	static constexpr size_t num_tile_rows_{ 24 };
+	static constexpr size_t num_tiles_{ 384 };
+	static constexpr size_t tile_grid_width_{ 16 };
+	static constexpr size_t tile_grid_height_{ 24 };
 	static constexpr size_t tile_width_{ 8 };
 	static constexpr size_t tile_height_{ 8 };
-	static_assert(num_tile_columns_ * num_tile_rows_ == 384, "Invalid number of tile rows and columns");
+	static_assert(tile_grid_width_ * tile_grid_height_ == num_tiles_, "Invalid number of tile rows and columns");
 
-	std::array<PPU::Tile, 384> tile_set_{};
-	std::array<uint8_t, 384 * tile_width_ * tile_height_> framebuffer_;
-	std::mutex framebuffer_mutex_;
+	std::array<PPU::Tile, num_tiles_> tile_set_{};
+	std::mutex tile_set_mutex_;
+
+	// OpenGL stuff
+	GLuint vertex_array_object_{ 0 };
+	GLuint vertex_buffer_object_{ 0 };
+	GLuint element_buffer_object_{ 0 };
+	GLuint vertex_shader_{ 0 };
+	GLuint fragment_shader_{ 0 };
+	GLuint shader_program_{ 0 };
+	GLuint texture_{ 0 };
+
+	const std::vector<Vertex> vertices_;
+	const std::vector<GLuint> elements_;
 
 	DebugPPU* debug_ppu_{ nullptr };
 

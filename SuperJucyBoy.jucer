@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="TfnRnX" name="SuperJucyBoy" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.idearcos.SuperJucyBoy" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.1" defines="JUCE_OPENGL_ALLOW_NON_POWER_OF_TWO_TEXTURES&#10;JUCE_OPENGL3">
+              jucerVersion="4.3.1" defines="GLEW_STATIC&#10;JUCE_OPENGL_ALLOW_NON_POWER_OF_TWO_TEXTURES&#10;JUCE_OPENGL3">
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
       <GROUP id="{F1A5EA92-351C-9FCF-06FA-0EB39BA6EE8A}" name="DebugComponents">
@@ -95,12 +95,13 @@
     <FILE id="IxbJmR" name="README.md" compile="0" resource="1" file="README.md"/>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <VS2015 targetFolder="Builds/VisualStudio2015" extraCompilerFlags="/bigobj">
+    <VS2015 targetFolder="Builds/VisualStudio2015" extraCompilerFlags="/bigobj"
+            externalLibraries="glew32s.lib">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="1" optimisation="1" targetName="SuperJucyBoy"/>
+                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" libraryPath="../../"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="0" optimisation="3" targetName="SuperJucyBoy"/>
+                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" libraryPath="../../"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_events" path="../JUCE/modules"/>

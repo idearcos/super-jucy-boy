@@ -1,3 +1,4 @@
+#include "GL/glew.h"
 #include "OpenGl2DComponent.h"
 
 OpenGl2DComponent::OpenGl2DComponent(size_t width, size_t height) :
@@ -25,6 +26,12 @@ OpenGl2DComponent::~OpenGl2DComponent()
 
 void OpenGl2DComponent::initialise()
 {
+	const auto glew_init_result = glewInit();
+	if (glew_init_result != GLEW_OK)
+	{
+		//TODO: do something
+	}
+
 #pragma region Shaders initialization
 	const std::string vertex_shader{
 		"#version 400\n"
@@ -57,44 +64,44 @@ void OpenGl2DComponent::initialise()
 	// Generate Vertex Array Object
 	// The binding of the VAO must be done BEFORE binding the GL_ELEMENT_ARRAY_BUFFER
 	// Otherwise the GL_ELEMENT_ARRAY_BUFFER won't be tied to the VAO state, and thus not automatically bound with it
-	openGLContext.extensions.glGenVertexArrays(1, &vertex_array_object_);
-	openGLContext.extensions.glBindVertexArray(vertex_array_object_);
+	glGenVertexArrays(1, &vertex_array_object_);
+	glBindVertexArray(vertex_array_object_);
 
 	// Generate Vertex Buffer Object
-	openGLContext.extensions.glGenBuffers(1, &vertex_buffer_object_);
-	openGLContext.extensions.glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
-	openGLContext.extensions.glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(decltype(vertices_)::value_type), vertices_.data(), GL_STATIC_DRAW);
+	glGenBuffers(1, &vertex_buffer_object_);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
+	glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(decltype(vertices_)::value_type), vertices_.data(), GL_STATIC_DRAW);
 
 	// Generate Element Buffer Object
-	openGLContext.extensions.glGenBuffers(1, &element_buffer_object_);
-	openGLContext.extensions.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object_);
-	openGLContext.extensions.glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements_.size() * sizeof(decltype(elements_)::value_type), elements_.data(), GL_STATIC_DRAW);
+	glGenBuffers(1, &element_buffer_object_);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object_);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements_.size() * sizeof(decltype(elements_)::value_type), elements_.data(), GL_STATIC_DRAW);
 
 	// Generate texture
-	openGLContext.extensions.glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &texture_);
 	glBindTexture(GL_TEXTURE_2D, texture_);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, static_cast<GLsizei>(width_), static_cast<GLsizei>(height_), 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, nullptr);
 
-	openGLContext.extensions.glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-	openGLContext.extensions.glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(float) * 2));
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(float) * 2));
 
 	// Attributes are disabled by default, therefore enable them
-	openGLContext.extensions.glEnableVertexAttribArray(0);
-	openGLContext.extensions.glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
-	openGLContext.extensions.glBindVertexArray(0);
+	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void OpenGl2DComponent::shutdown()
 {
-	openGLContext.extensions.glDeleteBuffers(1, &vertex_buffer_object_);
-	openGLContext.extensions.glDeleteBuffers(1, &element_buffer_object_);
+	glDeleteBuffers(1, &vertex_buffer_object_);
+	glDeleteBuffers(1, &element_buffer_object_);
 
 	glDeleteTextures(1, &texture_);
 }
