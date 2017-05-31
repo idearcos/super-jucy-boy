@@ -86,6 +86,7 @@ void PPU::RenderBackground(uint8_t line_number)
 	auto scrolled_x = scroll_x_;
 	const auto scrolled_y = static_cast<uint8_t>(line_number + scroll_y_);
 
+	uint8_t color_number{ 0 };
 	for (int i = 0; i < 160; ++i)
 	{
 		// Retrieve the tile number from the active tile map
@@ -95,9 +96,11 @@ void PPU::RenderBackground(uint8_t line_number)
 		auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
 
 		// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
-		color_numbers_buffer_[160 * line_number + i] = tile[8 * (scrolled_y & 0x07) + (scrolled_x & 0x07)];
+		color_number = tile[8 * (scrolled_y & 0x07) + (scrolled_x & 0x07)];
 
-		framebuffer_[160 * line_number + i] = bg_palette_[color_numbers_buffer_[160 * line_number + i]];
+		is_bg_transparent_[160 * line_number + i] = (color_number == 0);
+
+		framebuffer_[160 * line_number + i] = bg_palette_[color_number];
 
 		scrolled_x += 1;
 	}
@@ -111,6 +114,7 @@ void PPU::RenderWindow(uint8_t line_number)
 
 	const auto window_line = static_cast<uint8_t>(line_number - window_y_);
 
+	uint8_t color_number{ 0 };
 	for (int x = window_x_; x < 160; ++x)
 	{
 		if ((x < 0) || (x >= 160)) continue;
@@ -122,9 +126,11 @@ void PPU::RenderWindow(uint8_t line_number)
 		auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
 
 		// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
-		color_numbers_buffer_[160 * line_number + x] = tile[8 * (window_line & 0x07) + (x & 0x07)];
+		color_number = tile[8 * (window_line & 0x07) + (x & 0x07)];
 
-		framebuffer_[160 * line_number + x] = bg_palette_[color_numbers_buffer_[160 * line_number + x]];
+		is_bg_transparent_[160 * line_number + x] = (color_number == 0);
+
+		framebuffer_[160 * line_number + x] = bg_palette_[color_number];
 	}
 }
 
@@ -176,20 +182,22 @@ void PPU::RenderSprites(uint8_t line_number)
 		auto tile_line = line_number - sprite.GetY();
 		if (sprite.IsVerticallyFlipped()) tile_line = (sprite_height - 1) - tile_line;
 
-		const auto& tile = tile_line < 8 ? tile_set_[sprite.GetTileNumber()] : tile_set_[sprite.GetTileNumber() + 1];
+		// 16 pixel height sprites' first tile number is retrieved by resetting the lowest bit; the second tile number is retrieved by setting it.
+		const auto& tile = (!double_size_sprites_) ? tile_set_[sprite.GetTileNumber()]
+			: (tile_line < 8 ? tile_set_[sprite.GetTileNumber() & 0xFE] : tile_set_[sprite.GetTileNumber() | 0x01]);
 		tile_line &= 0x07;
 
+		uint8_t color_number{ 0 };
 		for (auto x = sprite.GetX(), tile_x_offset = !sprite.IsHorizontallyFlipped() ? 0 : 7; x < sprite.GetX() + 8; ++x, !sprite.IsHorizontallyFlipped() ? ++tile_x_offset : --tile_x_offset)
 		{
 			if (x < 0 || x >= 160) continue;
 
 			if (tile[8 * tile_line + tile_x_offset] == 0) continue;
 
-			if (!sprite.IsRenderedAboveBackground() && (color_numbers_buffer_[160 * line_number + x] != 0)) continue;
+			if (!sprite.IsRenderedAboveBackground() && !is_bg_transparent_[160 * line_number + x]) continue;
 
-			color_numbers_buffer_[160 * line_number + x] = tile[8 * tile_line + tile_x_offset];
-
-			framebuffer_[160 * line_number + x] = obj_palettes_[sprite.GetObjPaletteNumber()][color_numbers_buffer_[160 * line_number + x]];
+			color_number = tile[8 * tile_line + tile_x_offset];
+			framebuffer_[160 * line_number + x] = obj_palettes_[sprite.GetObjPaletteNumber()][color_number];
 		}
 	}
 }

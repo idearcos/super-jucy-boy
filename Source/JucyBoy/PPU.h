@@ -112,7 +112,7 @@ protected:
 
 	std::array<Sprite, 40> sprites_{};
 
-	std::array<uint8_t, 160 * 144> color_numbers_buffer_{}; // Color numbers before mapping to palette colors
+	std::array<bool, 160 * 144> is_bg_transparent_{}; // Color number 0 on background is "transparent" and therefore sprites show on top of it
 	Framebuffer framebuffer_{};
 
 	MMU* mmu_{ nullptr };
