@@ -96,10 +96,10 @@
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
                        isDebug="1" optimisation="1" targetName="SuperJucyBoy" libraryPath="../../glew-2.0.0/lib/Release/x64"
-                       defines="../../glew-2.0.0/include"/>
+                       headerPath="../../glew-2.0.0/include"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
                        isDebug="0" optimisation="3" targetName="SuperJucyBoy" libraryPath="../../glew-2.0.0/lib/Release/x64"
-                       defines="../../glew-2.0.0/include"/>
+                       headerPath="../../glew-2.0.0/include"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_events" path="../JUCE/modules"/>
