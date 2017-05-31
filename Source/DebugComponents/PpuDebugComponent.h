@@ -28,6 +28,7 @@ private:
 		float texCoord[3];
 	};
 
+	static GLuint CompileShaderProgram();
 	static std::vector<Vertex> InitializeVertices();
 	static std::vector<GLuint> InitializeElements();
 	static uint8_t PpuColorNumberToIntensity(uint8_t color_number);
@@ -47,8 +48,6 @@ private:
 	GLuint vertex_array_object_{ 0 };
 	GLuint vertex_buffer_object_{ 0 };
 	GLuint element_buffer_object_{ 0 };
-	GLuint vertex_shader_{ 0 };
-	GLuint fragment_shader_{ 0 };
 	GLuint shader_program_{ 0 };
 	GLuint texture_{ 0 };
 

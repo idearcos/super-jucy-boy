@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="TfnRnX" name="SuperJucyBoy" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.idearcos.SuperJucyBoy" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.1" defines="GLEW_STATIC&#10;JUCE_OPENGL_ALLOW_NON_POWER_OF_TWO_TEXTURES&#10;JUCE_OPENGL3">
+              jucerVersion="4.3.1" defines="GLEW_STATIC">
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
       <GROUP id="{F1A5EA92-351C-9FCF-06FA-0EB39BA6EE8A}" name="DebugComponents">
@@ -87,10 +87,6 @@
       <FILE id="dhem0M" name="JucyBoy.cpp" compile="1" resource="0" file="Source/JucyBoy.cpp"/>
       <FILE id="TQFnBn" name="JucyBoy.h" compile="0" resource="0" file="Source/JucyBoy.h"/>
       <FILE id="uh1Uzk" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
-      <FILE id="dIs3NE" name="OpenGl2DComponent.cpp" compile="1" resource="0"
-            file="Source/OpenGl2DComponent.cpp"/>
-      <FILE id="EkR43x" name="OpenGl2DComponent.h" compile="0" resource="0"
-            file="Source/OpenGl2DComponent.h"/>
     </GROUP>
     <FILE id="IxbJmR" name="README.md" compile="0" resource="1" file="README.md"/>
   </MAINGROUP>
@@ -99,9 +95,11 @@
             externalLibraries="glew32s.lib">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" libraryPath="../../"/>
+                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" libraryPath="../../glew-2.0.0/lib/Release/x64"
+                       defines="../../glew-2.0.0/include"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" libraryPath="../../"/>
+                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" libraryPath="../../glew-2.0.0/lib/Release/x64"
+                       defines="../../glew-2.0.0/include"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_events" path="../JUCE/modules"/>
