@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../MMU.h"
+#include <set>
 
 class DebugMMU final : public MMU
 {

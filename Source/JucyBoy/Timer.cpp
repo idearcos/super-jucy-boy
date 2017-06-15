@@ -20,7 +20,6 @@ void Timer::OnMachineCycleLapse()
 		if (timer_counter_ == 0)
 		{
 			timer_counter_ = timer_modulo_;
-			mmu_->WriteByte(Memory::TIMA, timer_counter_, false);
 			mmu_->SetBit(Memory::IF, 2);
 			timer_overflow_state_ = TimerOverflowState::JustReloaded;
 		}
@@ -39,14 +38,45 @@ void Timer::OnMachineCycleLapse()
 
 	internal_counter_ += 4;
 
-	if ((internal_counter_ & (divider_period_ - 1)) == 0)
-	{
-		mmu_->WriteByte(Memory::DIV, (internal_counter_ >> 8), false);
-	}
-
 	if (timer_enabled_ && ((internal_counter_ & (timer_period_ - 1)) == 0))
 	{
 		IncreaseTimer();
+	}
+}
+
+// MMU mapped memory read/write functions
+uint8_t Timer::OnIoMemoryRead(Memory::Address address) const
+{
+	switch (address)
+	{
+	case Memory::DIV:
+		return (internal_counter_ >> 8);
+	case Memory::TIMA:
+		return timer_counter_;
+	case Memory::TMA:
+		return timer_modulo_;
+	case Memory::TAC:
+		{uint8_t timer_period_code{ 0 };
+		switch (timer_period_)
+		{
+		case 1024:
+			timer_period_code = 0;
+			break;
+		case 16:
+			timer_period_code = 1;
+			break;
+		case 64:
+			timer_period_code = 2;
+			break;
+		case 256:
+			timer_period_code = 3;
+			break;
+		default:
+			throw std::logic_error{ "Invalid timer period value: " + timer_period_ };
+		}
+		return 0xF8 | (timer_enabled_ << 2) | timer_period_code; }
+	default:
+		throw std::invalid_argument{ "Reading from invalid memory address in Timer: " + address };
 	}
 }
 
@@ -59,7 +89,6 @@ void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 
 		// Writing any value to this register resets it to 0x00
 		internal_counter_ = 0;
-		mmu_->WriteByte(Memory::DIV, 0, false);
 
 		// Obscure timer behavior
 		if (timer_enabled_ && (previous_internal_counter & (timer_period_ >> 1)) != 0)
@@ -69,11 +98,7 @@ void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		break;
 	case Memory::TIMA:
 		// Timer overflow obscure behavior: the cycle when TIMA is reloaded with TMA, writing to TIMA has no effect (TMA prevails)
-		if (timer_overflow_state_ == TimerOverflowState::JustReloaded)
-		{
-			mmu_->WriteByte(Memory::TIMA, timer_counter_, false);
-			break;
-		}
+		if (timer_overflow_state_ == TimerOverflowState::JustReloaded) break;
 
 		timer_counter_ = value;
 		break;
@@ -84,14 +109,13 @@ void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		if (timer_overflow_state_ == TimerOverflowState::JustReloaded)
 		{
 			timer_counter_ = timer_modulo_;
-			mmu_->WriteByte(Memory::TIMA, timer_counter_, false);
 		}
 		break;
 	case Memory::TAC:
 		{const auto previous_timer_enabled = timer_enabled_;
 		const auto previous_timer_period = timer_period_;
 
-		timer_enabled_ = (value & (1 << 2)) != 0;
+		timer_enabled_ = (value & 0x04) != 0;
 		timer_period_ = timer_periods_map_[(value & 0x03)];
 
 		// Obscure timer behavior
@@ -102,6 +126,8 @@ void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 			IncreaseTimer();
 		}}
 		break;
+	default:
+		throw std::invalid_argument{ "Writing to invalid memory address in Timer: " + address };
 	}
 }
 
@@ -111,7 +137,6 @@ void Timer::IncreaseTimer()
 	{
 		timer_overflow_state_ = TimerOverflowState::JustOverflowed;
 	}
-	mmu_->WriteByte(Memory::TIMA, timer_counter_, false);
 }
 
 }

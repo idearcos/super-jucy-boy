@@ -8,8 +8,8 @@
 #include "JucyBoy/Debug/DebugPPU.h"
 #include "JucyBoy/APU.h"
 #include "JucyBoy/Timer.h"
-#include "JucyBoy/OamDma.h"
 #include "JucyBoy/Joypad.h"
+#include "JucyBoy/Cartridge.h"
 #include "GameScreenComponent.h"
 #include "AudioPlayerComponent.h"
 #include "DebugComponents/CpuDebugComponent.h"
@@ -59,10 +59,10 @@ private:
 	DebugMMU mmu_{};
 	DebugCPU cpu_{ mmu_ };
 	DebugPPU ppu_{ mmu_ };
-	APU apu_{ mmu_ };
+	APU apu_;
 	jb::Timer timer_{ mmu_ };
-	OamDma oam_dma_{ mmu_ };
-	Joypad joypad_{ mmu_ };
+	Joypad joypad_;
+	std::unique_ptr<Cartridge> cartridge_;
 
 	std::vector<std::function<void()>> listener_deregister_functions_;
 

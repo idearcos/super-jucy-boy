@@ -18,6 +18,10 @@ public:
 	void ClockVolumeEnvelope();
 
 	// Interface with memory registers
+	inline uint8_t ReadNRx1() const { return 0x3F | static_cast<uint8_t>(selected_duty_cycle_ << 6); }
+	inline uint8_t ReadNRx2() const { return static_cast<uint8_t>(envelope_.period) | (static_cast<uint8_t>(envelope_.direction) << 3) | static_cast<uint8_t>(envelope_.initial_volume << 4); }
+	inline uint8_t ReadNRx3() const { return 0xFF; }
+	inline uint8_t ReadNRx4() const { return 0xBF | (length_counter_enabled_ << 6); }
 	void OnNRx1Written(uint8_t value);
 	void OnNRx2Written(uint8_t value);
 	void OnNRx3Written(uint8_t value);
@@ -68,13 +72,14 @@ private:
 struct SquareWaveChannelWithSweep final : public SquareWaveChannel
 {
 public:
-	SquareWaveChannelWithSweep() : SquareWaveChannel() {}
+	SquareWaveChannelWithSweep();
 	~SquareWaveChannelWithSweep() = default;
 
 	// Interface with frame sequencer
 	void ClockFrequencySweep();
 
 	// Interface with memory registers
+	uint8_t ReadNR10() const { return 0x80 | static_cast<uint8_t>(frequency_sweep_.shift) | static_cast<uint8_t>(frequency_sweep_.direction << 3) | static_cast<uint8_t>(frequency_sweep_.period << 4); }
 	void OnNR10Written(uint8_t value);
 
 private:
@@ -85,7 +90,7 @@ private:
 	struct FrequencySweep
 	{
 		size_t period{ 0 };
-		int direction{ 1 };
+		int direction{ 0 };
 		size_t shift{ 0 };
 
 		bool active{ false };

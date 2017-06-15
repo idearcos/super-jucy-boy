@@ -13,14 +13,10 @@ bool DebugMMU::IsWriteWatchpointHit(Memory::Address address) const
 Memory::Map DebugMMU::GetMemoryMap() const
 {
 	Memory::Map memory_map{};
-	size_t offset{ 0 };
 
-	for (int i = 0; i < memory_.size(); ++i)
+	for (int i = 0; i < memory_map.size(); ++i)
 	{
-		memcpy(memory_map.data() + offset, memory_[i].data(), memory_[i].size());
-
-		// memory_[i].size() cannot be used below, since in the MBC2 case the external RAM size will be 2kBytes, rather than the usual 8 kBytes
-		offset += GetSizeOfRegion(static_cast<Memory::Region>(i));
+		memory_map[i] = ReadByte(static_cast<Memory::Address>(i));
 	}
 
 	return memory_map;

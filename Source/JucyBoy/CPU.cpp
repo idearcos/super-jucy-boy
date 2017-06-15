@@ -1,13 +1,13 @@
 #include "CPU.h"
 #include "MMU.h"
 #include <cassert>
+#include <string>
 
 CPU::CPU(MMU &mmu) :
 	mmu_{ &mmu }
 {
 	PopulateInstructions();
 	PopulateCbInstructions();
-	Reset();
 }
 
 CPU::~CPU()
@@ -192,8 +192,6 @@ void CPU::CheckInterrupts()
 				// Interrupt Master Enable and the corresponding bit in the IF register become cleared
 				interrupt_master_enable_ = false;
 				requested_interrupts_ &= (~(1 << interrupt));
-
-				mmu_->ClearBit(Memory::IF, interrupt, false);
 
 				// Interrupts are processed one at a time, therefore exit the loop now
 				break;
@@ -407,24 +405,27 @@ void CPU::TestBit(uint8_t reg, int bit_num)
 }
 #pragma endregion
 
-#pragma region MMU listener functions
-void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
+#pragma region MMU mapped memory read/write functions
+uint8_t CPU::OnIoMemoryRead(Memory::Address address) const
 {
-	switch (address)
-	{
-	case Memory::IF:
-		requested_interrupts_ = value;
-		mmu_->WriteByte(Memory::IF, 0xE0 | value, false);
-		break;
-	default:
-		break;
-	}
+	assert(address == Memory::IF);
+	return (0xE0 | requested_interrupts_);
 }
 
-void CPU::OnInterruptsRegisterWritten(Memory::Address, uint8_t value)
+void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
-	enabled_interrupts_ = value;
-	mmu_->WriteByte(Memory::IE, 0xE0 | value, false);
+	assert(address == Memory::IF);
+	requested_interrupts_ = value & 0x1F;
+}
+
+uint8_t CPU::OnInterruptsRead(Memory::Address) const
+{
+	return (0xE0 | enabled_interrupts_);
+}
+
+void CPU::OnInterruptsWritten(Memory::Address, uint8_t value)
+{
+	enabled_interrupts_ = value & 0x1F;
 }
 #pragma endregion
 

@@ -1,24 +1,31 @@
 #include "Joypad.h"
-#include "MMU.h"
+#include <cassert>
 
-Joypad::Joypad(MMU &mmu) :
-	mmu_{ &mmu }
+uint8_t Joypad::OnIoMemoryRead(Memory::Address address) const
 {
+	assert(address == Memory::JOYP);
 
+	uint8_t pressed_keys{ 0xFF };
+	if (direction_keys_requested_)
+	{
+		pressed_keys &= ~0x10;
+		pressed_keys &= pressed_directions_.load();
+	}
+	if (button_keys_requested_)
+	{
+		pressed_keys &= ~0x20;
+		pressed_keys &= pressed_buttons_.load();
+	}
+
+	return pressed_keys;
 }
 
 void Joypad::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
-	if (address != Memory::JOYP) return;
+	assert(address == Memory::JOYP);
 	
-	const auto direction_keys_requested = (value & (1 << 4)) == 0;
-	const auto button_keys_requested = (value & (1 << 5)) == 0;
-
-	uint8_t pressed_keys{ 0xFF };
-	if (direction_keys_requested) pressed_keys &= pressed_directions_.load();
-	if (button_keys_requested) pressed_keys &= pressed_buttons_.load();
-
-	mmu_->WriteByte(Memory::JOYP, pressed_keys, false);
+	direction_keys_requested_ = (value & 0x10) == 0;
+	button_keys_requested_ = (value & 0x20) == 0;
 }
 
 void Joypad::UpdatePressedKeys(std::vector<Keys> pressed_keys)
@@ -31,28 +38,28 @@ void Joypad::UpdatePressedKeys(std::vector<Keys> pressed_keys)
 		switch (key)
 		{
 		case Joypad::Keys::Down:
-			pressed_directions &= ~(1 << 3);
+			pressed_directions &= ~0x08;
 			break;
 		case Joypad::Keys::Up:
-			pressed_directions &= ~(1 << 2);
+			pressed_directions &= ~0x04;
 			break;
 		case Joypad::Keys::Left:
-			pressed_directions &= ~(1 << 1);
+			pressed_directions &= ~0x02;
 			break;
 		case Joypad::Keys::Right:
-			pressed_directions &= ~(1 << 0);
+			pressed_directions &= ~0x01;
 			break;
 		case Joypad::Keys::Start:
-			pressed_buttons &= ~(1 << 3);
+			pressed_buttons &= ~0x08;
 			break;
 		case Joypad::Keys::Select:
-			pressed_buttons &= ~(1 << 2);
+			pressed_buttons &= ~0x04;
 			break;
 		case Joypad::Keys::B:
-			pressed_buttons &= ~(1 << 1);
+			pressed_buttons &= ~0x02;
 			break;
 		case Joypad::Keys::A:
-			pressed_buttons &= ~(1 << 0);
+			pressed_buttons &= ~0x01;
 			break;
 		default:
 			break;

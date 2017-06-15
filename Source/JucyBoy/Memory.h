@@ -22,7 +22,8 @@ namespace Memory
 		Unused,			// 0xFEA0 - 0xFEFF
 		IO,				// 0xFF00 - 0xFF7F
 		HRAM,			// 0xFF80 - 0xFFFE
-		Interrupts		// 0xFFFF - 0xFFFF
+		Interrupts,		// 0xFFFF - 0xFFFF
+		Count
 	};
 
 	struct Watchpoint
@@ -40,22 +41,35 @@ namespace Memory
 	};
 
 	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address);
-	size_t GetSizeOfRegion(Region region);
 
 	static constexpr size_t rom_bank_size_			{ 0x4000 };
+	static constexpr size_t vram_size_				{ 0x2000 };
 	static constexpr size_t external_ram_bank_size_	{ 0x2000 };
+	static constexpr size_t wram_size_				{ 0x2000 };
+	static constexpr size_t wram_echo_size_			{ 0x1E00 };
+	static constexpr size_t oam_size_				{ 0x00A0 };
+	static constexpr size_t unused_region_size_		{ 0x0060 };
+	static constexpr size_t io_region_size_			{ 0x0080 };
+	static constexpr size_t hram_size_				{ 0x007F };
+	static constexpr size_t interrupts_region_size_	{ 0x0001 };
+
+	static constexpr Address rom_bank_mask			{ 0x3FFF };
+	static constexpr Address vram_mask				{ 0x1FFF };
+	static constexpr Address external_ram_bank_mask_{ 0x1FFF };
+	static constexpr Address wram_mask				{ 0x1FFF };
+	static constexpr Address oam_mask				{ 0x00FF };
+	static constexpr Address unused_region_mask		{ 0x007F };
+	static constexpr Address io_region_mask			{ 0x007F };
+	static constexpr Address hram_mask				{ 0x007F };
+	static constexpr Address interrupts_region_mask	{ 0x0000 };
 
 #pragma region Region start addresses
 	static constexpr Address isr_start_			{ 0x0040 };
-	static constexpr Address tile_sets_start_	{ 0x8000 };
-	static constexpr Address tile_map_0_start_	{ 0x9800 };
-	static constexpr Address tile_map_1_start_	{ 0x9C00 };
-	static constexpr Address external_ram_start_{ 0xA000 };
-	static constexpr Address oam_start_			{ 0xFE00 };
 	static constexpr Address io_region_start_	{ 0xFF00 };
 #pragma endregion
 
 #pragma region IO addresses
+	// Joypad
 	static constexpr Address JOYP	{ 0xFF00 };
 
 	// Timer
@@ -64,6 +78,7 @@ namespace Memory
 	static constexpr Address TMA	{ 0xFF06 };
 	static constexpr Address TAC	{ 0xFF07 };
 
+	// CPU Interrupts
 	static constexpr Address IF		{ 0xFF0F };
 
 	// APU
@@ -103,6 +118,7 @@ namespace Memory
 	static constexpr Address WY		{ 0xFF4A };
 	static constexpr Address WX		{ 0xFF4B };
 
+	// CPU Interrupts
 	static constexpr Address IE		{ 0xFFFF };
 #pragma endregion
 }

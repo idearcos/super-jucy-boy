@@ -4,78 +4,103 @@
 #include "MMU.h"
 
 PPU::PPU(MMU &mmu) :
-	mmu_(&mmu)
-{
-	//TODO: Trigger correct initial values in memory
-	SetLineNumber(0);
-	SetLcdState(State::OAM);
-}
-
-PPU::~PPU()
+	mmu_(&mmu),
+	bg_palette_{ Color::Black, Color::Black, Color::Black, Color::White },
+	obj_palettes_{ { { Color::Black, Color::Black, Color::Black, Color::Black },
+		{ Color::Black, Color::Black, Color::Black, Color::Black } } }
 {
 
 }
 
 void PPU::OnMachineCycleLapse()
 {
-	if (!lcd_on_) return;
-
-	cycles_lapsed_in_state_ += 1;
-	switch (current_state_)
+	if (lcd_on_)
 	{
-	case State::OAM:
-		if (cycles_lapsed_in_state_ >= 21)
+		cycles_lapsed_in_state_ += 1;
+		switch (current_state_)
 		{
-			cycles_lapsed_in_state_ -= 21;
-			SetLcdState(State::VRAM);
-		}
-		break;
-	case State::VRAM:
-		if (cycles_lapsed_in_state_ >= 43)
-		{
-			cycles_lapsed_in_state_ -= 43;
-			SetLcdState(State::HBLANK);
+		case State::OAM:
+			if (cycles_lapsed_in_state_ >= 21)
+			{
+				cycles_lapsed_in_state_ -= 21;
+				SetLcdState(State::VRAM);
+			}
+			break;
+		case State::VRAM:
+			if (cycles_lapsed_in_state_ >= 43)
+			{
+				cycles_lapsed_in_state_ -= 43;
+				SetLcdState(State::HBLANK);
 
-			RenderBackground(current_line_);
-			RenderWindow(current_line_);
-			RenderSprites(current_line_);
-		}
-		break;
-	case State::HBLANK:
-		if (cycles_lapsed_in_state_ >= 50)
-		{
-			cycles_lapsed_in_state_ -= 50;
-			if (IncrementLine() == 144)
+				RenderBackground(current_line_);
+				RenderWindow(current_line_);
+				RenderSprites(current_line_);
+			}
+			break;
+		case State::HBLANK:
+			if (cycles_lapsed_in_state_ >= 50)
 			{
-				SetLcdState(State::VBLANK);
+				cycles_lapsed_in_state_ -= 50;
+				if (IncrementLine() == 144)
+				{
+					SetLcdState(State::VBLANK);
 
-				NotifyNewFrame();
+					NotifyNewFrame();
 
-				// Request VBlank interrupt
-				mmu_->SetBit(Memory::IF, 0);
+					// Request VBlank interrupt
+					mmu_->SetBit(Memory::IF, 0);
+				}
+				else
+				{
+					SetLcdState(State::OAM);
+				}
 			}
-			else
+			break;
+		case State::VBLANK:
+			if (cycles_lapsed_in_state_ >= 114)
 			{
-				SetLcdState(State::OAM);
+				cycles_lapsed_in_state_ -= 114;
+				if (IncrementLine() == 0)
+				{
+					SetLcdState(State::OAM);
+				}
+				else
+				{
+					SetLcdState(State::VBLANK);
+				}
 			}
+			break;
+		default:
+			throw std::logic_error("Invalid current mode in OnMachineCycleLapse: " + std::to_string(cycles_lapsed_in_state_));
 		}
+	}
+
+	// OAM DMA
+	oam_dma_.current_state_ = oam_dma_.next_state_;
+	switch (oam_dma_.current_state_)
+	{
+	case OamDma::State::Startup:
+		oam_dma_.current_byte_index_ = 0;
+		oam_dma_.next_state_ = OamDma::State::Active;
 		break;
-	case State::VBLANK:
-		if (cycles_lapsed_in_state_ >= 114)
+	case OamDma::State::Active:
+		WriteOam(oam_dma_.current_byte_index_, mmu_->ReadByte(oam_dma_.source_ + oam_dma_.current_byte_index_));
+
+		if (++oam_dma_.current_byte_index_ == Memory::oam_size_)
 		{
-			cycles_lapsed_in_state_ -= 114;
-			if (IncrementLine() == 0)
-			{
-				SetLcdState(State::OAM);
-			}
-			else
-			{
-				SetLcdState(State::VBLANK);
-			}
+			oam_dma_.current_byte_index_ = 0;
+			oam_dma_.next_state_ = OamDma::State::Teardown;
+			break;
 		}
+
+		break;
+	case OamDma::State::Teardown:
+		oam_dma_.next_state_ = OamDma::State::Inactive;
+		break;
+	case OamDma::State::Inactive:
 		break;
 	default:
-		throw std::logic_error("Invalid current mode in OnMachineCycleLapse: " + std::to_string(cycles_lapsed_in_state_));
+		throw std::logic_error{ "Invalid OAM DMA state: " + std::to_string(static_cast<size_t>(oam_dma_.current_state_)) };
 	}
 }
 
@@ -202,54 +227,24 @@ void PPU::RenderSprites(uint8_t line_number)
 	}
 }
 
-uint8_t PPU::SetLineNumber(uint8_t line_number)
-{
-	current_line_ = line_number;
-	if (current_line_ >= 154)
-	{
-		current_line_ = 0;
-	}
-
-	mmu_->WriteByte(Memory::LY, current_line_, false);
-
-	UpdateLineComparison();
-
-	return current_line_;
-}
-
-void PPU::UpdateLineComparison()
-{
-	if (current_line_ == line_compare_)
-	{
-		mmu_->SetBit(Memory::STAT, 2, false);
-
-		// Request interrupt if enabled
-		if (line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-	}
-	else
-	{
-		mmu_->ClearBit(Memory::STAT, 2, false);
-	}
-}
-
 void PPU::SetLcdControl(uint8_t value)
 {
-	show_bg_ = (value & (1 << 0)) != 0;
-	show_sprites_ = (value & (1 << 1)) != 0;
-	double_size_sprites_ = (value & (1 << 2)) != 0;
-	active_bg_tile_map_ = (value & (1 << 3)) != 0 ? 1 : 0;
-	active_tile_set_ = (value & (1 << 4)) != 0 ? 1 : 0;
-	show_window_ = (value & (1 << 5)) != 0;
-	active_window_tile_map_ = (value & (1 << 6)) != 0 ? 1 : 0;
-	EnableLcd((value & (1 << 7)) != 0);
+	show_bg_ = (value & 0x01) != 0;
+	show_sprites_ = (value & 0x02) != 0;
+	double_size_sprites_ = (value & 0x04) != 0;
+	active_bg_tile_map_ = (value & 0x08) != 0 ? 1 : 0;
+	active_tile_set_ = (value & 0x10) != 0 ? 1 : 0;
+	show_window_ = (value & 0x20) != 0;
+	active_window_tile_map_ = (value & 0x40) != 0 ? 1 : 0;
+	EnableLcd((value & 0x80) != 0);
 }
 
 void PPU::SetLcdStatus(uint8_t value)
 {
-	hblank_interrupt_enabled_ = (value & (1 << 3)) != 0;
-	vblank_interrupt_enabled_ = (value & (1 << 4)) != 0;
-	oam_interrupt_enabled_ = (value & (1 << 5)) != 0;
-	line_coincidence_interrupt_enabled_ = (value & (1 << 6)) != 0;
+	hblank_interrupt_enabled_ = (value & 0x08) != 0;
+	vblank_interrupt_enabled_ = (value & 0x10) != 0;
+	oam_interrupt_enabled_ = (value & 0x20) != 0;
+	line_coincidence_interrupt_enabled_ = (value & 0x40) != 0;
 }
 
 void PPU::SetPaletteData(Palette &palette, uint8_t value)
@@ -292,8 +287,6 @@ void PPU::SetLcdState(State state)
 {
 	current_state_ = state;
 
-	mmu_->WriteByte(Memory::STAT, mmu_->ReadByte(Memory::STAT) & ~(0x03) | static_cast<uint8_t>(state));
-
 	// Request interrupt if enabled
 	switch (current_state_)
 	{
@@ -310,57 +303,134 @@ void PPU::SetLcdState(State state)
 		break;
 	}
 }
+
+uint8_t PPU::SetLineNumber(uint8_t line_number)
+{
+	current_line_ = line_number;
+	if (current_line_ >= 154)
+	{
+		current_line_ = 0;
+	}
+
+	UpdateLineComparison();
+
+	return current_line_;
+}
+
+void PPU::UpdateLineComparison()
+{
+	// Request interrupt if enabled
+	if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+}
+
+uint8_t PPU::GetPaletteData(const Palette &palette) const
+{
+	return (static_cast<uint8_t>(palette[0]))
+		| (static_cast<uint8_t>(palette[1]) << 2)
+		| (static_cast<uint8_t>(palette[2]) << 4)
+		| (static_cast<uint8_t>(palette[3]) << 6);
+}
 #pragma endregion
 
-#pragma region MMU listener functions
-void PPU::OnVramWritten(Memory::Address address, uint8_t value)
+#pragma region MMU mapped memory read/write functions
+uint8_t PPU::OnVramRead(Memory::Address relative_address) const
 {
-	if (address < Memory::tile_map_0_start_)
+	return vram_[relative_address];
+}
+
+void PPU::OnVramWritten(Memory::Address relative_address, uint8_t value)
+{
+	vram_[relative_address] = value;
+
+	if (relative_address < tile_map_0_offset_)
 	{
 		// Select tile from set, taking into account each tile is 16 bytes in size
-		auto& tile = tile_set_[(address - Memory::tile_sets_start_) >> 4];
+		auto& tile = tile_set_[relative_address >> 4];
 
 		// Pixel values in the tile are computed by combining the pertinent bit of two consecutive bytes in VRAM
 		// Therefore updating one byte in VRAM will change the value of all 8 pixels in one line of the tile
-		const auto line_in_tile = ((address - Memory::tile_sets_start_) & 0x0F) >> 1;
+		const auto line_in_tile = (relative_address & 0x0F) >> 1;
 		for (int i = 0; i < 8; ++i)
 		{
-			const auto pixel_mask = (1 << (7 - i));
-			const auto pixel_low_bit = static_cast<uint8_t>((mmu_->ReadByte(address & 0xFFFE) & pixel_mask) != 0 ? 1 : 0);
-			const auto pixel_high_bit = static_cast<uint8_t>((mmu_->ReadByte((address & 0xFFFE) + 1) & pixel_mask) != 0 ? 1 : 0);
-			tile[8 * line_in_tile + i] = pixel_low_bit + 2 * pixel_high_bit;
+			const auto pixel_mask = (0x80 >> i);
+			const auto pixel_low_bit = (vram_[relative_address & 0xFFFE] & pixel_mask) != 0 ? 1 : 0;
+			const auto pixel_high_bit = (vram_[(relative_address & 0xFFFE) + 1] & pixel_mask) != 0 ? 1 : 0;
+			tile[8 * line_in_tile + i] = static_cast<uint8_t>(pixel_low_bit + (pixel_high_bit << 1));
 		}
 	}
-	else if (address < Memory::tile_map_1_start_)
+	else if (relative_address < tile_map_1_offset_)
 	{
-		tile_maps_[0][address - Memory::tile_map_0_start_] = value;
+		tile_maps_[0][relative_address - tile_map_0_offset_] = value;
 	}
 	else
 	{
-		tile_maps_[1][address - Memory::tile_map_1_start_] = value;
+		tile_maps_[1][relative_address - tile_map_1_offset_] = value;
 	}
 }
 
-void PPU::OnOamWritten(Memory::Address address, uint8_t value)
+uint8_t PPU::OnOamRead(Memory::Address relative_address) const
 {
-	// There are 40 sprites, 4 bytes each, held in OAM [0xFE00 - 0xFE9F]
-	const auto sprite_num = (address - Memory::oam_start_) >> 2;
-	assert((sprite_num >= 0) && (sprite_num < 40));
+	if (oam_dma_.current_state_ == OamDma::State::Active) return 0xFF;
 
-	switch (address & 0x03)
+	return oam_[relative_address];
+}
+
+void PPU::OnOamWritten(Memory::Address relative_address, uint8_t value)
+{
+	if (oam_dma_.current_state_ == OamDma::State::Active) return;
+
+	WriteOam(relative_address, value);
+}
+
+uint8_t PPU::OnIoMemoryRead(Memory::Address address)
+{
+	switch (address)
 	{
-	case 0:
-		sprites_[sprite_num].SetY(value);
+	case Memory::LCDC:
+	{uint8_t value{ 0 };
+	value |= static_cast<uint8_t>(show_bg_);
+	value |= static_cast<uint8_t>(show_sprites_) << 1;
+	value |= static_cast<uint8_t>(double_size_sprites_) << 2;
+	value |= static_cast<uint8_t>(active_bg_tile_map_) << 3;
+	value |= static_cast<uint8_t>(active_tile_set_) << 4;
+	value |= static_cast<uint8_t>(show_window_) << 5;
+	value |= static_cast<uint8_t>(active_window_tile_map_) << 6;
+	value |= static_cast<uint8_t>(lcd_on_) << 7;
+	return value; }
+	case Memory::STAT:
+	{uint8_t value{ 0x80 };
+	value |= static_cast<uint8_t>(current_state_);
+	value |= static_cast<uint8_t>(current_line_ == line_compare_) << 2;
+	value |= static_cast<uint8_t>(hblank_interrupt_enabled_) << 3;
+	value |= static_cast<uint8_t>(vblank_interrupt_enabled_) << 4;
+	value |= static_cast<uint8_t>(oam_interrupt_enabled_) << 5;
+	value |= static_cast<uint8_t>(line_coincidence_interrupt_enabled_) << 6;
+	return value; }
+	case Memory::SCY:
+		return scroll_y_;
+	case Memory::SCX:
+		return scroll_x_;
+	case Memory::LY:
+		return current_line_;
+	case Memory::LYC:
+		return line_compare_;
+	case Memory::DMA:
+		return static_cast<uint8_t>(oam_dma_.source_ >> 8);
+	case Memory::BGP:
+		return GetPaletteData(bg_palette_);
 		break;
-	case 1:
-		sprites_[sprite_num].SetX(value);
+	case Memory::OBP0:
+		return GetPaletteData(obj_palettes_[0]);
 		break;
-	case 2:
-		sprites_[sprite_num].SetTileNumber(value);
+	case Memory::OBP1:
+		return GetPaletteData(obj_palettes_[1]);
 		break;
-	case 3:
-		sprites_[sprite_num].SetOptions(value);
-		break;
+	case Memory::WY:
+		return static_cast<uint8_t>(window_y_);
+	case Memory::WX:
+		return static_cast<uint8_t>(window_x_ + 7);
+	default:
+		throw std::invalid_argument{ "Reading from invalid memory address in PPU: " + address };
 	}
 }
 
@@ -392,6 +462,12 @@ void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		line_compare_ = value;
 		UpdateLineComparison();
 		break;
+	case Memory::DMA:
+		if (value > 0xF1) throw std::invalid_argument("Invalid DMA transfer source: " + std::to_string(int{ value }));
+
+		oam_dma_.next_state_ = OamDma::State::Startup;
+		oam_dma_.source_ = value << 8;
+		break;
 	case Memory::BGP:
 		SetPaletteData(bg_palette_, value);
 		break;
@@ -408,6 +484,31 @@ void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		window_x_ = value - 7;
 		break;
 	default:
+		throw std::invalid_argument{ "Writing to invalid memory address in PPU: " + address };
+	}
+}
+
+void PPU::WriteOam(Memory::Address relative_address, uint8_t value)
+{
+	oam_[relative_address] = value;
+
+	// There are 40 sprites, 4 bytes each, held in OAM [0xFE00 - 0xFE9F]
+	const auto sprite_num = relative_address >> 2;
+	assert((sprite_num >= 0) && (sprite_num < 40));
+
+	switch (relative_address & 0x03)
+	{
+	case 0:
+		sprites_[sprite_num].SetY(value);
+		break;
+	case 1:
+		sprites_[sprite_num].SetX(value);
+		break;
+	case 2:
+		sprites_[sprite_num].SetTileNumber(value);
+		break;
+	case 3:
+		sprites_[sprite_num].SetOptions(value);
 		break;
 	}
 }

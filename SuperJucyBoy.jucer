@@ -42,6 +42,8 @@
         </GROUP>
         <FILE id="TPGff6" name="APU.cpp" compile="1" resource="0" file="Source/JucyBoy/APU.cpp"/>
         <FILE id="lQvxJL" name="APU.h" compile="0" resource="0" file="Source/JucyBoy/APU.h"/>
+        <FILE id="o8YS5v" name="Cartridge.cpp" compile="1" resource="0" file="Source/JucyBoy/Cartridge.cpp"/>
+        <FILE id="KucDFZ" name="Cartridge.h" compile="0" resource="0" file="Source/JucyBoy/Cartridge.h"/>
         <FILE id="MBpuLo" name="ClockDivider.h" compile="0" resource="0" file="Source/JucyBoy/ClockDivider.h"/>
         <FILE id="kZEcqM" name="CPU.cpp" compile="1" resource="0" file="Source/JucyBoy/CPU.cpp"/>
         <FILE id="YypB1H" name="CPU.h" compile="0" resource="0" file="Source/JucyBoy/CPU.h"/>
@@ -49,22 +51,16 @@
               file="Source/JucyBoy/CPU_CbInstructions.cpp"/>
         <FILE id="NRAfZO" name="CPU_Instructions.cpp" compile="1" resource="0"
               file="Source/JucyBoy/CPU_Instructions.cpp"/>
-        <FILE id="CzTdhN" name="IMbc.cpp" compile="1" resource="0" file="Source/JucyBoy/IMbc.cpp"/>
-        <FILE id="KgXXuQ" name="IMbc.h" compile="0" resource="0" file="Source/JucyBoy/IMbc.h"/>
         <FILE id="z6EfSH" name="InstructionMnemonics.cpp" compile="1" resource="0"
               file="Source/JucyBoy/InstructionMnemonics.cpp"/>
         <FILE id="ISXFZa" name="InstructionMnemonics.h" compile="0" resource="0"
               file="Source/JucyBoy/InstructionMnemonics.h"/>
         <FILE id="nlYzBQ" name="Joypad.cpp" compile="1" resource="0" file="Source/JucyBoy/Joypad.cpp"/>
         <FILE id="zo27Nc" name="Joypad.h" compile="0" resource="0" file="Source/JucyBoy/Joypad.h"/>
-        <FILE id="CunjaQ" name="Mbc1.cpp" compile="1" resource="0" file="Source/JucyBoy/Mbc1.cpp"/>
-        <FILE id="XT6WFf" name="Mbc1.h" compile="0" resource="0" file="Source/JucyBoy/Mbc1.h"/>
         <FILE id="UCf5A0" name="Memory.cpp" compile="1" resource="0" file="Source/JucyBoy/Memory.cpp"/>
         <FILE id="oMwB46" name="Memory.h" compile="0" resource="0" file="Source/JucyBoy/Memory.h"/>
         <FILE id="DfP5e5" name="MMU.cpp" compile="1" resource="0" file="Source/JucyBoy/MMU.cpp"/>
         <FILE id="ZKlLmE" name="MMU.h" compile="0" resource="0" file="Source/JucyBoy/MMU.h"/>
-        <FILE id="FDuHoS" name="OamDma.cpp" compile="1" resource="0" file="Source/JucyBoy/OamDma.cpp"/>
-        <FILE id="QsSx1X" name="OamDma.h" compile="0" resource="0" file="Source/JucyBoy/OamDma.h"/>
         <FILE id="Kilrvt" name="PPU.cpp" compile="1" resource="0" file="Source/JucyBoy/PPU.cpp"/>
         <FILE id="P09DZp" name="PPU.h" compile="0" resource="0" file="Source/JucyBoy/PPU.h"/>
         <FILE id="OVAOjP" name="Registers.h" compile="0" resource="0" file="Source/JucyBoy/Registers.h"/>

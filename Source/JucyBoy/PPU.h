@@ -23,7 +23,8 @@ public:
 		White = 0,
 		LightGrey = 1,
 		DarkGrey = 2,
-		Black = 3
+		Black = 3,
+		Count
 	};
 
 	using Palette = std::array<Color, 4>;
@@ -39,14 +40,17 @@ public:
 
 public:
 	PPU(MMU &mmu);
-	virtual ~PPU();
+	virtual ~PPU() = default;
 
 	// CPU::Listener overrides
 	void OnMachineCycleLapse() override;
 
-	// MMU listener functions
-	void OnVramWritten(Memory::Address address, uint8_t value);
-	void OnOamWritten(Memory::Address address, uint8_t value);
+	// MMU mapped memory read/write functions
+	uint8_t OnVramRead(Memory::Address relative_address) const;
+	void OnVramWritten(Memory::Address relative_address, uint8_t value);
+	uint8_t OnOamRead(Memory::Address relative_address) const;
+	void OnOamWritten(Memory::Address relative_address, uint8_t value);
+	uint8_t OnIoMemoryRead(Memory::Address address);
 	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
 
 	// Listeners management
@@ -70,13 +74,18 @@ private:
 	uint8_t IncrementLine() { return SetLineNumber(current_line_ + 1); }
 	uint8_t SetLineNumber(uint8_t line_number);
 	void UpdateLineComparison();
+	uint8_t GetPaletteData(const Palette &palette) const;
+	void WriteOam(Memory::Address relative_address, uint8_t value);
 
 	// Listener notification
 	void NotifyNewFrame() const;
 
 protected:
+	static constexpr Memory::Address tile_map_0_offset_{ 0x1800 };
+	static constexpr Memory::Address tile_map_1_offset_{ 0x1C00 };
+
 	// LCD mode state machine
-	State current_state_{ State::VBLANK };
+	State current_state_{ State::OAM };
 	CPU::MachineCycles cycles_lapsed_in_state_{ 0 };
 
 	// LCD Control register values
@@ -100,11 +109,13 @@ protected:
 	uint8_t scroll_x_{ 0 };
 	uint8_t current_line_{ 0 };
 	uint8_t line_compare_{ 0 };
-	Palette bg_palette_{};
-	std::array<Palette, 2> obj_palettes_{ { {}, {} } };
+	Palette bg_palette_;
+	std::array<Palette, 2> obj_palettes_;
 	int window_y_{ 0 };
-	int window_x_{ 0 };
+	int window_x_{ -7 };
 
+	std::array<uint8_t, Memory::vram_size_> vram_{};
+	std::array<uint8_t, Memory::oam_size_> oam_{};
 	std::array<Tile, 384> tile_set_{};
 
 	using TileMap = std::array<uint8_t, 32 * 32>;
@@ -114,6 +125,21 @@ protected:
 
 	std::array<bool, 160 * 144> is_bg_transparent_{}; // Color number 0 on background is "transparent" and therefore sprites show on top of it
 	Framebuffer framebuffer_{};
+
+	struct OamDma
+	{
+		enum class State
+		{
+			Startup, // 1 cycle
+			Active, // 160 cycles
+			Teardown, // 1 cycle
+			Inactive
+		};
+		State current_state_{ State::Inactive };
+		State next_state_{ State::Inactive };
+		Memory::Address source_{ 0x0000 };
+		uint8_t current_byte_index_{ 0 };
+	} oam_dma_;
 
 	MMU* mmu_{ nullptr };
 	std::set<Listener*> listeners_;

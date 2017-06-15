@@ -3,7 +3,7 @@
 
 JucyBoy::JucyBoy()
 {
-	setSize (160 * 4 + cpu_status_width_ + memory_map_width_ + ppu_tileset_width_, 144 * 4);
+	setSize(160 * 4 + cpu_status_width_ + memory_map_width_ + ppu_tileset_width_, 144 * 4);
 	setWantsKeyboardFocus(true);
 
 	game_screen_component_.addMouseListener(this, true);
@@ -29,19 +29,29 @@ JucyBoy::JucyBoy()
 	cpu_.CPU::AddListener(timer_);
 	cpu_.CPU::AddListener(ppu_);
 	cpu_.CPU::AddListener(apu_);
-	cpu_.CPU::AddListener(oam_dma_);
 	cpu_.CPU::AddListener(*this);
 
-	// MMU listeners
-	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { cpu_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { cpu_.OnInterruptsRegisterWritten(address, value); }, Memory::Region::Interrupts));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { ppu_.OnVramWritten(address, value); }, Memory::Region::VRAM));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { ppu_.OnOamWritten(address, value); }, Memory::Region::OAM));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { ppu_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { apu_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { timer_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { joypad_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
-	listener_deregister_functions_.emplace_back(mmu_.AddListener([this](Memory::Address address, uint8_t value) { oam_dma_.OnIoMemoryWritten(address, value); }, Memory::Region::IO));
+	// Map memory read/write functions to MMU
+	mmu_.MapMemoryRead(std::bind(&PPU::OnVramRead, &ppu_, std::placeholders::_1), Memory::Region::VRAM);
+	mmu_.MapMemoryRead(std::bind(&PPU::OnOamRead, &ppu_, std::placeholders::_1), Memory::Region::OAM);
+	mmu_.MapMemoryRead(std::bind(&CPU::OnInterruptsRead, &cpu_, std::placeholders::_1), Memory::Region::Interrupts);
+
+	mmu_.MapMemoryWrite(std::bind(&PPU::OnVramWritten, &ppu_, std::placeholders::_1, std::placeholders::_2), Memory::Region::VRAM);
+	mmu_.MapMemoryWrite(std::bind(&PPU::OnOamWritten, &ppu_, std::placeholders::_1, std::placeholders::_2), Memory::Region::OAM);
+	mmu_.MapMemoryWrite(std::bind(&CPU::OnInterruptsWritten, &cpu_, std::placeholders::_1, std::placeholders::_2), Memory::Region::Interrupts);
+
+	// Map IO register read/write functions to MMU
+	mmu_.MapIoRegisterRead(std::bind(&CPU::OnIoMemoryRead, &cpu_, std::placeholders::_1), Memory::IF, Memory::IF);
+	mmu_.MapIoRegisterRead(std::bind(&PPU::OnIoMemoryRead, &ppu_, std::placeholders::_1), Memory::LCDC, Memory::WX);
+	mmu_.MapIoRegisterRead(std::bind(&APU::OnIoMemoryRead, &apu_, std::placeholders::_1), Memory::NR10, Memory::NR52);
+	mmu_.MapIoRegisterRead(std::bind(&jb::Timer::OnIoMemoryRead, &timer_, std::placeholders::_1), Memory::DIV, Memory::TAC);
+	mmu_.MapIoRegisterRead(std::bind(&Joypad::OnIoMemoryRead, &joypad_, std::placeholders::_1), Memory::JOYP, Memory::JOYP);
+
+	mmu_.MapIoRegisterWrite(std::bind(&CPU::OnIoMemoryWritten, &cpu_, std::placeholders::_1, std::placeholders::_2), Memory::IF, Memory::IF);
+	mmu_.MapIoRegisterWrite(std::bind(&PPU::OnIoMemoryWritten, &ppu_, std::placeholders::_1, std::placeholders::_2), Memory::LCDC, Memory::WX);
+	mmu_.MapIoRegisterWrite(std::bind(&APU::OnIoMemoryWritten, &apu_, std::placeholders::_1, std::placeholders::_2), Memory::NR10, Memory::NR52);
+	mmu_.MapIoRegisterWrite(std::bind(&jb::Timer::OnIoMemoryWritten, &timer_, std::placeholders::_1, std::placeholders::_2), Memory::DIV, Memory::TAC);
+	mmu_.MapIoRegisterWrite(std::bind(&Joypad::OnIoMemoryWritten, &joypad_, std::placeholders::_1, std::placeholders::_2), Memory::JOYP, Memory::JOYP);
 
 	// PPU listeners
 	ppu_.AddListener(game_screen_component_);
@@ -60,7 +70,6 @@ JucyBoy::~JucyBoy()
 	cpu_.CPU::RemoveListener(timer_);
 	cpu_.CPU::RemoveListener(ppu_);
 	cpu_.CPU::RemoveListener(apu_);
-	cpu_.CPU::RemoveListener(oam_dma_);
 	cpu_.CPU::RemoveListener(*this);
 
 	ppu_.RemoveListener(game_screen_component_);
@@ -84,9 +93,15 @@ void JucyBoy::Reset()
 void JucyBoy::LoadRom(const juce::File &file)
 {
 	Reset();
+	cartridge_ = std::make_unique<Cartridge>(file.getFullPathName().toStdString());
 
-	// Convert the juce file to std string
-	mmu_.LoadRom(file.getFullPathName().toStdString());
+	mmu_.MapMemoryRead(std::bind(&Cartridge::OnRomBank0Read, cartridge_.get(), std::placeholders::_1), Memory::Region::ROM_Bank0);
+	mmu_.MapMemoryRead(std::bind(&Cartridge::OnRomBankNRead, cartridge_.get(), std::placeholders::_1), Memory::Region::ROM_OtherBanks);
+	mmu_.MapMemoryRead(std::bind(&Cartridge::OnExternalRamRead, cartridge_.get(), std::placeholders::_1), Memory::Region::ERAM);
+
+	mmu_.MapMemoryWrite(std::bind(&Cartridge::OnRomBank0Written, cartridge_.get(), std::placeholders::_1, std::placeholders::_2), Memory::Region::ROM_Bank0);
+	mmu_.MapMemoryWrite(std::bind(&Cartridge::OnRomBankNWritten, cartridge_.get(), std::placeholders::_1, std::placeholders::_2), Memory::Region::ROM_OtherBanks);
+	mmu_.MapMemoryWrite(std::bind(&Cartridge::OnExternalRamWritten, cartridge_.get(), std::placeholders::_1, std::placeholders::_2), Memory::Region::ERAM);
 
 	NotifyStatusUpdateRequest(false);
 }
@@ -146,6 +161,7 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 			try
 			{
 				LoadRom(rom_file);
+				cpu_.Run();
 			}
 			catch (std::exception &e)
 			{
@@ -163,7 +179,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 	// Switch statement does not work below because the keys are not compile time constants...
 	if (key.getKeyCode() == KeyPress::spaceKey)
 	{
-		if (!mmu_.IsRomLoaded()) { return true; }
+		if (!cartridge_) { return true; }
 		if (cpu_.IsRunning())
 		{
 			cpu_.Stop();
@@ -176,7 +192,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 	}
 	else if (key.getKeyCode() == KeyPress::rightKey)
 	{
-		if (!mmu_.IsRomLoaded()) { return true; }
+		if (!cartridge_) { return true; }
 		if (!cpu_.IsRunning())
 		{
 			try

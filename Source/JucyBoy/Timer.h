@@ -18,7 +18,8 @@ public:
 	// CPU::Listener overrides
 	void OnMachineCycleLapse() override;
 
-	// MMU listener functions
+	// MMU mapped memory read/write functions
+	uint8_t OnIoMemoryRead(Memory::Address address) const;
 	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
 
 private:

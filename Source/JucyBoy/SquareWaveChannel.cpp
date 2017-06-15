@@ -124,6 +124,15 @@ void SquareWaveChannel::Trigger()
 	if (IsDacEnabled()) { enabled_ = true; }
 }
 
+SquareWaveChannelWithSweep::SquareWaveChannelWithSweep() :
+	SquareWaveChannel()
+{
+	OnNR10Written(0x80);
+	OnNRx1Written(0xBF);
+	OnNRx2Written(0xF3);
+	OnNRx4Written(0xBF);
+}
+
 void SquareWaveChannelWithSweep::ClockFrequencySweep()
 {
 	if (!enabled_) return;

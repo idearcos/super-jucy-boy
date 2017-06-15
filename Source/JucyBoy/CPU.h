@@ -18,12 +18,12 @@ public:
 
 	struct Registers
 	{
-		RegisterPair af;
-		RegisterPair bc;
-		RegisterPair de;
-		RegisterPair hl;
-		uint16_t pc;
-		uint16_t sp;
+		RegisterPair af{ 0x01B0 };
+		RegisterPair bc{ 0x0013 };
+		RegisterPair de{ 0x00D8 };
+		RegisterPair hl{ 0x014D };
+		uint16_t pc{ 0x0100 };
+		uint16_t sp{ 0xFFFE };
 	};
 
 	enum class Flags : uint8_t
@@ -57,9 +57,11 @@ public:
 	bool IsRunning() const noexcept;
 	virtual void StepOver();
 
-	// MMU listener functions
+	// MMU mapped memory read/write functions
+	uint8_t OnIoMemoryRead(Memory::Address address) const;
 	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
-	void OnInterruptsRegisterWritten(Memory::Address address, uint8_t value);
+	uint8_t OnInterruptsRead(Memory::Address address) const;
+	void OnInterruptsWritten(Memory::Address address, uint8_t value);
 
 	// Listeners management
 	void AddListener(Listener &listener) { listeners_.insert(&listener); }

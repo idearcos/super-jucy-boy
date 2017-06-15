@@ -2,13 +2,10 @@
 
 #include <cstdint>
 #include <functional>
-#include <vector>
 #include <list>
 #include "Memory.h"
 #include "SquareWaveChannel.h"
 #include "CPU.h"
-
-class MMU;
 
 class APU final : public CPU::Listener
 {
@@ -19,10 +16,10 @@ class APU final : public CPU::Listener
 	static constexpr size_t frame_sequencer_frequency_{ 512 };
 
 public:
-	static constexpr size_t sample_rate_{ 4194304 / 4 };
+	static constexpr size_t sample_rate_{ input_clock_frequency_ / 4 };
 	static constexpr size_t max_amplitude_{ max_master_volume_ * num_channels_ * max_channel_volume_ };
 
-	APU(MMU &mmu);
+	APU() = default;
 	~APU() = default;
 
 	// CPU::Listener overrides
@@ -31,7 +28,8 @@ public:
 	// Frame Sequencer callback function
 	void OnFrameSequencerClocked();
 
-	// MMU listener functions
+	// MMU mapped memory read/write functions
+	uint8_t OnIoMemoryRead(Memory::Address address) const;
 	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
 
 	// AddListener returns a deregister function that can be called with no arguments
@@ -53,12 +51,10 @@ private:
 
 	// Control
 	bool apu_enabled_{ true };
-	size_t right_volume_{ 0 };
-	size_t left_volume_{ 0 };
-	uint8_t right_channels_enabled_{ 0 };
-	uint8_t left_channels_enabled_{ 0 };
-
-	MMU* mmu_{ nullptr };
+	size_t right_volume_{ 7 };
+	size_t left_volume_{ 7 };
+	uint8_t right_channels_enabled_{ 0x3 };
+	uint8_t left_channels_enabled_{ 0xF};
 
 	std::list<Listener> listeners_;
 };

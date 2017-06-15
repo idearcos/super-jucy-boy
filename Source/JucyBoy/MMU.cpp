@@ -1,33 +1,38 @@
 #include "MMU.h"
-#include "Mbc1.h"
-#include <fstream>
-#include <cassert>
 
 MMU::MMU()
 {
-	Reset();
-}
+	MapMemoryRead(std::bind(&MMU::OnUnusedMemoryRead, this, std::placeholders::_1), Memory::Region::ROM_Bank0);
+	MapMemoryRead(std::bind(&MMU::OnUnusedMemoryRead, this, std::placeholders::_1), Memory::Region::ROM_OtherBanks);
+	MapMemoryRead(std::bind(&MMU::OnUnusedMemoryRead, this, std::placeholders::_1), Memory::Region::ERAM);
+	MapMemoryRead(std::bind(&MMU::OnWramRead, this, std::placeholders::_1), Memory::Region::WRAM);
+	MapMemoryRead(std::bind(&MMU::OnWramRead, this, std::placeholders::_1), Memory::Region::WRAM_Echo);
+	MapMemoryRead(std::bind(&MMU::OnUnusedMemoryRead, this, std::placeholders::_1), Memory::Region::Unused);
+	MapMemoryRead(std::bind(&MMU::OnIoMemoryRead, this, std::placeholders::_1), Memory::Region::IO);
+	MapMemoryRead(std::bind(&MMU::OnHramRead, this, std::placeholders::_1), Memory::Region::HRAM);
 
-MMU::~MMU()
-{
-	mbc_.reset();
+	MapMemoryWrite(std::bind(&MMU::OnUnusedMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::ROM_Bank0);
+	MapMemoryWrite(std::bind(&MMU::OnUnusedMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::ROM_OtherBanks);
+	MapMemoryWrite(std::bind(&MMU::OnUnusedMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::ERAM);
+	MapMemoryWrite(std::bind(&MMU::OnWramWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::WRAM);
+	MapMemoryWrite(std::bind(&MMU::OnWramWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::WRAM_Echo);
+	MapMemoryWrite(std::bind(&MMU::OnUnusedMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::Unused);
+	MapMemoryWrite(std::bind(&MMU::OnIoMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::IO);
+	MapMemoryWrite(std::bind(&MMU::OnHramWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::HRAM);
+
+	mapped_io_register_reads_.fill(std::bind(&MMU::OnUnmappedIoRegisterRead, this, std::placeholders::_1));
+	mapped_io_register_writes_.fill(std::bind(&MMU::OnUnmappedIoRegisterWritten, this, std::placeholders::_1, std::placeholders::_2));
+
+	wram_.fill(0);
+	hram_.fill(0);
+	unmapped_io_registers_.fill(0xFF);
 }
 
 void MMU::Reset()
 {
-	memory_.clear();
-
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::ROM_Bank0), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::ROM_OtherBanks), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::VRAM), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::ERAM), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::WRAM), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::WRAM_Echo), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::OAM), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::Unused), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::IO), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::HRAM), 0);
-	memory_.emplace_back(Memory::GetSizeOfRegion(Memory::Region::Interrupts), 0);
+	wram_.fill(0);
+	hram_.fill(0);
+	unmapped_io_registers_.fill(0xFF);
 
 	WriteByte(Memory::JOYP, 0xCF);
 	WriteByte(Memory::TIMA, 0x00);
@@ -67,131 +72,48 @@ uint8_t MMU::ReadByte(Memory::Address address) const
 {
 	const auto region_and_relative_address = Memory::GetRegionAndRelativeAddress(address);
 
-	if (is_oam_dma_active_ && (region_and_relative_address.first == Memory::Region::OAM)) return 0xFF;
-
-	return memory_[static_cast<size_t>(region_and_relative_address.first)][region_and_relative_address.second];
+	return mapped_memory_reads_[static_cast<size_t>(region_and_relative_address.first)](region_and_relative_address.second);
 }
 
-void MMU::WriteByte(Memory::Address address, uint8_t value, bool notify)
+void MMU::WriteByte(Memory::Address address, uint8_t value)
 {
 	const auto region_and_relative_address = Memory::GetRegionAndRelativeAddress(address);
 
-	if (is_oam_dma_active_ && (region_and_relative_address.first == Memory::Region::OAM)) return;
+	mapped_memory_writes_[static_cast<size_t>(region_and_relative_address.first)](region_and_relative_address.second, value);
+}
 
-	switch (region_and_relative_address.first)
+#pragma region Memory read/write function mapping
+void MMU::MapMemoryRead(MemoryReadFunction &&memory_read_function, Memory::Region region)
+{
+	mapped_memory_reads_[static_cast<size_t>(region)] = memory_read_function;
+}
+
+void MMU::MapMemoryWrite(MemoryWriteFunction &&memory_write_function, Memory::Region region)
+{
+	mapped_memory_writes_[static_cast<size_t>(region)] = memory_write_function;
+}
+
+void MMU::MapIoRegisterRead(MemoryReadFunction &&io_register_read_function, Memory::Address first_register, Memory::Address last_register)
+{
+	for (Memory::Address address = first_register; address <= last_register; ++address)
 	{
-	case Memory::Region::ROM_Bank0:
-	case Memory::Region::ROM_OtherBanks:
-		if (notify) NotifyMemoryWrite(region_and_relative_address.first, address, value);
-		return;
-	case Memory::Region::VRAM:
-		//TODO: ignore writes during VRAM PPU state
-		break;
-	case Memory::Region::ERAM:
-		if (!external_ram_enabled_) return;
-		if ((address - Memory::external_ram_start_) > memory_[static_cast<size_t>(Memory::Region::ERAM)].size()) return;
-		break;
-	case Memory::Region::OAM:
-		//TODO: ignore writes during OAM and VRAM PPU states
-		break;
-	default:
-		break;
+		const auto region_and_relative_address = Memory::GetRegionAndRelativeAddress(address);
+
+		if (region_and_relative_address.first != Memory::Region::IO) throw std::logic_error{ "Trying to map IO register read function to non-IO memory address" };
+
+		mapped_io_register_reads_[region_and_relative_address.second] = io_register_read_function;
 	}
-
-	memory_[static_cast<size_t>(region_and_relative_address.first)][region_and_relative_address.second] = value;
-
-	if (notify) NotifyMemoryWrite(region_and_relative_address.first, address, value);
 }
 
-void MMU::LoadRom(const std::string &rom_file_path)
+void MMU::MapIoRegisterWrite(MemoryWriteFunction &&io_register_write_function, Memory::Address first_register, Memory::Address last_register)
 {
-	// Clear all state of previously loaded ROM
-	rom_loaded_ = false;
-	rom_banks.clear();
-	external_ram_banks.clear();
-	mbc_.reset();
-
-	std::ifstream rom_read_stream{ rom_file_path, std::ios::binary | std::ios::ate };
-	if (!rom_read_stream.is_open()) { throw std::runtime_error{ "ROM file could not be opened" }; }
-
-	const auto file_size = static_cast<size_t>(rom_read_stream.tellg());
-	rom_read_stream.seekg(0, std::ios::beg);
-
-	//TODO: check byte 0x147 for number of ROM banks
-	for (auto i = 0; i < file_size / Memory::GetSizeOfRegion(Memory::Region::ROM_Bank0); ++i)
+	for (Memory::Address address = first_register; address <= last_register; ++address)
 	{
-		rom_banks.emplace_back();
-		rom_banks.back().resize(Memory::GetSizeOfRegion(Memory::Region::ROM_Bank0));
-		rom_read_stream.read(reinterpret_cast<char*>(rom_banks.back().data()), rom_banks.back().size());
-	}
+		const auto region_and_relative_address = Memory::GetRegionAndRelativeAddress(address);
 
-	rom_read_stream.close();
-	rom_loaded_ = true;
+		if (region_and_relative_address.first != Memory::Region::IO) throw std::logic_error{ "Trying to map IO register write function to non-IO memory address" };
 
-	// Map ROM banks 0 and 1
-	memory_[static_cast<size_t>(Memory::Region::ROM_Bank0)].swap(rom_banks[0]);
-	memory_[static_cast<size_t>(Memory::Region::ROM_OtherBanks)].swap(rom_banks[1]);
-	loaded_rom_bank_ = 1;
-
-	// Create the appropriate MBC
-	switch (memory_[static_cast<size_t>(Memory::Region::ROM_Bank0)][0x147])
-	{
-	case 0:
-		// No MBC
-		break;
-	case 1:
-	case 2:
-	case 3:
-		mbc_ = std::make_unique<Mbc1>(*this);
-		break;
-	default:
-		throw std::logic_error{ "Unsupported MBC:" + std::to_string(static_cast<int>(memory_[static_cast<size_t>(Memory::Region::ROM_Bank0)][0x147])) };
-	}
-
-	// Create the necessary number of external RAM banks
-	if (mbc_) external_ram_banks = mbc_->GetExternalRamBanks(memory_[static_cast<size_t>(Memory::Region::ROM_Bank0)][0x149]);
-
-	// Map the first external RAM bank
-	if (!external_ram_banks.empty()) memory_[static_cast<size_t>(Memory::Region::ERAM)].swap(external_ram_banks[0]);
-}
-
-void MMU::LoadRomBank(size_t rom_bank_number)
-{
-	assert(rom_bank_number != 0);
-	if (rom_bank_number >= rom_banks.size()) throw std::invalid_argument("Requested invalid ROM bank: " + std::to_string(rom_bank_number));
-
-	if (rom_bank_number == loaded_rom_bank_) return;
-
-	// Swap the currently loaded ROM bank back into its original slot
-	memory_[static_cast<size_t>(Memory::Region::ROM_OtherBanks)].swap(rom_banks[loaded_rom_bank_]);
-
-	// Then load the requested ROM bank into the main memory slot
-	memory_[static_cast<size_t>(Memory::Region::ROM_OtherBanks)].swap(rom_banks[rom_bank_number]);
-
-	loaded_rom_bank_ = rom_bank_number;
-}
-
-void MMU::LoadRamBank(size_t external_ram_bank_number)
-{
-	if (external_ram_bank_number >= external_ram_banks.size()) throw std::invalid_argument("Requested invalid external RAM bank: " + std::to_string(external_ram_bank_number));
-
-	if (external_ram_bank_number == loaded_external_ram_bank_) return;
-
-	// Swap the currently loaded external RAM bank back into its original slot
-	memory_[static_cast<size_t>(Memory::Region::ERAM)].swap(external_ram_banks[loaded_external_ram_bank_]);
-
-	// Then load the requested external RAM bank into the main memory slot
-	memory_[static_cast<size_t>(Memory::Region::ERAM)].swap(external_ram_banks[external_ram_bank_number]);
-
-	loaded_external_ram_bank_ = external_ram_bank_number;
-}
-
-#pragma region Listener notification
-void MMU::NotifyMemoryWrite(Memory::Region region, Memory::Address address, uint8_t value)
-{
-	for (auto& listener : listeners_[region])
-	{
-		listener(address, value);
+		mapped_io_register_writes_[region_and_relative_address.second] = io_register_write_function;
 	}
 }
 #pragma endregion
