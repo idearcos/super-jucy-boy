@@ -81,6 +81,11 @@ private:
 	void NotifyNewFrame() const;
 
 protected:
+	static constexpr CPU::MachineCycles oam_state_duration_{ 20 };
+	static constexpr CPU::MachineCycles vram_state_duration_{ 43 };
+	static constexpr CPU::MachineCycles hblank_state_duration_{ 51 };
+	static constexpr CPU::MachineCycles line_duration_{ 114 };
+
 	static constexpr Memory::Address tile_map_0_offset_{ 0x1800 };
 	static constexpr Memory::Address tile_map_1_offset_{ 0x1C00 };
 

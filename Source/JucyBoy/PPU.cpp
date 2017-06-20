@@ -20,16 +20,16 @@ void PPU::OnMachineCycleLapse()
 		switch (current_state_)
 		{
 		case State::OAM:
-			if (cycles_lapsed_in_state_ >= 21)
+			if (cycles_lapsed_in_state_ >= oam_state_duration_)
 			{
-				cycles_lapsed_in_state_ -= 21;
+				cycles_lapsed_in_state_ -= oam_state_duration_;
 				SetLcdState(State::VRAM);
 			}
 			break;
 		case State::VRAM:
-			if (cycles_lapsed_in_state_ >= 43)
+			if (cycles_lapsed_in_state_ >= vram_state_duration_)
 			{
-				cycles_lapsed_in_state_ -= 43;
+				cycles_lapsed_in_state_ -= vram_state_duration_;
 				SetLcdState(State::HBLANK);
 
 				RenderBackground(current_line_);
@@ -38,9 +38,9 @@ void PPU::OnMachineCycleLapse()
 			}
 			break;
 		case State::HBLANK:
-			if (cycles_lapsed_in_state_ >= 50)
+			if (cycles_lapsed_in_state_ >= hblank_state_duration_)
 			{
-				cycles_lapsed_in_state_ -= 50;
+				cycles_lapsed_in_state_ -= hblank_state_duration_;
 				if (IncrementLine() == 144)
 				{
 					SetLcdState(State::VBLANK);
@@ -57,9 +57,9 @@ void PPU::OnMachineCycleLapse()
 			}
 			break;
 		case State::VBLANK:
-			if (cycles_lapsed_in_state_ >= 114)
+			if (cycles_lapsed_in_state_ >= line_duration_)
 			{
-				cycles_lapsed_in_state_ -= 114;
+				cycles_lapsed_in_state_ -= line_duration_;
 				if (IncrementLine() == 0)
 				{
 					SetLcdState(State::OAM);
@@ -138,20 +138,24 @@ void PPU::RenderWindow(uint8_t line_number)
 	if (line_number < window_y_) return;
 
 	const auto window_line = static_cast<uint8_t>(line_number - window_y_);
+	const auto end_of_window = (window_x_ + 160);
 
 	uint8_t color_number{ 0 };
-	for (int x = window_x_; x < 160; ++x)
+	for (int x = window_x_; x < end_of_window; ++x)
 	{
-		if ((x < 0) || (x >= 160)) continue;
+		if (x < 0) continue;
+		if (x >= 160) break;
+
+		const auto window_x = x - window_x_;
 
 		// Retrieve the tile number from the active tile map
-		auto tile_number = tile_maps_[active_window_tile_map_][32 * (window_line >> 3) + (x >> 3)];
+		auto tile_number = tile_maps_[active_window_tile_map_][32 * (window_line >> 3) + (window_x >> 3)];
 
 		// Select tile depending on which tile set is currently active
 		auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
 
 		// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
-		color_number = tile[8 * (window_line & 0x07) + (x & 0x07)];
+		color_number = tile[8 * (window_line & 0x07) + (window_x & 0x07)];
 
 		is_bg_transparent_[160 * line_number + x] = (color_number == 0);
 
@@ -335,11 +339,15 @@ uint8_t PPU::GetPaletteData(const Palette &palette) const
 #pragma region MMU mapped memory read/write functions
 uint8_t PPU::OnVramRead(Memory::Address relative_address) const
 {
+	if (current_state_ == State::VRAM) return 0xFF;
+
 	return vram_[relative_address];
 }
 
 void PPU::OnVramWritten(Memory::Address relative_address, uint8_t value)
 {
+	if (current_state_ == State::VRAM) return;
+
 	vram_[relative_address] = value;
 
 	if (relative_address < tile_map_0_offset_)
@@ -370,6 +378,8 @@ void PPU::OnVramWritten(Memory::Address relative_address, uint8_t value)
 
 uint8_t PPU::OnOamRead(Memory::Address relative_address) const
 {
+	if ((current_state_ == State::VRAM) || (current_state_ == State::OAM)) return 0xFF;
+
 	if (oam_dma_.current_state_ == OamDma::State::Active) return 0xFF;
 
 	return oam_[relative_address];
@@ -377,6 +387,8 @@ uint8_t PPU::OnOamRead(Memory::Address relative_address) const
 
 void PPU::OnOamWritten(Memory::Address relative_address, uint8_t value)
 {
+	if ((current_state_ == State::VRAM) || (current_state_ == State::OAM)) return;
+
 	if (oam_dma_.current_state_ == OamDma::State::Active) return;
 
 	WriteOam(relative_address, value);
