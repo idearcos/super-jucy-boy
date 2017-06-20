@@ -79,7 +79,7 @@ void AudioPlayerComponent::OnNewSample(size_t right_sample, size_t left_sample)
 
 	while (output_buffers_[0].abstract_fifo.getFreeSpace() == 0 || output_buffers_[0].abstract_fifo.getFreeSpace() == 0)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds{ 15 });
+		std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
 	}
 
 	for (int i = 0; i < output_buffers_.size(); ++i)

@@ -1,13 +1,14 @@
 #include "GL/glew.h"
 #include "GameScreenComponent.h"
-#include <string>
+#include <cassert>
 
 GameScreenComponent::GameScreenComponent() :
 	vertices_{ Vertex{ { -1.0f, 1.0f },{ 0.0f, 0.0f } },
 		Vertex{ { 1.0f, 1.0f },{ 1.0f, 0.0f } },
 		Vertex{ { 1.0f, -1.0f },{ 1.0f, 1.0f } },
 		Vertex{ { -1.0f, -1.0f },{ 0.0f, 1.0f } } },
-	elements_{ 0, 1, 2, 2, 3, 0 }
+	elements_{ 0, 1, 2, 2, 3, 0 },
+	intensity_palette_{ 255, 192, 96, 0 }
 {
 	// It's important to set the OpenGL component painting to false, otherwise the OpenGL thread will need to lock Juce's MessageManager, which leads to all sorts of deadlocks
 	openGLContext.setComponentPaintingEnabled(false);
@@ -172,7 +173,8 @@ void GameScreenComponent::OnNewFrame(const PPU::Framebuffer &ppu_framebuffer)
 
 	for (int i = 0; i < ppu_framebuffer.size(); ++i)
 	{
-		framebuffer_[i] = PpuColorToIntensity(ppu_framebuffer[i]);
+		assert(static_cast<size_t>(ppu_framebuffer[i]) < intensity_palette_.size());
+		framebuffer_[i] = intensity_palette_[static_cast<size_t>(ppu_framebuffer[i])];
 	}
 
 	openGLContext.triggerRepaint();
@@ -204,21 +206,4 @@ void GameScreenComponent::render()
 	// Unbind VAO and texture
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-uint8_t GameScreenComponent::PpuColorToIntensity(PPU::Color color)
-{
-	switch (color)
-	{
-	case PPU::Color::White:
-		return 255;
-	case PPU::Color::LightGrey:
-		return 192;
-	case PPU::Color::DarkGrey:
-		return 96;
-	case PPU::Color::Black:
-		return 0;
-	default:
-		throw std::invalid_argument("Invalid argument to PpuColorToIntensity: " + std::to_string(static_cast<int>(color)));
-	}
 }

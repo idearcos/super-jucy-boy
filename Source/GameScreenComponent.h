@@ -28,7 +28,7 @@ private:
 	};
 
 	static GLuint CompileShaderProgram();
-	uint8_t PpuColorToIntensity(PPU::Color color);
+	std::array<uint8_t, static_cast<size_t>(PPU::Color::Count)> intensity_palette_;
 
 private:
 	static const size_t width_{ 160 };
