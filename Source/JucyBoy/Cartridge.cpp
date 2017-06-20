@@ -183,12 +183,28 @@ void Cartridge::OnMbc1Written(Memory::Address address, uint8_t value)
 		}
 		else
 		{
-			LoadRomBank((loaded_rom_bank_ & 0x1F) | (value & 0x60));
+			LoadRomBank((loaded_rom_bank_ & 0x1F) | ((value & 0x03) << 5));
 		}
 		break;
 	case 0x6000:
 	case 0x7000:
+		const auto was_ram_banking_mode = mbc1_ram_banking_mode_enabled_;
 		mbc1_ram_banking_mode_enabled_ = ((value & 0x01) != 0);
+
+		if (mbc1_ram_banking_mode_enabled_ == was_ram_banking_mode) break;
+
+		// Correct the ROM/RAM memory banks for the new mode
+		if (mbc1_ram_banking_mode_enabled_)
+		{
+			loaded_external_ram_bank_ = loaded_rom_bank_ >> 5;
+			loaded_rom_bank_ &= 0x1F;
+		}
+		else
+		{
+			loaded_rom_bank_ = (loaded_rom_bank_ & 0x1F) | (loaded_external_ram_bank_ << 5);
+			loaded_external_ram_bank_ = 0;
+		}
+
 		break;
 	}
 }
