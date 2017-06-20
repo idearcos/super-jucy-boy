@@ -80,19 +80,6 @@ void DebugCPU::RemoveInstructionBreakpoint(OpCode opcode)
 	NotifyInstructionBreakpointsChange();
 }
 
-bool DebugCPU::IsBreakpointHit() const
-{
-	for (const auto breakpoint : breakpoints_)
-	{
-		if (breakpoint == registers_.pc)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
 bool DebugCPU::IsInstructionBreakpointHit() const
 {
 	for (const auto instruction_breakpoint : instruction_breakpoints_)
@@ -109,6 +96,7 @@ bool DebugCPU::IsInstructionBreakpointHit() const
 bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 {
 	//TODO: also check OAM DMA for watchpoints
+	//TODO: check Call from interrupts
 	Memory::Address address{ 0 };
 	switch (next_opcode)
 	{
@@ -117,7 +105,7 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0x08:
 		address = debug_mmu_->ReadByte(registers_.pc + 1);
 		address += (debug_mmu_->ReadByte(registers_.pc + 2) << 8);
-		return debug_mmu_->IsWriteWatchpointHit(address);
+		return debug_mmu_->IsWriteWatchpointHit(address) || debug_mmu_->IsWriteWatchpointHit(address + 1);
 	case 0x0A:
 		return debug_mmu_->IsReadWatchpointHit(registers_.bc);
 	case 0x12:
@@ -160,12 +148,25 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0xD1:
 	case 0xE1:
 	case 0xF1:
-		return debug_mmu_->IsReadWatchpointHit(registers_.sp);
+		return debug_mmu_->IsReadWatchpointHit(registers_.sp) || debug_mmu_->IsReadWatchpointHit(registers_.sp + 1);
 	case 0xC5:
 	case 0xD5:
 	case 0xE5:
 	case 0xF5:
-		return debug_mmu_->IsWriteWatchpointHit(registers_.sp);
+	case 0xC7:
+	case 0xCF:
+	case 0xD7:
+	case 0xDF:
+	case 0xE7:
+	case 0xEF:
+	case 0xF7:
+	case 0xFF:
+	case 0xC4:
+	case 0xCC:
+	case 0xCD:
+	case 0xD4:
+	case 0xDC:
+		return debug_mmu_->IsWriteWatchpointHit(registers_.sp - 1) || debug_mmu_->IsWriteWatchpointHit(registers_.sp - 2);
 	case 0xE0:
 		return debug_mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + debug_mmu_->ReadByte(registers_.pc + 1));
 	case 0xE2:

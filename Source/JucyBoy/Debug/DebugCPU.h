@@ -41,7 +41,7 @@ public:
 private:
 	void DebugRunningLoopFunction();
 
-	bool IsBreakpointHit() const;
+	inline bool IsBreakpointHit() const { return (breakpoints_.find(registers_.pc) != breakpoints_.end()); }
 	bool IsInstructionBreakpointHit() const;
 	bool IsWatchpointHit(OpCode next_opcode) const;
 
