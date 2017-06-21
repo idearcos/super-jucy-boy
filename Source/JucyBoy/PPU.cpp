@@ -16,34 +16,43 @@ void PPU::OnMachineCycleLapse()
 {
 	if (lcd_on_)
 	{
-		cycles_lapsed_in_state_ += 1;
+		current_state_ = next_state_;
+		clock_cycles_lapsed_in_state_ += 4;
 		switch (current_state_)
 		{
+		case State::EnteredOAM:
+			if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+			next_state_ = State::OAM;
 		case State::OAM:
-			if (cycles_lapsed_in_state_ >= oam_state_duration_)
+			if (clock_cycles_lapsed_in_state_ >= oam_state_duration_)
 			{
-				cycles_lapsed_in_state_ -= oam_state_duration_;
-				SetLcdState(State::VRAM);
+				clock_cycles_lapsed_in_state_ -= oam_state_duration_;
+				vram_duration_this_line_ = vram_state_duration_ + (scroll_x_ & 0x07);
+				next_state_ = State::VRAM;
 			}
 			break;
 		case State::VRAM:
-			if (cycles_lapsed_in_state_ >= vram_state_duration_)
+			if (clock_cycles_lapsed_in_state_ >= vram_duration_this_line_)
 			{
-				cycles_lapsed_in_state_ -= vram_state_duration_;
-				SetLcdState(State::HBLANK);
+				clock_cycles_lapsed_in_state_ -= vram_duration_this_line_;
+				hblank_duration_this_line_ = line_duration_ - oam_state_duration_ - vram_duration_this_line_;
+				next_state_ = State::EnteredHBLANK;
 
 				RenderBackground(current_line_);
 				RenderWindow(current_line_);
 				RenderSprites(current_line_);
 			}
 			break;
+		case State::EnteredHBLANK:
+			if (hblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+			next_state_ = State::HBLANK;
 		case State::HBLANK:
-			if (cycles_lapsed_in_state_ >= hblank_state_duration_)
+			if (clock_cycles_lapsed_in_state_ >= hblank_duration_this_line_)
 			{
-				cycles_lapsed_in_state_ -= hblank_state_duration_;
+				clock_cycles_lapsed_in_state_ -= hblank_duration_this_line_;
 				if (IncrementLine() == 144)
 				{
-					SetLcdState(State::VBLANK);
+					next_state_ = State::EnteredVBLANK;
 
 					NotifyNewFrame();
 
@@ -52,26 +61,29 @@ void PPU::OnMachineCycleLapse()
 				}
 				else
 				{
-					SetLcdState(State::OAM);
+					next_state_ = State::EnteredOAM;
 				}
 			}
 			break;
+		case State::EnteredVBLANK:
+			if (vblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+			next_state_ = State::VBLANK;
 		case State::VBLANK:
-			if (cycles_lapsed_in_state_ >= line_duration_)
+			if (clock_cycles_lapsed_in_state_ >= line_duration_)
 			{
-				cycles_lapsed_in_state_ -= line_duration_;
+				clock_cycles_lapsed_in_state_ -= line_duration_;
 				if (IncrementLine() == 0)
 				{
-					SetLcdState(State::OAM);
+					next_state_ = State::EnteredOAM;
 				}
 				else
 				{
-					SetLcdState(State::VBLANK);
+					next_state_ = State::VBLANK;
 				}
 			}
 			break;
 		default:
-			throw std::logic_error("Invalid current mode in OnMachineCycleLapse: " + std::to_string(cycles_lapsed_in_state_));
+			throw std::logic_error("Invalid current mode in OnMachineCycleLapse: " + std::to_string(static_cast<int>(current_state_)));
 		}
 	}
 
@@ -271,40 +283,14 @@ void PPU::EnableLcd(bool enabled)
 
 	if (lcd_on_)
 	{
-		//TODO: is it correct to set the beginning of the first line here?
-		cycles_lapsed_in_state_ = 0;
-		current_state_ = State::OAM;
+		clock_cycles_lapsed_in_state_ = 4;
+		next_state_ = State::OAM;
 		SetLineNumber(0);
 	}
 	else
 	{
-		//TODO: is it correct to set the end of the last line here? (while LCD is off, the stat register does indeed report VBlank state)
-		cycles_lapsed_in_state_ = 114;
 		current_state_ = State::VBLANK;
 		SetLineNumber(153);
-	}
-
-	//TODO: does any interrupt have to be requested when turning LCD on/off? I guess not
-}
-
-void PPU::SetLcdState(State state)
-{
-	current_state_ = state;
-
-	// Request interrupt if enabled
-	switch (current_state_)
-	{
-	case State::HBLANK:
-		if (hblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-		break;
-	case State::VBLANK:
-		if (vblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-		break;
-	case State::OAM:
-		if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-		break;
-	default:
-		break;
 	}
 }
 
@@ -378,7 +364,7 @@ void PPU::OnVramWritten(Memory::Address relative_address, uint8_t value)
 
 uint8_t PPU::OnOamRead(Memory::Address relative_address) const
 {
-	if ((current_state_ == State::VRAM) || (current_state_ == State::OAM)) return 0xFF;
+	if ((current_state_ == State::VRAM) || (current_state_ == State::OAM) || (current_state_ == State::EnteredOAM)) return 0xFF;
 
 	if (oam_dma_.current_state_ == OamDma::State::Active) return 0xFF;
 
@@ -387,7 +373,7 @@ uint8_t PPU::OnOamRead(Memory::Address relative_address) const
 
 void PPU::OnOamWritten(Memory::Address relative_address, uint8_t value)
 {
-	if ((current_state_ == State::VRAM) || (current_state_ == State::OAM)) return;
+	if ((current_state_ == State::VRAM) || (current_state_ == State::OAM) || (current_state_ == State::EnteredOAM)) return;
 
 	if (oam_dma_.current_state_ == OamDma::State::Active) return;
 
@@ -411,7 +397,7 @@ uint8_t PPU::OnIoMemoryRead(Memory::Address address)
 	return value; }
 	case Memory::STAT:
 	{uint8_t value{ 0x80 };
-	value |= static_cast<uint8_t>(current_state_);
+	value |= static_cast<uint8_t>(current_state_) & 0x03;
 	value |= static_cast<uint8_t>(current_line_ == line_compare_) << 2;
 	value |= static_cast<uint8_t>(hblank_interrupt_enabled_) << 3;
 	value |= static_cast<uint8_t>(vblank_interrupt_enabled_) << 4;
@@ -467,8 +453,8 @@ void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		SetLineNumber(0);
 
 		//TODO: Should the cycle counter in the current mode be reset to 0 too?
-		cycles_lapsed_in_state_ = 0;
-		current_state_ = State::OAM;
+		clock_cycles_lapsed_in_state_ = 0;
+		next_state_ = State::EnteredOAM;
 		break;
 	case Memory::LYC:
 		line_compare_ = value;

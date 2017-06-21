@@ -15,7 +15,11 @@ public:
 		HBLANK = 0,
 		VBLANK = 1,
 		OAM = 2,
-		VRAM = 3
+		VRAM = 3,
+		// The lower 2 bits of the following modes coincide with the above, therefore applying a 0x03 mask to them yields the same value
+		EnteredHBLANK = 4,
+		EnteredVBLANK = 5,
+		EnteredOAM = 6
 	};
 
 	enum class Color : uint8_t
@@ -81,17 +85,20 @@ private:
 	void NotifyNewFrame() const;
 
 protected:
-	static constexpr CPU::MachineCycles oam_state_duration_{ 20 };
-	static constexpr CPU::MachineCycles vram_state_duration_{ 43 };
-	static constexpr CPU::MachineCycles hblank_state_duration_{ 51 };
-	static constexpr CPU::MachineCycles line_duration_{ 114 };
+	static constexpr size_t oam_state_duration_{ 80 };
+	static constexpr size_t vram_state_duration_{ 172 };
+	static constexpr size_t hblank_state_duration_{ 204 };
+	static constexpr size_t line_duration_{ 456 };
 
 	static constexpr Memory::Address tile_map_0_offset_{ 0x1800 };
 	static constexpr Memory::Address tile_map_1_offset_{ 0x1C00 };
 
 	// LCD mode state machine
 	State current_state_{ State::OAM };
-	CPU::MachineCycles cycles_lapsed_in_state_{ 0 };
+	State next_state_{ State::OAM };
+	size_t clock_cycles_lapsed_in_state_{ 0 };
+	size_t vram_duration_this_line_{ hblank_state_duration_ };
+	size_t hblank_duration_this_line_{ hblank_state_duration_ };
 
 	// LCD Control register values
 	bool show_bg_{ true }; // bit 0

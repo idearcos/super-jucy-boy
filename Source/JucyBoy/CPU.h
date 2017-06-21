@@ -13,7 +13,6 @@ class MMU;
 class CPU
 {
 public:
-	using MachineCycles = size_t;
 	using OpCode = uint8_t;
 
 	struct Registers
