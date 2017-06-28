@@ -12,14 +12,21 @@ class PPU : public CPU::Listener
 public:
 	enum class State
 	{
+		// Apart from the LCD modes 0-3, some "virtual" modes are used to represent more specific situations of the LCD.
+		// The lower 2 bits of these virtual modes represent the mode reported when reading the STAT register in these situations.
+		// Therefore, a 0x03 mask is applied when the STAT register is read.
+
 		HBLANK = 0,
+		LcdTurnedOn = 4, // Used upon LCD being turned on, for line #0 (there is no OAM mode for this line before VRAM mode)
+
 		VBLANK = 1,
-		OAM = 2,
-		VRAM = 3,
-		// The lower 2 bits of the following modes coincide with the above, therefore applying a 0x03 mask to them yields the same value
-		EnteredHBLANK = 4,
 		EnteredVBLANK = 5,
-		EnteredOAM = 6
+
+		OAM = 2,
+		EnteredOAM = 6, // Used to trigger LY = LYC comparison at the beginning of OAM (4 clock cycles after LY is incremented)
+		OAM_Line0 = 10, // Used for OAM mode of line 0
+
+		VRAM = 3,
 	};
 
 	enum class Color : uint8_t
@@ -65,6 +72,8 @@ private:
 	// Rendering
 	void RenderBackground(uint8_t line_number);
 	void RenderWindow(uint8_t line_number);
+	std::vector<size_t> ComputeSpritesToRender(uint8_t line_number) const;
+	size_t ComputeVramModeDuration() const;
 	void RenderSprites(uint8_t line_number);
 
 	// Register write functions
@@ -75,11 +84,12 @@ private:
 	// Helper functions
 	void EnableLcd(bool enabled);
 	void SetLcdState(State state);
-	uint8_t IncrementLine() { return SetLineNumber(current_line_ + 1); }
+	inline uint8_t IncrementLine() { return SetLineNumber(current_line_ + 1); }
 	uint8_t SetLineNumber(uint8_t line_number);
-	void UpdateLineComparison();
+	void TriggerLineComparison();
 	uint8_t GetPaletteData(const Palette &palette) const;
 	void WriteOam(Memory::Address relative_address, uint8_t value);
+	inline bool CompareCurrentLine() const { return (current_line_ == line_compare_) && ((clock_cycles_lapsed_in_line_ >= 4) || (current_line_ == 0)); }
 
 	// Listener notification
 	void NotifyNewFrame() const;
@@ -94,27 +104,28 @@ protected:
 	static constexpr Memory::Address tile_map_1_offset_{ 0x1C00 };
 
 	// LCD mode state machine
-	State current_state_{ State::OAM };
-	State next_state_{ State::OAM };
+	State current_state_{ State::LcdTurnedOn };
+	State next_state_{ State::LcdTurnedOn };
 	size_t clock_cycles_lapsed_in_state_{ 0 };
-	size_t vram_duration_this_line_{ hblank_state_duration_ };
+	size_t clock_cycles_lapsed_in_line_{ 0 };
+	size_t vram_duration_this_line_{ vram_state_duration_ };
 	size_t hblank_duration_this_line_{ hblank_state_duration_ };
 
 	// LCD Control register values
-	bool show_bg_{ true }; // bit 0
-	bool show_sprites_{ false }; // bit 1
-	bool double_size_sprites_{ false }; // bit 2
-	size_t active_bg_tile_map_{ 0 }; // bit 3
-	size_t active_tile_set_{ 1 }; // bit 4
-	bool show_window_{ false }; // bit 5
-	size_t active_window_tile_map_{ 0 }; // bit 6
-	bool lcd_on_{ true }; // bit 7
+	bool show_bg_{ true };					// bit 0
+	bool show_sprites_{ false };			// bit 1
+	int sprite_height_{ 8 };				// bit 2
+	size_t active_bg_tile_map_{ 0 };		// bit 3
+	size_t active_tile_set_{ 1 };			// bit 4
+	bool show_window_{ false };				// bit 5
+	size_t active_window_tile_map_{ 0 };	// bit 6
+	bool lcd_on_{ true };					// bit 7
 
 	// LCD Status register values
-	bool hblank_interrupt_enabled_{ false }; // bit 3
-	bool vblank_interrupt_enabled_{ false }; // bit 4
-	bool oam_interrupt_enabled_{ false }; // bit 5
-	bool line_coincidence_interrupt_enabled_{ false }; // bit 6
+	bool hblank_interrupt_enabled_{ false };			// bit 3
+	bool vblank_interrupt_enabled_{ false };			// bit 4
+	bool oam_interrupt_enabled_{ false };				// bit 5
+	bool line_coincidence_interrupt_enabled_{ false };	// bit 6
 
 	// Other register values
 	uint8_t scroll_y_{ 0 };
@@ -134,6 +145,7 @@ protected:
 	std::array<TileMap, 2> tile_maps_{};
 
 	std::array<Sprite, 40> sprites_{};
+	std::vector<size_t> sprites_to_render_this_line_;
 
 	std::array<bool, 160 * 144> is_bg_transparent_{}; // Color number 0 on background is "transparent" and therefore sprites show on top of it
 	Framebuffer framebuffer_{};

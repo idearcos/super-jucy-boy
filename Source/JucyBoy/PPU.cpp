@@ -18,16 +18,25 @@ void PPU::OnMachineCycleLapse()
 	{
 		current_state_ = next_state_;
 		clock_cycles_lapsed_in_state_ += 4;
+		clock_cycles_lapsed_in_line_ += 4;
 		switch (current_state_)
 		{
-		case State::EnteredOAM:
+		case State::OAM_Line0:
+			// Line #0 requests the mode 2 STAT interrupt when entered, as opposed to the rest of the lines, which request it at the end of mode 0 instead
 			if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
 			next_state_ = State::OAM;
+			break;
+		case State::EnteredOAM:
+			// Line comparison is triggered at the beginning of OAM mode, 4 clock cycles after LY is incremented
+			TriggerLineComparison();
+			next_state_ = State::OAM;
+			break;
 		case State::OAM:
 			if (clock_cycles_lapsed_in_state_ >= oam_state_duration_)
 			{
 				clock_cycles_lapsed_in_state_ -= oam_state_duration_;
-				vram_duration_this_line_ = vram_state_duration_ + (scroll_x_ & 0x07);
+				sprites_to_render_this_line_ = ComputeSpritesToRender(current_line_);
+				vram_duration_this_line_ = ComputeVramModeDuration();
 				next_state_ = State::VRAM;
 			}
 			break;
@@ -36,50 +45,61 @@ void PPU::OnMachineCycleLapse()
 			{
 				clock_cycles_lapsed_in_state_ -= vram_duration_this_line_;
 				hblank_duration_this_line_ = line_duration_ - oam_state_duration_ - vram_duration_this_line_;
-				next_state_ = State::EnteredHBLANK;
+
+				if (hblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+				next_state_ = State::HBLANK;
 
 				RenderBackground(current_line_);
 				RenderWindow(current_line_);
 				RenderSprites(current_line_);
 			}
 			break;
-		case State::EnteredHBLANK:
-			if (hblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-			next_state_ = State::HBLANK;
 		case State::HBLANK:
 			if (clock_cycles_lapsed_in_state_ >= hblank_duration_this_line_)
 			{
 				clock_cycles_lapsed_in_state_ -= hblank_duration_this_line_;
+				clock_cycles_lapsed_in_line_ -= clock_cycles_lapsed_in_line_;
 				if (IncrementLine() == 144)
 				{
 					next_state_ = State::EnteredVBLANK;
 
 					NotifyNewFrame();
-
-					// Request VBlank interrupt
-					mmu_->SetBit(Memory::IF, 0);
 				}
 				else
 				{
+					if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
 					next_state_ = State::EnteredOAM;
 				}
 			}
 			break;
 		case State::EnteredVBLANK:
-			if (vblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+			mmu_->SetBit(Memory::IF, 0); // Request VBlank interrupt
 			next_state_ = State::VBLANK;
+			// Fallthrough
 		case State::VBLANK:
+			// Mode 1 STAT interrupt is requested every cycle
+			if (vblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+
 			if (clock_cycles_lapsed_in_state_ >= line_duration_)
 			{
 				clock_cycles_lapsed_in_state_ -= line_duration_;
+				clock_cycles_lapsed_in_line_ -= clock_cycles_lapsed_in_line_;
 				if (IncrementLine() == 0)
 				{
-					next_state_ = State::EnteredOAM;
+					next_state_ = State::OAM_Line0;
 				}
 				else
 				{
 					next_state_ = State::VBLANK;
 				}
+			}
+			break;
+		case State::LcdTurnedOn:
+			if (clock_cycles_lapsed_in_state_ >= oam_state_duration_)
+			{
+				clock_cycles_lapsed_in_state_ -= oam_state_duration_;
+				vram_duration_this_line_ = ComputeVramModeDuration();
+				next_state_ = State::VRAM;
 			}
 			break;
 		default:
@@ -175,9 +195,11 @@ void PPU::RenderWindow(uint8_t line_number)
 	}
 }
 
-void PPU::RenderSprites(uint8_t line_number)
+std::vector<size_t> PPU::ComputeSpritesToRender(uint8_t line_number) const
 {
-	if (!show_sprites_) return;
+	if (!show_sprites_) return{};
+
+	std::vector<size_t> sprites_to_render;
 
 	// Only 10 sprites can be displayed on any one line, prioritized by address (i.e. 0xFE00 highest, 0xFE04 next highest, etc.)
 	// When this limit is exceeded, the lower priority sprites won't be displayed
@@ -187,44 +209,71 @@ void PPU::RenderSprites(uint8_t line_number)
 
 	//TODO: precompute sprites priority when OAM is written? That may perform better than rechecking priority every time
 
-	std::vector<size_t> indices_of_sprites_to_render;
-
 	// First, filter the sprites to be rendered in the current scanline
-	const auto sprite_height = double_size_sprites_ ? 16 : 8;
 	for (int i = 0; i < sprites_.size(); ++i)
 	{
 		// Verify if it has to be rendered in the current scanline
-		if ((line_number < sprites_[i].GetY()) || (line_number >= (sprites_[i].GetY() + sprite_height))) { continue; }
+		if ((line_number < sprites_[i].GetY()) || (line_number >= (sprites_[i].GetY() + sprite_height_))) { continue; }
 
-		indices_of_sprites_to_render.emplace_back(i);
+		sprites_to_render.emplace_back(i);
 
-		if (indices_of_sprites_to_render.size() == 10) break;
+		if (sprites_to_render.size() == 10) break;
 	}
 
-	// Remove the sprites that are off-screen, since they don't need to be rendered
-	indices_of_sprites_to_render.erase(std::remove_if(indices_of_sprites_to_render.begin(), indices_of_sprites_to_render.end(), [this](size_t index) {
-		return (sprites_[index].GetX() <= -8) || (sprites_[index].GetX() >= 160);
-	}), indices_of_sprites_to_render.end());
+	// Remove the sprites beyond the screen width, since they don't add up any cycles to VRAM duration nor do they need to be drawn
+	sprites_to_render.erase(std::remove_if(sprites_to_render.begin(), sprites_to_render.end(), [this](size_t index) {
+		return (sprites_[index].GetX() >= 160);
+	}), sprites_to_render.end());
 
 	// Return if there are no sprites to render
-	if (indices_of_sprites_to_render.empty()) return;
+	if (sprites_to_render.empty()) return{};
 
 	// Now sort the remaining sprites according to rendering priority: draw higher X (or higher address, if equals X) sprites first (i.e. from right to left)
 	// This way, in the final image the sprites with lower X and lower address will appear above the rest
-	std::sort(indices_of_sprites_to_render.begin(), indices_of_sprites_to_render.end(), [this](size_t lhs_index, size_t rhs_index) {
+	std::sort(sprites_to_render.begin(), sprites_to_render.end(), [this](size_t lhs_index, size_t rhs_index) {
 		return sprites_[lhs_index].GetX() > sprites_[rhs_index].GetX()
 			|| (sprites_[lhs_index].GetX() == sprites_[rhs_index].GetX()) && (lhs_index > rhs_index);
 	});
 
-	// Render the sprites one by one, right to left
-	for (int i = 0; i < indices_of_sprites_to_render.size(); ++i)
+	return sprites_to_render;
+}
+
+size_t PPU::ComputeVramModeDuration() const
+{
+	size_t vram_duration_this_line = vram_state_duration_ + (scroll_x_ & 0x07);
+
+	if (sprites_to_render_this_line_.empty()) return vram_duration_this_line;
+
+	// Each odd sprite adds 4 clock cycles to VRAM duration; each even sprite adds 8 clock cycles instead
+	vram_duration_this_line += sprites_to_render_this_line_.size() * 6; // (sprites_to_render_this_line_.size() << 2) + ((sprites_to_render_this_line_.size() >> 1) << 2);
+
+	// Each unique X coordinate among the sprites adds a number of clock cycles, depending on the X coordinate in modulo 8
+	std::set<int> x_coordinates;
+	for (auto sprite_index : sprites_to_render_this_line_)
 	{
-		const auto& sprite = sprites_[indices_of_sprites_to_render[i]];
+		x_coordinates.insert(sprites_[sprite_index].GetX());
+	}
+
+	for (auto x : x_coordinates)
+	{
+		vram_duration_this_line += std::max(5 - (x & 0x07), 0);
+	}
+
+	// Round down to the nearest CPU cycle (4 clock cycles)
+	return vram_duration_this_line & ~0x03;
+}
+
+void PPU::RenderSprites(uint8_t line_number)
+{
+	// Render the sprites one by one, right to left
+	for (int i = 0; i < sprites_to_render_this_line_.size(); ++i)
+	{
+		const auto& sprite = sprites_[sprites_to_render_this_line_[i]];
 		auto tile_line = line_number - sprite.GetY();
-		if (sprite.IsVerticallyFlipped()) tile_line = (sprite_height - 1) - tile_line;
+		if (sprite.IsVerticallyFlipped()) tile_line = (sprite_height_ - 1) - tile_line;
 
 		// 16 pixel height sprites' first tile number is retrieved by resetting the lowest bit; the second tile number is retrieved by setting it.
-		const auto& tile = (!double_size_sprites_) ? tile_set_[sprite.GetTileNumber()]
+		const auto& tile = ((sprite_height_ >> 4) == 0) ? tile_set_[sprite.GetTileNumber()]
 			: (tile_line < 8 ? tile_set_[sprite.GetTileNumber() & 0xFE] : tile_set_[sprite.GetTileNumber() | 0x01]);
 		tile_line &= 0x07;
 
@@ -247,11 +296,11 @@ void PPU::SetLcdControl(uint8_t value)
 {
 	show_bg_ = (value & 0x01) != 0;
 	show_sprites_ = (value & 0x02) != 0;
-	double_size_sprites_ = (value & 0x04) != 0;
-	active_bg_tile_map_ = (value & 0x08) != 0 ? 1 : 0;
-	active_tile_set_ = (value & 0x10) != 0 ? 1 : 0;
+	sprite_height_ = 8 << ((value >> 2) & 0x01);
+	active_bg_tile_map_ = ((value >> 3) & 0x01);
+	active_tile_set_ = ((value >> 4) & 0x01);
 	show_window_ = (value & 0x20) != 0;
-	active_window_tile_map_ = (value & 0x40) != 0 ? 1 : 0;
+	active_window_tile_map_ = ((value >> 6) & 0x01);
 	EnableLcd((value & 0x80) != 0);
 }
 
@@ -284,13 +333,13 @@ void PPU::EnableLcd(bool enabled)
 	if (lcd_on_)
 	{
 		clock_cycles_lapsed_in_state_ = 4;
-		next_state_ = State::OAM;
-		SetLineNumber(0);
+		clock_cycles_lapsed_in_line_ = 4;
+		next_state_ = State::LcdTurnedOn;
 	}
 	else
 	{
-		current_state_ = State::VBLANK;
-		SetLineNumber(153);
+		current_state_ = State::HBLANK;
+		SetLineNumber(0);
 	}
 }
 
@@ -302,12 +351,10 @@ uint8_t PPU::SetLineNumber(uint8_t line_number)
 		current_line_ = 0;
 	}
 
-	UpdateLineComparison();
-
 	return current_line_;
 }
 
-void PPU::UpdateLineComparison()
+void PPU::TriggerLineComparison()
 {
 	// Request interrupt if enabled
 	if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
@@ -325,13 +372,15 @@ uint8_t PPU::GetPaletteData(const Palette &palette) const
 #pragma region MMU mapped memory read/write functions
 uint8_t PPU::OnVramRead(Memory::Address relative_address) const
 {
-	if (current_state_ == State::VRAM) return 0xFF;
+	// VRAM cannot be read during mode 3 or right in the transition from mode 2 to mode 3
+	if ((current_state_ == State::VRAM) || ((next_state_ == State::VRAM) && ((static_cast<size_t>(current_state_) & 0x03) == 2))) return 0xFF;
 
 	return vram_[relative_address];
 }
 
 void PPU::OnVramWritten(Memory::Address relative_address, uint8_t value)
 {
+	// VRAM cannot be written during mode 3
 	if (current_state_ == State::VRAM) return;
 
 	vram_[relative_address] = value;
@@ -364,7 +413,8 @@ void PPU::OnVramWritten(Memory::Address relative_address, uint8_t value)
 
 uint8_t PPU::OnOamRead(Memory::Address relative_address) const
 {
-	if ((current_state_ == State::VRAM) || (current_state_ == State::OAM) || (current_state_ == State::EnteredOAM)) return 0xFF;
+	// OAM cannot be read during modes 2 and 3, or right before mode 2
+	if (((static_cast<size_t>(current_state_) & 0x02) != 0) || ((static_cast<size_t>(next_state_) & 0x03) == 2)) return 0xFF;
 
 	if (oam_dma_.current_state_ == OamDma::State::Active) return 0xFF;
 
@@ -373,7 +423,8 @@ uint8_t PPU::OnOamRead(Memory::Address relative_address) const
 
 void PPU::OnOamWritten(Memory::Address relative_address, uint8_t value)
 {
-	if ((current_state_ == State::VRAM) || (current_state_ == State::OAM) || (current_state_ == State::EnteredOAM)) return;
+	// OAM cannot be written during mode 2 and 3, EXCEPT the CPU cycle right before mode 3
+	if ((((static_cast<size_t>(current_state_) & 0x03) == 2) && (next_state_ != State::VRAM)) || (((static_cast<size_t>(current_state_) & 0x03) == 3)))return;
 
 	if (oam_dma_.current_state_ == OamDma::State::Active) return;
 
@@ -385,25 +436,25 @@ uint8_t PPU::OnIoMemoryRead(Memory::Address address)
 	switch (address)
 	{
 	case Memory::LCDC:
-	{uint8_t value{ 0 };
-	value |= static_cast<uint8_t>(show_bg_);
-	value |= static_cast<uint8_t>(show_sprites_) << 1;
-	value |= static_cast<uint8_t>(double_size_sprites_) << 2;
-	value |= static_cast<uint8_t>(active_bg_tile_map_) << 3;
-	value |= static_cast<uint8_t>(active_tile_set_) << 4;
-	value |= static_cast<uint8_t>(show_window_) << 5;
-	value |= static_cast<uint8_t>(active_window_tile_map_) << 6;
-	value |= static_cast<uint8_t>(lcd_on_) << 7;
-	return value; }
+		{uint8_t value{ 0 };
+		value |= static_cast<uint8_t>(show_bg_);
+		value |= static_cast<uint8_t>(show_sprites_) << 1;
+		value |= static_cast<uint8_t>(sprite_height_ >> 4) << 2;
+		value |= static_cast<uint8_t>(active_bg_tile_map_) << 3;
+		value |= static_cast<uint8_t>(active_tile_set_) << 4;
+		value |= static_cast<uint8_t>(show_window_) << 5;
+		value |= static_cast<uint8_t>(active_window_tile_map_) << 6;
+		value |= static_cast<uint8_t>(lcd_on_) << 7;
+		return value; }
 	case Memory::STAT:
-	{uint8_t value{ 0x80 };
-	value |= static_cast<uint8_t>(current_state_) & 0x03;
-	value |= static_cast<uint8_t>(current_line_ == line_compare_) << 2;
-	value |= static_cast<uint8_t>(hblank_interrupt_enabled_) << 3;
-	value |= static_cast<uint8_t>(vblank_interrupt_enabled_) << 4;
-	value |= static_cast<uint8_t>(oam_interrupt_enabled_) << 5;
-	value |= static_cast<uint8_t>(line_coincidence_interrupt_enabled_) << 6;
-	return value; }
+		{uint8_t value{ 0x80 };
+		value |= static_cast<uint8_t>(current_state_) & 0x03;
+		value |= static_cast<uint8_t>(CompareCurrentLine()) << 2;
+		value |= static_cast<uint8_t>(hblank_interrupt_enabled_) << 3;
+		value |= static_cast<uint8_t>(vblank_interrupt_enabled_) << 4;
+		value |= static_cast<uint8_t>(oam_interrupt_enabled_) << 5;
+		value |= static_cast<uint8_t>(line_coincidence_interrupt_enabled_) << 6;
+		return value; }
 	case Memory::SCY:
 		return scroll_y_;
 	case Memory::SCX:
@@ -453,12 +504,12 @@ void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		SetLineNumber(0);
 
 		//TODO: Should the cycle counter in the current mode be reset to 0 too?
-		clock_cycles_lapsed_in_state_ = 0;
-		next_state_ = State::EnteredOAM;
+		clock_cycles_lapsed_in_line_ = clock_cycles_lapsed_in_state_ = 0;
+		next_state_ = State::OAM_Line0;
 		break;
 	case Memory::LYC:
 		line_compare_ = value;
-		UpdateLineComparison();
+		// TriggerLineComparison();
 		break;
 	case Memory::DMA:
 		if (value > 0xF1) throw std::invalid_argument("Invalid DMA transfer source: " + std::to_string(int{ value }));
