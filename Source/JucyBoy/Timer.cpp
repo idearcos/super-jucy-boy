@@ -16,17 +16,8 @@ void Timer::OnMachineCycleLapse()
 	switch (timer_overflow_state_)
 	{
 	case TimerOverflowState::JustOverflowed:
-		// If TIMA was written right when it overflowed, the interrupt does not happen
-		if (timer_counter_ == 0)
-		{
-			timer_counter_ = timer_modulo_;
-			mmu_->SetBit(Memory::IF, 2);
-			timer_overflow_state_ = TimerOverflowState::JustReloaded;
-		}
-		else
-		{
-			timer_overflow_state_ = TimerOverflowState::NoOverflow;
-		}
+		timer_counter_ = timer_modulo_;
+		timer_overflow_state_ = TimerOverflowState::JustReloaded;
 		break;
 	case TimerOverflowState::JustReloaded:
 		timer_overflow_state_ = TimerOverflowState::NoOverflow;
@@ -100,6 +91,12 @@ void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		// Timer overflow obscure behavior: the cycle when TIMA is reloaded with TMA, writing to TIMA has no effect (TMA prevails)
 		if (timer_overflow_state_ == TimerOverflowState::JustReloaded) break;
 
+		// If TIMA was written right when it overflowed, the interrupt does not happen
+		if (timer_overflow_state_ == TimerOverflowState::JustOverflowed)
+		{
+			timer_overflow_state_ = TimerOverflowState::NoOverflow;
+		}
+
 		timer_counter_ = value;
 		break;
 	case Memory::TMA:
@@ -136,6 +133,7 @@ void Timer::IncreaseTimer()
 	if (++timer_counter_ == 0)
 	{
 		timer_overflow_state_ = TimerOverflowState::JustOverflowed;
+		mmu_->SetBit(Memory::IF, 2);
 	}
 }
 

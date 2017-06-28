@@ -151,15 +151,14 @@ void CPU::PushWordToStack(uint16_t value)
 
 uint8_t CPU::ReadByte(uint16_t address) const
 {
-	const auto value = mmu_->ReadByte(address);
 	NotifyMachineCycleLapse();
-	return value;
+	return mmu_->ReadByte(address);
 }
 
 void CPU::WriteByte(uint16_t address, uint8_t value) const
 {
-	mmu_->WriteByte(address, value);
 	NotifyMachineCycleLapse();
+	mmu_->WriteByte(address, value);
 }
 #pragma endregion
 
