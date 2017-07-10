@@ -51,10 +51,10 @@ public:
 	void Reset();
 
 	// Execution flow control
-	virtual void Run();
+	void Run();
 	void Stop();
 	bool IsRunning() const noexcept;
-	virtual void StepOver();
+	void StepOver();
 
 	// MMU mapped memory read/write functions
 	uint8_t OnIoMemoryRead(Memory::Address address) const;
@@ -136,6 +136,8 @@ protected:
 	std::atomic<bool> exit_loop_{ false };
 	std::future<void> loop_function_result_;
 
+	MMU *mmu_{ nullptr };
+
 private:
 	using Instruction = std::function<void()>;
 
@@ -169,8 +171,6 @@ private:
 	uint8_t requested_interrupts_{ 0 };
 
 	std::set<Listener*> listeners_;
-
-	MMU *mmu_{ nullptr };
 
 private:
 	CPU(const CPU&) = delete;

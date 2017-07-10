@@ -2,11 +2,8 @@
 #include <sstream>
 #include <iomanip>
 
-CpuBreakpointsComponent::CpuBreakpointsComponent(DebugCPU &cpu) :
-	cpu_{ &cpu }
+CpuBreakpointsComponent::CpuBreakpointsComponent()
 {
-	cpu_->AddListener(*this);
-
 	// Add list of breakpoints
 	breakpoint_list_box_.setModel(this);
 	addAndMakeVisible(breakpoint_list_box_);
@@ -29,7 +26,13 @@ CpuBreakpointsComponent::CpuBreakpointsComponent(DebugCPU &cpu) :
 
 CpuBreakpointsComponent::~CpuBreakpointsComponent()
 {
-	cpu_->RemoveListener(*this);
+	
+}
+
+void CpuBreakpointsComponent::SetCpu(DebugCPU& cpu)
+{
+	cpu_ = &cpu;
+	cpu_->AddListener(*this);
 }
 
 int CpuBreakpointsComponent::getNumRows()
@@ -52,17 +55,23 @@ void CpuBreakpointsComponent::paintListBoxItem(int rowNumber, Graphics& g, int w
 
 void CpuBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 {
+	if (!cpu_) return;
+
 	cpu_->RemoveBreakpoint(breakpoints_[lastRowSelected]);
+	UpdateBreakpoints();
 }
 
 void CpuBreakpointsComponent::textEditorReturnKeyPressed(TextEditor&)
 {
+	if (!cpu_) return;
+
 	const auto breakpoint = std::stoi(breakpoint_add_editor_.getText().toStdString(), 0, 16);
 	if (breakpoint < std::numeric_limits<Memory::Address>::min() || breakpoint > std::numeric_limits<Memory::Address>::max()) return;
 
 	breakpoint_add_editor_.clear();
 
 	cpu_->AddBreakpoint(static_cast<Memory::Address>(breakpoint));
+	UpdateBreakpoints();
 }
 
 void CpuBreakpointsComponent::UpdateHitBreakpoint(Memory::Address pc)
@@ -73,9 +82,12 @@ void CpuBreakpointsComponent::UpdateHitBreakpoint(Memory::Address pc)
 	}
 }
 
-void CpuBreakpointsComponent::OnBreakpointsChanged(const DebugCPU::BreakpointList &breakpoint_list)
+void CpuBreakpointsComponent::UpdateBreakpoints()
 {
-	breakpoints_ = std::vector<Memory::Address>{ breakpoint_list.cbegin(), breakpoint_list.cend() };
+	if (!cpu_) return;
+
+	const auto cpu_breakpoints = cpu_->GetBreakpoints();
+	breakpoints_ = std::vector<Memory::Address>{ cpu_breakpoints.cbegin(), cpu_breakpoints.cend() };
 	breakpoint_list_box_.updateContent();
 }
 
@@ -92,8 +104,8 @@ void CpuBreakpointsComponent::resized()
 	auto working_area = getLocalBounds();
 	auto breakpoint_list_area_height = working_area.getHeight();
 
-	breakpoint_list_header_.setBounds(working_area.removeFromTop(breakpoint_list_area_height / 10));
-	breakpoint_add_editor_.setBounds(working_area.removeFromBottom(breakpoint_list_area_height / 10));
+	breakpoint_list_header_.setBounds(working_area.removeFromTop(breakpoint_list_header_.getFont().getHeight() * 1.5));
+	breakpoint_add_editor_.setBounds(working_area.removeFromBottom(breakpoint_add_editor_.getFont().getHeight() * 1.5));
 	breakpoint_list_box_.setBounds(working_area.reduced(1, 0));
 
 	const auto vertical_indent = (breakpoint_add_editor_.getHeight() - breakpoint_add_editor_.getFont().getHeight()) / 2.0;

@@ -3,11 +3,8 @@
 #include <iomanip>
 #include "../JucyBoy/InstructionMnemonics.h"
 
-CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent(DebugCPU &cpu) :
-	cpu_{ &cpu }
+CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent()
 {
-	cpu_->AddListener(*this);
-
 	// Add list of instruction breakpoints
 	instruction_breakpoint_list_box_.setModel(this);
 	addAndMakeVisible(instruction_breakpoint_list_box_);
@@ -23,9 +20,7 @@ CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent(DebugCPU 
 	{
 		if ((ii % 16) == 0)
 		{
-			std::stringstream header_string;
-			header_string << "0x" << std::uppercase << std::setfill('0') << std::hex << std::setw(2) << ii << " - 0x" << std::setw(2) << ii + 0xF;
-			instruction_breakpoint_add_combo_box_.addSectionHeading(header_string.str());
+			instruction_breakpoint_add_combo_box_.addSeparator();
 		}
 
 		std::stringstream instruction_string;
@@ -35,11 +30,23 @@ CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent(DebugCPU 
 	}
 	instruction_breakpoint_add_combo_box_.addListener(this);
 	addAndMakeVisible(instruction_breakpoint_add_combo_box_);
+	instruction_breakpoint_add_combo_box_.setTextWhenNothingSelected("Select opcode");
 
 	// Add button for new instruction breakpoints
 	instruction_breakpoint_add_button_.setButtonText("Add");
 	instruction_breakpoint_add_button_.addListener(this);
 	addAndMakeVisible(instruction_breakpoint_add_button_);
+}
+
+CpuInstructionBreakpointsComponent::~CpuInstructionBreakpointsComponent()
+{
+	
+}
+
+void CpuInstructionBreakpointsComponent::SetCpu(DebugCPU& cpu)
+{
+	cpu_ = &cpu;
+	cpu_->AddListener(*this);
 }
 
 int CpuInstructionBreakpointsComponent::getNumRows()
@@ -59,17 +66,26 @@ void CpuInstructionBreakpointsComponent::paintListBoxItem(int rowNumber, Graphic
 
 void CpuInstructionBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 {
+	if (!cpu_) return;
+
 	cpu_->RemoveInstructionBreakpoint(instruction_breakpoints_[lastRowSelected]);
+	UpdateInstructionBreakpoints();
 }
 
 void CpuInstructionBreakpointsComponent::buttonClicked(Button*)
 {
+	if (!cpu_) return;
+
 	cpu_->AddInstructionBreakpoint(static_cast<CPU::OpCode>(instruction_breakpoint_add_combo_box_.getSelectedId() - 1));
+	UpdateInstructionBreakpoints();
 }
 
-void CpuInstructionBreakpointsComponent::OnInstructionBreakpointsChanged(const DebugCPU::InstructionBreakpointList &instruction_breakpoint_list)
+void CpuInstructionBreakpointsComponent::UpdateInstructionBreakpoints()
 {
-	instruction_breakpoints_ = std::vector<CPU::OpCode>{ instruction_breakpoint_list.cbegin(), instruction_breakpoint_list.cend() };
+	if (!cpu_) return;
+
+	const auto cpu_instruction_breakpoints = cpu_->GetInstructionBreakpoints();
+	instruction_breakpoints_ = std::vector<CPU::OpCode>{ cpu_instruction_breakpoints.cbegin(), cpu_instruction_breakpoints.cend() };
 	instruction_breakpoint_list_box_.updateContent();
 }
 
@@ -86,8 +102,8 @@ void CpuInstructionBreakpointsComponent::resized()
 	auto working_area = getLocalBounds();
 	auto working_area_height = working_area.getHeight();
 
-	instruction_breakpoint_list_header_.setBounds(working_area.removeFromTop(working_area_height / 10));
-	auto addition_controls_area = working_area.removeFromBottom(working_area_height / 10);
+	instruction_breakpoint_list_header_.setBounds(working_area.removeFromTop(instruction_breakpoint_list_header_.getFont().getHeight() * 1.5));
+	auto addition_controls_area = working_area.removeFromBottom(instruction_breakpoint_list_header_.getFont().getHeight() * 1.5);
 	instruction_breakpoint_list_box_.setBounds(working_area.reduced(1, 0));
 
 	instruction_breakpoint_add_combo_box_.setBounds(addition_controls_area.removeFromLeft(3 * addition_controls_area.getWidth() / 4));

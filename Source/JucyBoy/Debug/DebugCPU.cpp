@@ -1,13 +1,12 @@
 #include "DebugCPU.h"
-#include "DebugMMU.h"
+#include "../MMU.h"
 
-DebugCPU::DebugCPU(DebugMMU &debug_mmu) : CPU{ debug_mmu },
-	debug_mmu_{ &debug_mmu }
+DebugCPU::DebugCPU(MMU &mmu) : CPU{ mmu }
 {
 
 }
 
-void DebugCPU::Run()
+void DebugCPU::DebugRun()
 {
 	if (loop_function_result_.valid()) { return; }
 
@@ -15,7 +14,7 @@ void DebugCPU::Run()
 	loop_function_result_ = std::async(std::launch::async, &DebugCPU::DebugRunningLoopFunction, this);
 }
 
-void DebugCPU::StepOver()
+void DebugCPU::DebugStepOver()
 {
 	// The CPU must be used with either of these methods:
 	//   1) Calling Run to execute instructions until calling Stop
@@ -38,7 +37,7 @@ void DebugCPU::DebugRunningLoopFunction()
 		{
 			ExecuteOneInstruction();
 
-			if (IsBreakpointHit() || IsInstructionBreakpointHit() || IsWatchpointHit(debug_mmu_->ReadByte(registers_.pc)))
+			if (IsBreakpointHit() || IsInstructionBreakpointHit() || IsWatchpointHit(mmu_->ReadByte(registers_.pc)))
 			{
 				NotifyRunningLoopInterruption();
 				break;
@@ -54,43 +53,9 @@ void DebugCPU::DebugRunningLoopFunction()
 	}
 }
 
-void DebugCPU::AddBreakpoint(Memory::Address address)
-{
-	//TODO: allow only when not running!
-	breakpoints_.insert(address);
-	NotifyBreakpointsChange();
-}
-
-void DebugCPU::RemoveBreakpoint(Memory::Address address)
-{
-	//TODO: allow only when not running!
-	breakpoints_.erase(address);
-	NotifyBreakpointsChange();
-}
-
-void DebugCPU::AddInstructionBreakpoint(OpCode opcode)
-{
-	instruction_breakpoints_.insert(opcode);
-	NotifyInstructionBreakpointsChange();
-}
-
-void DebugCPU::RemoveInstructionBreakpoint(OpCode opcode)
-{
-	instruction_breakpoints_.erase(opcode);
-	NotifyInstructionBreakpointsChange();
-}
-
 bool DebugCPU::IsInstructionBreakpointHit() const
 {
-	for (const auto instruction_breakpoint : instruction_breakpoints_)
-	{
-		if (instruction_breakpoint == debug_mmu_->ReadByte(registers_.pc))
-		{
-			return true;
-		}
-	}
-
-	return false;
+	return (instruction_breakpoints_.find(mmu_->ReadByte(registers_.pc)) != instruction_breakpoints_.end());
 }
 
 bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
@@ -101,17 +66,17 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	switch (next_opcode)
 	{
 	case 0x02:
-		return debug_mmu_->IsWriteWatchpointHit(registers_.bc);
+		return IsWriteWatchpointHit(registers_.bc);
 	case 0x08:
-		address = debug_mmu_->ReadByte(registers_.pc + 1);
-		address += (debug_mmu_->ReadByte(registers_.pc + 2) << 8);
-		return debug_mmu_->IsWriteWatchpointHit(address) || debug_mmu_->IsWriteWatchpointHit(address + 1);
+		address = mmu_->ReadByte(registers_.pc + 1);
+		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
+		return IsWriteWatchpointHit(address) || IsWriteWatchpointHit(address + 1);
 	case 0x0A:
-		return debug_mmu_->IsReadWatchpointHit(registers_.bc);
+		return IsReadWatchpointHit(registers_.bc);
 	case 0x12:
-		return debug_mmu_->IsWriteWatchpointHit(registers_.de);
+		return IsWriteWatchpointHit(registers_.de);
 	case 0x1A:
-		return debug_mmu_->IsReadWatchpointHit(registers_.de);
+		return IsReadWatchpointHit(registers_.de);
 	case 0x22:
 	case 0x32:
 	case 0x36:
@@ -122,10 +87,10 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0x74:
 	case 0x75:
 	case 0x77:
-		return debug_mmu_->IsWriteWatchpointHit(registers_.hl);
+		return IsWriteWatchpointHit(registers_.hl);
 	case 0x34:
 	case 0x35:
-		return debug_mmu_->IsReadWatchpointHit(registers_.hl) || debug_mmu_->IsWriteWatchpointHit(registers_.hl);
+		return IsReadWatchpointHit(registers_.hl) || IsWriteWatchpointHit(registers_.hl);
 	case 0x2A:
 	case 0x3A:
 	case 0x46:
@@ -143,12 +108,12 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0xAE:
 	case 0xB6:
 	case 0xBE:
-		return debug_mmu_->IsReadWatchpointHit(registers_.hl);
+		return IsReadWatchpointHit(registers_.hl);
 	case 0xC1:
 	case 0xD1:
 	case 0xE1:
 	case 0xF1:
-		return debug_mmu_->IsReadWatchpointHit(registers_.sp) || debug_mmu_->IsReadWatchpointHit(registers_.sp + 1);
+		return IsReadWatchpointHit(registers_.sp) || IsReadWatchpointHit(registers_.sp + 1);
 	case 0xC5:
 	case 0xD5:
 	case 0xE5:
@@ -166,43 +131,68 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0xCD:
 	case 0xD4:
 	case 0xDC:
-		return debug_mmu_->IsWriteWatchpointHit(registers_.sp - 1) || debug_mmu_->IsWriteWatchpointHit(registers_.sp - 2);
+		return IsWriteWatchpointHit(registers_.sp - 1) || IsWriteWatchpointHit(registers_.sp - 2);
 	case 0xE0:
-		return debug_mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + debug_mmu_->ReadByte(registers_.pc + 1));
+		return IsWriteWatchpointHit(Memory::io_region_start_ + mmu_->ReadByte(registers_.pc + 1));
 	case 0xE2:
-		return debug_mmu_->IsWriteWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
+		return IsWriteWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
 	case 0xEA:
-		address = debug_mmu_->ReadByte(registers_.pc + 1);
-		address += (debug_mmu_->ReadByte(registers_.pc + 2) << 8);
-		return debug_mmu_->IsWriteWatchpointHit(address);
+		address = mmu_->ReadByte(registers_.pc + 1);
+		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
+		return IsWriteWatchpointHit(address);
 	case 0xF0:
-		return debug_mmu_->IsReadWatchpointHit(Memory::io_region_start_ + debug_mmu_->ReadByte(registers_.pc + 1));
+		return IsReadWatchpointHit(Memory::io_region_start_ + mmu_->ReadByte(registers_.pc + 1));
 	case 0xF2:
-		return debug_mmu_->IsReadWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
+		return IsReadWatchpointHit(Memory::io_region_start_ + registers_.bc.GetLow());
 	case 0xFA:
-		address = debug_mmu_->ReadByte(registers_.pc + 1);
-		address += (debug_mmu_->ReadByte(registers_.pc + 2) << 8);
-		return debug_mmu_->IsReadWatchpointHit(address);
+		address = mmu_->ReadByte(registers_.pc + 1);
+		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
+		return IsReadWatchpointHit(address);
 	default:
 		return false;
 	}
 }
 
-#pragma region Listener notification
-void DebugCPU::NotifyBreakpointsChange() const
+std::vector<Memory::Watchpoint> DebugCPU::GetWatchpointList() const
 {
-	for (auto& listener : listeners_)
+	std::vector<Memory::Watchpoint> watchpoints;
+	for (auto watchpoint_address : read_watchpoints_)
 	{
-		listener->OnBreakpointsChanged(breakpoints_);
+		watchpoints.emplace_back(watchpoint_address, Memory::Watchpoint::Type::Read);
+	}
+	for (auto watchpoint_address : write_watchpoints_)
+	{
+		watchpoints.emplace_back(watchpoint_address, Memory::Watchpoint::Type::Write);
+	}
+	return watchpoints;
+}
+
+void DebugCPU::AddWatchpoint(Memory::Watchpoint watchpoint)
+{
+	switch (watchpoint.type)
+	{
+	case Memory::Watchpoint::Type::Read:
+		read_watchpoints_.emplace(watchpoint.address);
+		break;
+	case Memory::Watchpoint::Type::Write:
+		write_watchpoints_.emplace(watchpoint.address);
+		break;
+	default:
+		break;
 	}
 }
 
-void DebugCPU::NotifyInstructionBreakpointsChange() const
+void DebugCPU::RemoveWatchpoint(Memory::Watchpoint watchpoint)
 {
-	for (auto& listener : listeners_)
+	switch (watchpoint.type)
 	{
-		listener->OnInstructionBreakpointsChanged(instruction_breakpoints_);
+	case Memory::Watchpoint::Type::Read:
+		read_watchpoints_.erase(watchpoint.address);
+		break;
+	case Memory::Watchpoint::Type::Write:
+		write_watchpoints_.erase(watchpoint.address);
+		break;
+	default:
+		break;
 	}
 }
-#pragma endregion
-

@@ -4,7 +4,7 @@
 #include <functional>
 #include <vector>
 #include "JucyBoy/Debug/DebugCPU.h"
-#include "JucyBoy/Debug/DebugMMU.h"
+#include "JucyBoy/MMU.h"
 #include "JucyBoy/Debug/DebugPPU.h"
 #include "JucyBoy/APU.h"
 #include "JucyBoy/Timer.h"
@@ -13,7 +13,7 @@
 #include "GameScreenComponent.h"
 #include "AudioPlayerComponent.h"
 #include "DebugComponents/CpuDebugComponent.h"
-#include "DebugComponents/MemoryDebugComponent.h"
+#include "DebugComponents/MemoryMapComponent.h"
 #include "DebugComponents/PpuDebugComponent.h"
 
 class JucyBoy final : public Component, public CPU::Listener, public AsyncUpdater
@@ -35,20 +35,14 @@ public:
 	// Transfers the handling of exception in running loop to the message thread
 	void handleAsyncUpdate() override;
 
-	// AddListener returns a deregister function that can be called with no arguments
-	template <typename T>
-	std::function<void()> AddListener(T &listener, void(T::*func)(bool))
-	{
-		auto it = listeners_.emplace(listeners_.begin(), std::bind(func, std::ref(listener), std::placeholders::_1));
-		return [=, this]() { listeners_.erase(it); };
-	}
-
 private:
-	void Reset();
-	void LoadRom(const juce::File &file);
+	void LoadRom(std::string file_path);
+	void StartEmulation();
+	void PauseEmulation();
 
-	// Listener notification
-	void NotifyStatusUpdateRequest(bool compute_diff);
+	// Toggle GUI features on/off
+	void EnableDebugging(Component &component, bool enable);
+	int ComputeWindowWidth() const;
 
 private:
 	static const size_t cpu_status_width_{ 150 };
@@ -56,26 +50,25 @@ private:
 	static const size_t ppu_tileset_width_{ 128 * 2 };
 
 private:
-	DebugMMU mmu_{};
-	DebugCPU cpu_{ mmu_ };
-	DebugPPU ppu_{ mmu_ };
-	APU apu_;
-	jb::Timer timer_{ mmu_ };
-	Joypad joypad_;
+	std::unique_ptr<DebugCPU> cpu_;
+	std::unique_ptr<MMU> mmu_;
+	std::unique_ptr<DebugPPU> ppu_;
+	std::unique_ptr<APU> apu_;
+	std::unique_ptr<jb::Timer> timer_;
+	std::unique_ptr<Joypad> joypad_;
 	std::unique_ptr<Cartridge> cartridge_;
 
 	std::vector<std::function<void()>> listener_deregister_functions_;
+
+	std::string loaded_rom_file_path_;
 
 	GameScreenComponent game_screen_component_;
 	AudioPlayerComponent audio_player_component_;
 
 	Rectangle<int> usage_instructions_area_;
-	CpuDebugComponent cpu_debug_component_{ cpu_ };
-	MemoryDebugComponent memory_debug_component_{ mmu_ };
-	PpuDebugComponent ppu_debug_component_{ ppu_ };
-
-	using Listener = std::function<void(bool)>;
-	std::list<Listener> listeners_;
+	CpuDebugComponent cpu_debug_component_;
+	MemoryMapComponent memory_map_component_;
+	PpuDebugComponent ppu_debug_component_;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
 };

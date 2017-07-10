@@ -6,8 +6,10 @@
 class CpuInstructionBreakpointsComponent final : public Component, public ListBoxModel, public ComboBox::Listener, public Button::Listener, public DebugCPU::Listener
 {
 public:
-	CpuInstructionBreakpointsComponent(DebugCPU &cpu);
-	~CpuInstructionBreakpointsComponent() = default;
+	CpuInstructionBreakpointsComponent();
+	~CpuInstructionBreakpointsComponent();
+
+	void SetCpu(DebugCPU& cpu);
 
 	// ListBoxModel overrides
 	int getNumRows() override;
@@ -20,8 +22,7 @@ public:
 	// Button::Listener overrides
 	void buttonClicked(Button*) override;
 
-	// CPU::Listener overrides
-	void OnInstructionBreakpointsChanged(const DebugCPU::InstructionBreakpointList &instruction_breakpoint_list) override;
+	void UpdateInstructionBreakpoints();
 
 	// Component overrides
 	void paint(Graphics&) override;

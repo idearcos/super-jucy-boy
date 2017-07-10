@@ -6,8 +6,10 @@
 class CpuBreakpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener, public DebugCPU::Listener
 {
 public:
-	CpuBreakpointsComponent(DebugCPU &cpu);
+	CpuBreakpointsComponent();
 	~CpuBreakpointsComponent();
+
+	void SetCpu(DebugCPU& cpu);
 
 	// ListBoxModel overrides
 	int getNumRows() override;
@@ -17,8 +19,7 @@ public:
 	// TextEditor::Listener overrides
 	void textEditorReturnKeyPressed(TextEditor&) override;
 
-	// CPU::Listener overrides
-	void OnBreakpointsChanged(const DebugCPU::BreakpointList &breakpoint_list) override;
+	void UpdateBreakpoints();
 
 	// Component overrides
 	void paint(Graphics& g) override;

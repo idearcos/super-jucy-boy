@@ -28,6 +28,9 @@ public:
 	void MapIoRegisterRead(MemoryReadFunction &&io_register_read_function, Memory::Address first_register, Memory::Address last_register);
 	void MapIoRegisterWrite(MemoryWriteFunction &&io_register_write_function, Memory::Address first_register, Memory::Address last_register);
 
+	// Debug / GUI interaction
+	Memory::Map GetMemoryMap() const;
+
 private:
 	uint8_t OnWramRead(Memory::Address relative_address) const { return wram_[relative_address]; }
 	void OnWramWritten(Memory::Address relative_address, uint8_t value) { wram_[relative_address] = value; }

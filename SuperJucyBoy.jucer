@@ -22,21 +22,23 @@
               file="Source/DebugComponents/CpuRegistersComponent.cpp"/>
         <FILE id="PessTL" name="CpuRegistersComponent.h" compile="0" resource="0"
               file="Source/DebugComponents/CpuRegistersComponent.h"/>
-        <FILE id="LtPoBP" name="MemoryDebugComponent.cpp" compile="1" resource="0"
-              file="Source/DebugComponents/MemoryDebugComponent.cpp"/>
-        <FILE id="t8fWH8" name="MemoryDebugComponent.h" compile="0" resource="0"
-              file="Source/DebugComponents/MemoryDebugComponent.h"/>
+        <FILE id="LtPoBP" name="MemoryMapComponent.cpp" compile="1" resource="0"
+              file="Source/DebugComponents/MemoryMapComponent.cpp"/>
+        <FILE id="t8fWH8" name="MemoryMapComponent.h" compile="0" resource="0"
+              file="Source/DebugComponents/MemoryMapComponent.h"/>
         <FILE id="RYRThN" name="PpuDebugComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/PpuDebugComponent.cpp"/>
         <FILE id="HFU7Bi" name="PpuDebugComponent.h" compile="0" resource="0"
               file="Source/DebugComponents/PpuDebugComponent.h"/>
+        <FILE id="PijEQ4" name="WatchpointsComponent.cpp" compile="1" resource="0"
+              file="Source/DebugComponents/WatchpointsComponent.cpp"/>
+        <FILE id="cztgkU" name="WatchpointsComponent.h" compile="0" resource="0"
+              file="Source/DebugComponents/WatchpointsComponent.h"/>
       </GROUP>
       <GROUP id="{F134FA3D-DA88-4DFD-F9D2-E3EF84037505}" name="JucyBoy">
         <GROUP id="{42EBD592-5F3D-594E-5324-472C819B4991}" name="Debug">
           <FILE id="glggLZ" name="DebugCPU.cpp" compile="1" resource="0" file="Source/JucyBoy/Debug/DebugCPU.cpp"/>
           <FILE id="aYJp6b" name="DebugCPU.h" compile="0" resource="0" file="Source/JucyBoy/Debug/DebugCPU.h"/>
-          <FILE id="LzV7HF" name="DebugMMU.cpp" compile="1" resource="0" file="Source/JucyBoy/Debug/DebugMMU.cpp"/>
-          <FILE id="fDUCfG" name="DebugMMU.h" compile="0" resource="0" file="Source/JucyBoy/Debug/DebugMMU.h"/>
           <FILE id="mMyG2e" name="DebugPPU.cpp" compile="1" resource="0" file="Source/JucyBoy/Debug/DebugPPU.cpp"/>
           <FILE id="vfvxSq" name="DebugPPU.h" compile="0" resource="0" file="Source/JucyBoy/Debug/DebugPPU.h"/>
         </GROUP>

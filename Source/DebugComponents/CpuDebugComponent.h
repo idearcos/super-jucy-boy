@@ -4,16 +4,18 @@
 #include "CpuRegistersComponent.h"
 #include "CpuBreakpointsComponent.h"
 #include "CpuInstructionBreakpointsComponent.h"
+#include "WatchpointsComponent.h"
 #include "../JucyBoy/Debug/DebugCPU.h"
 
 class CpuDebugComponent final : public Component
 {
 public:
-	CpuDebugComponent(DebugCPU &cpu);
+	CpuDebugComponent();
 	~CpuDebugComponent() = default;
 
-	// JucyBoy Listener functions
-	void OnStatusUpdateRequested(bool compute_diff);
+	void SetCpu(DebugCPU& cpu);
+
+	void UpdateStatus(bool compute_diff);
 
 	void paint(Graphics&) override;
 	void resized() override;
@@ -22,6 +24,7 @@ private:
 	CpuRegistersComponent registers_component_;
 	CpuBreakpointsComponent breakpoints_component_;
 	CpuInstructionBreakpointsComponent instruction_breakpoints_component_;
+	WatchpointsComponent watchpoints_component_;
 
 	DebugCPU* cpu_{ nullptr };
 

@@ -2,8 +2,7 @@
 #include "PpuDebugComponent.h"
 #include <string>
 
-PpuDebugComponent::PpuDebugComponent(DebugPPU &debug_ppu) :
-	debug_ppu_{ &debug_ppu },
+PpuDebugComponent::PpuDebugComponent() :
 	vertices_{ InitializeVertices() },
 	elements_{ InitializeElements() }
 {
@@ -198,8 +197,10 @@ void PpuDebugComponent::shutdown()
 	glDeleteProgram(shader_program_);
 }
 
-void PpuDebugComponent::OnStatusUpdateRequested(bool /*compute_diff*/)
+void PpuDebugComponent::UpdateStatus()
 {
+	if (!debug_ppu_) return;
+
 	std::unique_lock<std::mutex> lock{ tile_set_mutex_ };
 	tile_set_ = debug_ppu_->GetTileSet();
 	for (auto& tile : tile_set_)

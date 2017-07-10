@@ -2,26 +2,26 @@
 
 MMU::MMU()
 {
-	MapMemoryRead(std::bind(&MMU::OnUnusedMemoryRead, this, std::placeholders::_1), Memory::Region::ROM_Bank0);
-	MapMemoryRead(std::bind(&MMU::OnUnusedMemoryRead, this, std::placeholders::_1), Memory::Region::ROM_OtherBanks);
-	MapMemoryRead(std::bind(&MMU::OnUnusedMemoryRead, this, std::placeholders::_1), Memory::Region::ERAM);
-	MapMemoryRead(std::bind(&MMU::OnWramRead, this, std::placeholders::_1), Memory::Region::WRAM);
-	MapMemoryRead(std::bind(&MMU::OnWramRead, this, std::placeholders::_1), Memory::Region::WRAM_Echo);
-	MapMemoryRead(std::bind(&MMU::OnUnusedMemoryRead, this, std::placeholders::_1), Memory::Region::Unused);
-	MapMemoryRead(std::bind(&MMU::OnIoMemoryRead, this, std::placeholders::_1), Memory::Region::IO);
-	MapMemoryRead(std::bind(&MMU::OnHramRead, this, std::placeholders::_1), Memory::Region::HRAM);
+	MapMemoryRead([this](Memory::Address relative_address) { return OnUnusedMemoryRead(relative_address); }, Memory::Region::ROM_Bank0);
+	MapMemoryRead([this](Memory::Address relative_address) { return OnUnusedMemoryRead(relative_address); }, Memory::Region::ROM_OtherBanks);
+	MapMemoryRead([this](Memory::Address relative_address) { return OnUnusedMemoryRead(relative_address); }, Memory::Region::ERAM);
+	MapMemoryRead([this](Memory::Address relative_address) { return OnWramRead(relative_address); }, Memory::Region::WRAM);
+	MapMemoryRead([this](Memory::Address relative_address) { return OnWramRead(relative_address); }, Memory::Region::WRAM_Echo);
+	MapMemoryRead([this](Memory::Address relative_address) { return OnUnusedMemoryRead(relative_address); }, Memory::Region::Unused);
+	MapMemoryRead([this](Memory::Address relative_address) { return OnIoMemoryRead(relative_address); }, Memory::Region::IO);
+	MapMemoryRead([this](Memory::Address relative_address) { return OnHramRead(relative_address); }, Memory::Region::HRAM);
 
-	MapMemoryWrite(std::bind(&MMU::OnUnusedMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::ROM_Bank0);
-	MapMemoryWrite(std::bind(&MMU::OnUnusedMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::ROM_OtherBanks);
-	MapMemoryWrite(std::bind(&MMU::OnUnusedMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::ERAM);
-	MapMemoryWrite(std::bind(&MMU::OnWramWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::WRAM);
-	MapMemoryWrite(std::bind(&MMU::OnWramWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::WRAM_Echo);
-	MapMemoryWrite(std::bind(&MMU::OnUnusedMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::Unused);
-	MapMemoryWrite(std::bind(&MMU::OnIoMemoryWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::IO);
-	MapMemoryWrite(std::bind(&MMU::OnHramWritten, this, std::placeholders::_1, std::placeholders::_2), Memory::Region::HRAM);
+	MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { return OnUnusedMemoryWritten(relative_address, value); }, Memory::Region::ROM_Bank0);
+	MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { return OnUnusedMemoryWritten(relative_address, value); }, Memory::Region::ROM_OtherBanks);
+	MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { return OnUnusedMemoryWritten(relative_address, value); }, Memory::Region::ERAM);
+	MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { return OnWramWritten(relative_address, value); }, Memory::Region::WRAM);
+	MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { return OnWramWritten(relative_address, value); }, Memory::Region::WRAM_Echo);
+	MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { return OnUnusedMemoryWritten(relative_address, value); }, Memory::Region::Unused);
+	MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { return OnIoMemoryWritten(relative_address, value); }, Memory::Region::IO);
+	MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { return OnHramWritten(relative_address, value); }, Memory::Region::HRAM);
 
-	mapped_io_register_reads_.fill(std::bind(&MMU::OnUnmappedIoRegisterRead, this, std::placeholders::_1));
-	mapped_io_register_writes_.fill(std::bind(&MMU::OnUnmappedIoRegisterWritten, this, std::placeholders::_1, std::placeholders::_2));
+	mapped_io_register_reads_.fill([this](Memory::Address relative_address) { return OnUnmappedIoRegisterRead(relative_address); });
+	mapped_io_register_writes_.fill([this](Memory::Address relative_address, uint8_t value) { OnUnmappedIoRegisterWritten(relative_address, value); });
 
 	wram_.fill(0);
 	hram_.fill(0);
@@ -115,5 +115,19 @@ void MMU::MapIoRegisterWrite(MemoryWriteFunction &&io_register_write_function, M
 
 		mapped_io_register_writes_[region_and_relative_address.second] = io_register_write_function;
 	}
+}
+#pragma endregion
+
+#pragma region Debug
+Memory::Map MMU::GetMemoryMap() const
+{
+	Memory::Map memory_map{};
+
+	for (int i = 0; i < memory_map.size(); ++i)
+	{
+		memory_map[i] = ReadByte(static_cast<Memory::Address>(i));
+	}
+
+	return memory_map;
 }
 #pragma endregion

@@ -1,9 +1,10 @@
 #include "JucyBoy.h"
 #include <sstream>
+#include <cassert>
 
 JucyBoy::JucyBoy()
 {
-	setSize(160 * 4 + cpu_status_width_ + memory_map_width_ + ppu_tileset_width_, 144 * 4);
+	setSize(ComputeWindowWidth(), 144 * 4);
 	setWantsKeyboardFocus(true);
 
 	game_screen_component_.addMouseListener(this, true);
@@ -12,98 +13,106 @@ JucyBoy::JucyBoy()
 	addChildComponent(audio_player_component_);
 
 	cpu_debug_component_.addMouseListener(this, true);
-	addAndMakeVisible(cpu_debug_component_);
+	addChildComponent(cpu_debug_component_);
+	EnableDebugging(cpu_debug_component_, false);
 
-	memory_debug_component_.addMouseListener(this, true);
-	addAndMakeVisible(memory_debug_component_);
+	memory_map_component_.addMouseListener(this, true);
+	addChildComponent(memory_map_component_);
+	EnableDebugging(memory_map_component_, false);
 
-	memory_debug_component_.addMouseListener(this, true);
-	addAndMakeVisible(ppu_debug_component_);
-
-	// JucyBoy listeners
-	listener_deregister_functions_.emplace_back(AddListener(cpu_debug_component_, &CpuDebugComponent::OnStatusUpdateRequested));
-	listener_deregister_functions_.emplace_back(AddListener(memory_debug_component_, &MemoryDebugComponent::OnStatusUpdateRequested));
-	listener_deregister_functions_.emplace_back(AddListener(ppu_debug_component_, &PpuDebugComponent::OnStatusUpdateRequested));
-
-	// CPU listeners
-	cpu_.CPU::AddListener(timer_);
-	cpu_.CPU::AddListener(ppu_);
-	cpu_.CPU::AddListener(apu_);
-	cpu_.CPU::AddListener(*this);
-
-	// Map memory read/write functions to MMU
-	mmu_.MapMemoryRead(std::bind(&PPU::OnVramRead, &ppu_, std::placeholders::_1), Memory::Region::VRAM);
-	mmu_.MapMemoryRead(std::bind(&PPU::OnOamRead, &ppu_, std::placeholders::_1), Memory::Region::OAM);
-	mmu_.MapMemoryRead(std::bind(&CPU::OnInterruptsRead, &cpu_, std::placeholders::_1), Memory::Region::Interrupts);
-
-	mmu_.MapMemoryWrite(std::bind(&PPU::OnVramWritten, &ppu_, std::placeholders::_1, std::placeholders::_2), Memory::Region::VRAM);
-	mmu_.MapMemoryWrite(std::bind(&PPU::OnOamWritten, &ppu_, std::placeholders::_1, std::placeholders::_2), Memory::Region::OAM);
-	mmu_.MapMemoryWrite(std::bind(&CPU::OnInterruptsWritten, &cpu_, std::placeholders::_1, std::placeholders::_2), Memory::Region::Interrupts);
-
-	// Map IO register read/write functions to MMU
-	mmu_.MapIoRegisterRead(std::bind(&CPU::OnIoMemoryRead, &cpu_, std::placeholders::_1), Memory::IF, Memory::IF);
-	mmu_.MapIoRegisterRead(std::bind(&PPU::OnIoMemoryRead, &ppu_, std::placeholders::_1), Memory::LCDC, Memory::WX);
-	mmu_.MapIoRegisterRead(std::bind(&APU::OnIoMemoryRead, &apu_, std::placeholders::_1), Memory::NR10, Memory::NR52);
-	mmu_.MapIoRegisterRead(std::bind(&jb::Timer::OnIoMemoryRead, &timer_, std::placeholders::_1), Memory::DIV, Memory::TAC);
-	mmu_.MapIoRegisterRead(std::bind(&Joypad::OnIoMemoryRead, &joypad_, std::placeholders::_1), Memory::JOYP, Memory::JOYP);
-
-	mmu_.MapIoRegisterWrite(std::bind(&CPU::OnIoMemoryWritten, &cpu_, std::placeholders::_1, std::placeholders::_2), Memory::IF, Memory::IF);
-	mmu_.MapIoRegisterWrite(std::bind(&PPU::OnIoMemoryWritten, &ppu_, std::placeholders::_1, std::placeholders::_2), Memory::LCDC, Memory::WX);
-	mmu_.MapIoRegisterWrite(std::bind(&APU::OnIoMemoryWritten, &apu_, std::placeholders::_1, std::placeholders::_2), Memory::NR10, Memory::NR52);
-	mmu_.MapIoRegisterWrite(std::bind(&jb::Timer::OnIoMemoryWritten, &timer_, std::placeholders::_1, std::placeholders::_2), Memory::DIV, Memory::TAC);
-	mmu_.MapIoRegisterWrite(std::bind(&Joypad::OnIoMemoryWritten, &joypad_, std::placeholders::_1, std::placeholders::_2), Memory::JOYP, Memory::JOYP);
-
-	// PPU listeners
-	ppu_.AddListener(game_screen_component_);
-
-	// APU listeners
-	listener_deregister_functions_.emplace_back(apu_.AddListener([this](size_t right_sample, size_t left_sample) { audio_player_component_.OnNewSample(right_sample, left_sample); }));
-
-	NotifyStatusUpdateRequest(false);
+	ppu_debug_component_.addMouseListener(this, true);
+	addChildComponent(ppu_debug_component_);
+	EnableDebugging(ppu_debug_component_, false);
 }
 
 JucyBoy::~JucyBoy()
 {
-	cpu_.Stop();
-
-	// Remove listeners
-	cpu_.CPU::RemoveListener(timer_);
-	cpu_.CPU::RemoveListener(ppu_);
-	cpu_.CPU::RemoveListener(apu_);
-	cpu_.CPU::RemoveListener(*this);
-
-	ppu_.RemoveListener(game_screen_component_);
-
-	for (auto deregister_function : listener_deregister_functions_)
-	{
-		deregister_function();
-	}
-	listener_deregister_functions_.clear();
+	if (cpu_) cpu_->Stop();
 }
 
-void JucyBoy::Reset()
+void JucyBoy::LoadRom(std::string file_path)
 {
-	// Stop execution, then reset all components
-	cpu_.Stop();
-	cpu_.Reset();
-	mmu_.Reset();
 	audio_player_component_.ClearBuffer();
+
+	mmu_ = std::make_unique<MMU>();
+	memory_map_component_.SetMmu(*mmu_);
+
+	cpu_ = std::make_unique<DebugCPU>(*mmu_);
+	cpu_debug_component_.SetCpu(*cpu_);
+
+	ppu_ = std::make_unique<DebugPPU>(*mmu_);
+	ppu_debug_component_.SetPpu(*ppu_);
+
+	apu_ = std::make_unique<APU>();
+	timer_ = std::make_unique<jb::Timer>(*mmu_);
+	joypad_ = std::make_unique<Joypad>();
+	cartridge_ = std::make_unique<Cartridge>(file_path);
+
+	// CPU listeners
+	cpu_->CPU::AddListener(*timer_);
+	cpu_->CPU::AddListener(*ppu_);
+	cpu_->CPU::AddListener(*apu_);
+	cpu_->CPU::AddListener(*this);
+
+	// Map memory read/write functions to MMU
+	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return ppu_->OnVramRead(relative_address); }, Memory::Region::VRAM);
+	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return ppu_->OnOamRead(relative_address); }, Memory::Region::OAM);
+	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return cpu_->OnInterruptsRead(relative_address); }, Memory::Region::Interrupts);
+
+	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { ppu_->OnVramWritten(relative_address, value); }, Memory::Region::VRAM);
+	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { ppu_->OnOamWritten(relative_address, value); }, Memory::Region::OAM);
+	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { cpu_->OnInterruptsWritten(relative_address, value); }, Memory::Region::Interrupts);
+
+	// Map IO register read/write functions to MMU
+	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return cpu_->OnIoMemoryRead(relative_address); }, Memory::IF, Memory::IF);
+	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return ppu_->OnIoMemoryRead(relative_address); }, Memory::LCDC, Memory::WX);
+	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return apu_->OnIoMemoryRead(relative_address); }, Memory::NR10, Memory::NR52);
+	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return timer_->OnIoMemoryRead(relative_address); }, Memory::DIV, Memory::TAC);
+	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return joypad_->OnIoMemoryRead(relative_address); }, Memory::JOYP, Memory::JOYP);
+	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return cartridge_->OnRomBank0Read(relative_address); }, Memory::Region::ROM_Bank0);
+	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return cartridge_->OnRomBankNRead(relative_address); }, Memory::Region::ROM_OtherBanks);
+	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return cartridge_->OnExternalRamRead(relative_address); }, Memory::Region::ERAM);
+
+	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { cpu_->OnIoMemoryWritten(relative_address, value); }, Memory::IF, Memory::IF);
+	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { ppu_->OnIoMemoryWritten(relative_address, value); }, Memory::LCDC, Memory::WX);
+	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { apu_->OnIoMemoryWritten(relative_address, value); }, Memory::NR10, Memory::NR52);
+	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { timer_->OnIoMemoryWritten(relative_address, value); }, Memory::DIV, Memory::TAC);
+	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { joypad_->OnIoMemoryWritten(relative_address, value); }, Memory::JOYP, Memory::JOYP);
+	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { cartridge_->OnRomBank0Written(relative_address, value); }, Memory::Region::ROM_Bank0);
+	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { cartridge_->OnRomBankNWritten(relative_address, value); }, Memory::Region::ROM_OtherBanks);
+	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { cartridge_->OnExternalRamWritten(relative_address, value); }, Memory::Region::ERAM);
+
+	// PPU listeners
+	ppu_->AddListener(game_screen_component_);
+
+	// APU listeners
+	listener_deregister_functions_.emplace_back(apu_->AddListener([this](size_t right_sample, size_t left_sample) { audio_player_component_.OnNewSample(right_sample, left_sample); }));
+
+	loaded_rom_file_path_ = std::move(file_path);
+
+	cpu_debug_component_.UpdateStatus(false);
+	memory_map_component_.UpdateStatus(false);
+	ppu_debug_component_.UpdateStatus();
 }
 
-void JucyBoy::LoadRom(const juce::File &file)
+void JucyBoy::StartEmulation()
 {
-	Reset();
-	cartridge_ = std::make_unique<Cartridge>(file.getFullPathName().toStdString());
+	if (!cpu_ || cpu_->IsRunning()) return;
 
-	mmu_.MapMemoryRead(std::bind(&Cartridge::OnRomBank0Read, cartridge_.get(), std::placeholders::_1), Memory::Region::ROM_Bank0);
-	mmu_.MapMemoryRead(std::bind(&Cartridge::OnRomBankNRead, cartridge_.get(), std::placeholders::_1), Memory::Region::ROM_OtherBanks);
-	mmu_.MapMemoryRead(std::bind(&Cartridge::OnExternalRamRead, cartridge_.get(), std::placeholders::_1), Memory::Region::ERAM);
+	cpu_debug_component_.isVisible() ? cpu_->DebugRun() : cpu_->Run();
+	cpu_debug_component_.UpdateStatus(false);
+	memory_map_component_.UpdateStatus(false);
+	ppu_debug_component_.UpdateStatus();
+}
 
-	mmu_.MapMemoryWrite(std::bind(&Cartridge::OnRomBank0Written, cartridge_.get(), std::placeholders::_1, std::placeholders::_2), Memory::Region::ROM_Bank0);
-	mmu_.MapMemoryWrite(std::bind(&Cartridge::OnRomBankNWritten, cartridge_.get(), std::placeholders::_1, std::placeholders::_2), Memory::Region::ROM_OtherBanks);
-	mmu_.MapMemoryWrite(std::bind(&Cartridge::OnExternalRamWritten, cartridge_.get(), std::placeholders::_1, std::placeholders::_2), Memory::Region::ERAM);
+void JucyBoy::PauseEmulation()
+{
+	if (!cpu_ || !cpu_->IsRunning()) return;
 
-	NotifyStatusUpdateRequest(false);
+	cpu_->Stop();
+	cpu_debug_component_.UpdateStatus(cpu_debug_component_.isVisible());
+	memory_map_component_.UpdateStatus(memory_map_component_.isVisible());
+	ppu_debug_component_.UpdateStatus();
 }
 
 void JucyBoy::paint (Graphics& g)
@@ -126,33 +135,49 @@ void JucyBoy::resized()
 	auto working_area = getLocalBounds();
 	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
 
-	auto cpu_debug_area = working_area.removeFromLeft(cpu_status_width_);
-	usage_instructions_area_ = cpu_debug_area.removeFromTop(40);
-	cpu_debug_component_.setBounds(cpu_debug_area);
+	if (cpu_debug_component_.isVisible())
+	{
+		auto cpu_debug_area = working_area.removeFromLeft(cpu_status_width_);
+		usage_instructions_area_ = cpu_debug_area.removeFromTop(40);
+		cpu_debug_component_.setBounds(cpu_debug_area);
+	}
 
-	auto memory_debug_area = working_area.removeFromLeft(memory_map_width_);
-	memory_debug_component_.setBounds(memory_debug_area);
+	if (memory_map_component_.isVisible())
+	{
+		auto memory_debug_area = working_area.removeFromLeft(memory_map_width_);
+		memory_map_component_.setBounds(memory_debug_area);
+	}
 
-	auto ppu_tileset_area = working_area.removeFromLeft(ppu_tileset_width_);
-	ppu_debug_component_.setBounds(ppu_tileset_area);
+	if (ppu_debug_component_.isVisible())
+	{
+		auto ppu_tileset_area = working_area.removeFromLeft(ppu_tileset_width_);
+		ppu_debug_component_.setBounds(ppu_tileset_area);
+	}
 }
 
 void JucyBoy::mouseDown( const MouseEvent &event)
 {
 	if (!event.mods.isRightButtonDown()) { return; }
 
-	const auto was_cpu_running = cpu_.IsRunning();
-	if (was_cpu_running) { cpu_.Stop(); }
+	bool was_cpu_running{ cpu_ ? cpu_->IsRunning() : false };
+	if (was_cpu_running)
+	{
+		PauseEmulation();
+	}
 
 	PopupMenu m;
 	m.addItem(1, "Load ROM");
+	m.addItem(2, "Reset");
+	m.addSeparator();
+	m.addItem(3, cpu_debug_component_.isVisible() ? "Disable CPU debugging" : "Enable CPU debugging");
+	m.addItem(4, memory_map_component_.isVisible() ? "Disable memory map" : "Enable memory map");
+	m.addItem(5, ppu_debug_component_.isVisible() ? "Disable graphics debugging" : "Enable graphics debugging");
 	const int result = m.show();
 	
 	switch (result)
 	{
 	case 0:
 		// Did not select anything
-		if (was_cpu_running) { cpu_.Run(); }
 		break;
 	case 1:
 		{FileChooser rom_chooser{ "Select a ROM file to load...", File::getSpecialLocation(File::currentExecutableFile), "*.gb" };
@@ -160,8 +185,8 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 			auto rom_file = rom_chooser.getResult();
 			try
 			{
-				LoadRom(rom_file);
-				cpu_.Run();
+				LoadRom(rom_file.getFullPathName().toStdString());
+				StartEmulation();
 			}
 			catch (std::exception &e)
 			{
@@ -169,9 +194,31 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 			}
 		}}
 		break;
+	case 2:
+		try
+		{
+			LoadRom(loaded_rom_file_path_);
+			StartEmulation();
+		}
+		catch (std::exception &e)
+		{
+			AlertWindow::showMessageBox(AlertWindow::AlertIconType::WarningIcon, "Failed to open ROM file", String{ "Error: " } +e.what());
+		}
+		break;
+	case 3:
+		EnableDebugging(cpu_debug_component_, !cpu_debug_component_.isVisible());
+		break;
+	case 4:
+		EnableDebugging(memory_map_component_, !memory_map_component_.isVisible());
+		break;
+	case 5:
+		EnableDebugging(ppu_debug_component_, !ppu_debug_component_.isVisible());
+		break;
 	default:
 		break;
 	}
+
+	if (was_cpu_running && cpu_) { StartEmulation(); }
 }
 
 bool JucyBoy::keyPressed(const KeyPress &key)
@@ -179,31 +226,32 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 	// Switch statement does not work below because the keys are not compile time constants...
 	if (key.getKeyCode() == KeyPress::spaceKey)
 	{
-		if (!cartridge_) { return true; }
-		if (cpu_.IsRunning())
+		if (!cpu_) { return true; }
+		if (cpu_->IsRunning())
 		{
-			cpu_.Stop();
-			NotifyStatusUpdateRequest(true);
+			PauseEmulation();
 		}
 		else
 		{
-			cpu_.Run();
+			StartEmulation();
 		}
 	}
 	else if (key.getKeyCode() == KeyPress::rightKey)
 	{
-		if (!cartridge_) { return true; }
-		if (!cpu_.IsRunning())
+		if (!cpu_) { return true; }
+		if (!cpu_->IsRunning())
 		{
 			try
 			{
-				cpu_.StepOver();
+				cpu_debug_component_.isVisible() ? cpu_->DebugStepOver() : cpu_->StepOver();
 			}
 			catch (std::exception &e)
 			{
 				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 			}
-			NotifyStatusUpdateRequest(true);
+			cpu_debug_component_.UpdateStatus(true);
+			memory_map_component_.UpdateStatus(true);
+			ppu_debug_component_.UpdateStatus();
 		}
 	}
 	
@@ -247,7 +295,7 @@ bool JucyBoy::keyStateChanged(bool /*isKeyDown*/)
 		pressed_keys.push_back(Joypad::Keys::Select);
 	}
 
-	joypad_.UpdatePressedKeys(pressed_keys);
+	if (joypad_) joypad_->UpdatePressedKeys(pressed_keys);
 
 	return true;
 }
@@ -262,12 +310,16 @@ void JucyBoy::OnRunningLoopInterrupted()
 
 void JucyBoy::handleAsyncUpdate()
 {
-	NotifyStatusUpdateRequest(true);
+	cpu_debug_component_.UpdateStatus(true);
+	memory_map_component_.UpdateStatus(true);
+	ppu_debug_component_.UpdateStatus();
 
 	try
 	{
+		if (!cpu_) return;
+
 		// Join the thread. If an exception was thrown in the running loop, Stop will rethrow it.
-		cpu_.Stop();
+		PauseEmulation();
 	}
 	catch (std::exception &e)
 	{
@@ -275,10 +327,17 @@ void JucyBoy::handleAsyncUpdate()
 	}
 }
 
-void JucyBoy::NotifyStatusUpdateRequest(bool compute_diff)
+void JucyBoy::EnableDebugging(Component &component, bool enable)
 {
-	for (auto& listener : listeners_)
-	{
-		listener(compute_diff);
-	}
+	component.setVisible(enable);
+	setSize(ComputeWindowWidth(), 144 * 4);
+}
+
+int JucyBoy::ComputeWindowWidth() const
+{
+	int total_width{ 160 * 4 };
+	if (cpu_debug_component_.isVisible()) total_width += cpu_status_width_;
+	if (memory_map_component_.isVisible()) total_width += memory_map_width_;
+	if (ppu_debug_component_.isVisible()) total_width += ppu_tileset_width_;
+	return total_width;
 }

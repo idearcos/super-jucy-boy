@@ -6,11 +6,12 @@
 class PpuDebugComponent final : public OpenGLAppComponent
 {
 public:
-	PpuDebugComponent(DebugPPU &debug_ppu);
+	PpuDebugComponent();
 	~PpuDebugComponent();
 
-	// JucyBoy Listener functions
-	void OnStatusUpdateRequested(bool compute_diff);
+	void SetPpu(DebugPPU &debug_ppu) { debug_ppu_ = &debug_ppu; }
+
+	void UpdateStatus();
 
 	// OpenGl2DComponent overrides
 	void render() override;
