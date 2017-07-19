@@ -2,17 +2,20 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JucyBoy/Memory.h"
+#include "../JucyBoy/Debug/DebugCPU.h"
 #include <vector>
 
-class DebugCPU;
-
-class WatchpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener
+class WatchpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener, public DebugCPU::Listener
 {
 public:
-	WatchpointsComponent();
+	WatchpointsComponent(DebugCPU& debug_cpu);
 	~WatchpointsComponent() = default;
 
-	inline void SetCpu(DebugCPU& debug_cpu) { debug_cpu_ = &debug_cpu; }
+	void OnEmulationStarted();
+	void OnEmulationPaused();
+
+	// DebugCPU::Listener overrides
+	void OnWatchpointHit(Memory::Watchpoint watchpoint) override;
 
 	void paint(Graphics&) override;
 	void resized() override;

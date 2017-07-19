@@ -38,6 +38,8 @@ namespace Memory
 
 		Address address{ 0x0000 };
 		Type type{ Type::Write };
+
+		bool operator==(const Watchpoint &rhs) { return (address == rhs.address) && (type == rhs.type); }
 	};
 
 	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address);

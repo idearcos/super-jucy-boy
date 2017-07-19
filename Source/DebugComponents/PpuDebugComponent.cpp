@@ -2,18 +2,33 @@
 #include "PpuDebugComponent.h"
 #include <string>
 
-PpuDebugComponent::PpuDebugComponent() :
+PpuDebugComponent::PpuDebugComponent(DebugPPU &debug_ppu) :
+	debug_ppu_{ &debug_ppu },
 	vertices_{ InitializeVertices() },
 	elements_{ InitializeElements() }
 {
 	openGLContext.setComponentPaintingEnabled(false);
 	openGLContext.setContinuousRepainting(false);
 	openGLContext.setOpenGLVersionRequired(OpenGLContext::OpenGLVersion::openGL3_2);
+
+	UpdateState();
 }
 
 PpuDebugComponent::~PpuDebugComponent()
 {
 	shutdownOpenGL();
+}
+
+void PpuDebugComponent::UpdateState()
+{
+	std::unique_lock<std::mutex> lock{ tile_set_mutex_ };
+	tile_set_ = debug_ppu_->GetTileSet();
+	for (auto& tile : tile_set_)
+	{
+		std::transform(tile.begin(), tile.end(), tile.begin(), PpuColorNumberToIntensity);
+	}
+
+	openGLContext.triggerRepaint();
 }
 
 std::vector<PpuDebugComponent::Vertex> PpuDebugComponent::InitializeVertices()
@@ -195,20 +210,6 @@ void PpuDebugComponent::shutdown()
 	glDeleteVertexArrays(1, &vertex_array_object_);
 
 	glDeleteProgram(shader_program_);
-}
-
-void PpuDebugComponent::UpdateStatus()
-{
-	if (!debug_ppu_) return;
-
-	std::unique_lock<std::mutex> lock{ tile_set_mutex_ };
-	tile_set_ = debug_ppu_->GetTileSet();
-	for (auto& tile : tile_set_)
-	{
-		std::transform(tile.begin(), tile.end(), tile.begin(), PpuColorNumberToIntensity);
-	}
-
-	openGLContext.triggerRepaint();
 }
 
 void PpuDebugComponent::render()

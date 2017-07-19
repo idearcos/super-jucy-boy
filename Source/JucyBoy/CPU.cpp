@@ -91,9 +91,7 @@ void CPU::StepOver()
 	// Therefore, do not allow calling StepOver if Run has already been called.
 	if (IsRunning()) { throw std::logic_error{ "Trying to call StepOver while RunningLoopFunction thread is running" }; }
 
-	ExecuteInstruction(FetchOpcode());
-
-	CheckInterrupts();
+	ExecuteOneInstruction();
 }
 
 void CPU::ExecuteOneInstruction()
@@ -123,11 +121,6 @@ void CPU::ExecuteOneInstruction()
 }
 
 #pragma region Memory R/W
-uint8_t CPU::FetchByte()
-{
-	return ReadByte(registers_.pc++);
-}
-
 uint16_t CPU::FetchWord()
 {
 	uint16_t value{ FetchByte() };

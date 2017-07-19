@@ -9,12 +9,12 @@ class MMU;
 class MemoryMapComponent final : public Component, public ListBoxModel
 {
 public:
-	MemoryMapComponent();
+	MemoryMapComponent(MMU &mmu);
 	~MemoryMapComponent() = default;
 
-	inline void SetMmu(MMU &mmu) { mmu_ = &mmu; }
-
-	void UpdateStatus(bool compute_diff);
+	void OnEmulationStarted();
+	void OnEmulationPaused();
+	void UpdateState(bool compute_diff);
 
 	// Component overrides
 	void paint(Graphics&) override;
@@ -32,6 +32,7 @@ private:
 
 	Memory::Map previous_memory_map_state_{};
 	std::vector<Colour> memory_map_colours_{ memory_map_.size(), Colours::black };
+	bool is_emulation_running_{ false };
 
 	MMU* mmu_{ nullptr };
 

@@ -1,6 +1,11 @@
 #include "CpuDebugComponent.h"
 
-CpuDebugComponent::CpuDebugComponent()
+CpuDebugComponent::CpuDebugComponent(DebugCPU& debug_cpu) :
+	registers_component_{ debug_cpu },
+	breakpoints_component_{ debug_cpu },
+	instruction_breakpoints_component_{ debug_cpu },
+	watchpoints_component_{ debug_cpu }
+
 {
 	addAndMakeVisible(registers_component_);
 	addAndMakeVisible(breakpoints_component_);
@@ -8,20 +13,25 @@ CpuDebugComponent::CpuDebugComponent()
 	addAndMakeVisible(watchpoints_component_);
 }
 
-void CpuDebugComponent::SetCpu(DebugCPU& debug_cpu)
+void CpuDebugComponent::OnEmulationStarted()
 {
-	cpu_ = &debug_cpu;
-	breakpoints_component_.SetCpu(debug_cpu);
-	instruction_breakpoints_component_.SetCpu(debug_cpu);
-	watchpoints_component_.SetCpu(debug_cpu);
+	registers_component_.OnEmulationStarted();
+	breakpoints_component_.OnEmulationStarted();
+	instruction_breakpoints_component_.OnEmulationStarted();
+	watchpoints_component_.OnEmulationStarted();
 }
 
-void CpuDebugComponent::UpdateStatus(bool compute_diff)
+void CpuDebugComponent::OnEmulationPaused()
 {
-	if (!cpu_) return;
+	registers_component_.OnEmulationPaused();
+	breakpoints_component_.OnEmulationPaused();
+	instruction_breakpoints_component_.OnEmulationPaused();
+	watchpoints_component_.OnEmulationPaused();
+}
 
-	registers_component_.UpdateRegistersState(cpu_->GetRegistersState(), cpu_->GetFlagsState(), compute_diff);
-	breakpoints_component_.UpdateHitBreakpoint(cpu_->GetRegistersState().pc);
+void CpuDebugComponent::UpdateState(bool compute_diff)
+{
+	registers_component_.UpdateState(compute_diff);
 }
 
 void CpuDebugComponent::paint(Graphics& g)

@@ -2,8 +2,11 @@
 #include <sstream>
 #include <iomanip>
 
-CpuBreakpointsComponent::CpuBreakpointsComponent()
+CpuBreakpointsComponent::CpuBreakpointsComponent(DebugCPU& debug_cpu) :
+	debug_cpu_{ &debug_cpu }
 {
+	debug_cpu_->AddListener(*this);
+
 	// Add list of breakpoints
 	breakpoint_list_box_.setModel(this);
 	addAndMakeVisible(breakpoint_list_box_);
@@ -24,15 +27,24 @@ CpuBreakpointsComponent::CpuBreakpointsComponent()
 	addAndMakeVisible(breakpoint_add_editor_);
 }
 
-CpuBreakpointsComponent::~CpuBreakpointsComponent()
+void CpuBreakpointsComponent::OnEmulationStarted()
 {
-	
+	breakpoint_add_editor_.setEnabled(false);
 }
 
-void CpuBreakpointsComponent::SetCpu(DebugCPU& cpu)
+void CpuBreakpointsComponent::OnEmulationPaused()
 {
-	cpu_ = &cpu;
-	cpu_->AddListener(*this);
+	breakpoint_add_editor_.setEnabled(true);
+}
+
+void CpuBreakpointsComponent::OnBreakpointHit(Memory::Address breakpoint)
+{
+	MessageManager::callAsync([this, breakpoint]() {
+		for (int i = 0; i < breakpoints_.size(); ++i)
+		{
+			if (breakpoints_[i] == breakpoint) breakpoint_list_box_.selectRow(i);
+		}
+	});
 }
 
 int CpuBreakpointsComponent::getNumRows()
@@ -55,38 +67,24 @@ void CpuBreakpointsComponent::paintListBoxItem(int rowNumber, Graphics& g, int w
 
 void CpuBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 {
-	if (!cpu_) return;
-
-	cpu_->RemoveBreakpoint(breakpoints_[lastRowSelected]);
+	debug_cpu_->RemoveBreakpoint(breakpoints_[lastRowSelected]);
 	UpdateBreakpoints();
 }
 
 void CpuBreakpointsComponent::textEditorReturnKeyPressed(TextEditor&)
 {
-	if (!cpu_) return;
-
 	const auto breakpoint = std::stoi(breakpoint_add_editor_.getText().toStdString(), 0, 16);
 	if (breakpoint < std::numeric_limits<Memory::Address>::min() || breakpoint > std::numeric_limits<Memory::Address>::max()) return;
 
 	breakpoint_add_editor_.clear();
 
-	cpu_->AddBreakpoint(static_cast<Memory::Address>(breakpoint));
+	debug_cpu_->AddBreakpoint(static_cast<Memory::Address>(breakpoint));
 	UpdateBreakpoints();
-}
-
-void CpuBreakpointsComponent::UpdateHitBreakpoint(Memory::Address pc)
-{
-	for (int i = 0; i < breakpoints_.size(); ++i)
-	{
-		if (breakpoints_[i] == pc) breakpoint_list_box_.selectRow(i);
-	}
 }
 
 void CpuBreakpointsComponent::UpdateBreakpoints()
 {
-	if (!cpu_) return;
-
-	const auto cpu_breakpoints = cpu_->GetBreakpoints();
+	const auto cpu_breakpoints = debug_cpu_->GetBreakpoints();
 	breakpoints_ = std::vector<Memory::Address>{ cpu_breakpoints.cbegin(), cpu_breakpoints.cend() };
 	breakpoint_list_box_.updateContent();
 }
@@ -102,7 +100,6 @@ void CpuBreakpointsComponent::paint(Graphics& g)
 void CpuBreakpointsComponent::resized()
 {
 	auto working_area = getLocalBounds();
-	auto breakpoint_list_area_height = working_area.getHeight();
 
 	breakpoint_list_header_.setBounds(working_area.removeFromTop(breakpoint_list_header_.getFont().getHeight() * 1.5));
 	breakpoint_add_editor_.setBounds(working_area.removeFromBottom(breakpoint_add_editor_.getFont().getHeight() * 1.5));

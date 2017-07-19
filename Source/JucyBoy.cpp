@@ -11,43 +11,27 @@ JucyBoy::JucyBoy()
 	addAndMakeVisible(game_screen_component_);
 
 	addChildComponent(audio_player_component_);
-
-	cpu_debug_component_.addMouseListener(this, true);
-	addChildComponent(cpu_debug_component_);
-	EnableDebugging(cpu_debug_component_, false);
-
-	memory_map_component_.addMouseListener(this, true);
-	addChildComponent(memory_map_component_);
-	EnableDebugging(memory_map_component_, false);
-
-	ppu_debug_component_.addMouseListener(this, true);
-	addChildComponent(ppu_debug_component_);
-	EnableDebugging(ppu_debug_component_, false);
 }
 
 JucyBoy::~JucyBoy()
 {
-	if (cpu_) cpu_->Stop();
+	PauseEmulation();
 }
 
 void JucyBoy::LoadRom(std::string file_path)
 {
 	audio_player_component_.ClearBuffer();
 
+	// Create all JucyBoy classes and debug components
 	mmu_ = std::make_unique<MMU>();
-	memory_map_component_.SetMmu(*mmu_);
-
 	cpu_ = std::make_unique<DebugCPU>(*mmu_);
-	cpu_debug_component_.SetCpu(*cpu_);
-
 	ppu_ = std::make_unique<DebugPPU>(*mmu_);
-	ppu_debug_component_.SetPpu(*ppu_);
-
 	apu_ = std::make_unique<APU>();
 	timer_ = std::make_unique<jb::Timer>(*mmu_);
 	joypad_ = std::make_unique<Joypad>();
 	cartridge_ = std::make_unique<Cartridge>(file_path);
 
+	// Register all listener functions
 	// CPU listeners
 	cpu_->CPU::AddListener(*timer_);
 	cpu_->CPU::AddListener(*ppu_);
@@ -90,29 +74,71 @@ void JucyBoy::LoadRom(std::string file_path)
 
 	loaded_rom_file_path_ = std::move(file_path);
 
-	cpu_debug_component_.UpdateStatus(false);
-	memory_map_component_.UpdateStatus(false);
-	ppu_debug_component_.UpdateStatus();
+	ConstructDebugComponents();
+}
+
+void JucyBoy::ConstructDebugComponents()
+{
+	assert(cpu_ && mmu_ && ppu_);
+
+	if (cpu_debug_component_) removeChildComponent(cpu_debug_component_.get());
+	cpu_debug_component_ = std::make_unique<CpuDebugComponent>(*cpu_);
+	cpu_debug_component_->addMouseListener(this, true);
+	addChildComponent(*cpu_debug_component_);
+	EnableDebugging(*cpu_debug_component_, false);
+
+	if (memory_map_component_) removeChildComponent(memory_map_component_.get());
+	memory_map_component_ = std::make_unique<MemoryMapComponent>(*mmu_);
+	memory_map_component_->addMouseListener(this, true);
+	addChildComponent(*memory_map_component_);
+	EnableDebugging(*memory_map_component_, false);
+
+	if (ppu_debug_component_) removeChildComponent(ppu_debug_component_.get());
+	ppu_debug_component_ = std::make_unique<PpuDebugComponent>(*ppu_);
+	ppu_debug_component_->addMouseListener(this, true);
+	addChildComponent(*ppu_debug_component_);
+	EnableDebugging(*ppu_debug_component_, false);
 }
 
 void JucyBoy::StartEmulation()
 {
-	if (!cpu_ || cpu_->IsRunning()) return;
+	assert(cpu_debug_component_ && memory_map_component_ && ppu_debug_component_);
 
-	cpu_debug_component_.isVisible() ? cpu_->DebugRun() : cpu_->Run();
-	cpu_debug_component_.UpdateStatus(false);
-	memory_map_component_.UpdateStatus(false);
-	ppu_debug_component_.UpdateStatus();
+	if (cpu_ && !cpu_->IsRunning())
+	{
+		cpu_debug_component_->isVisible() ? cpu_->DebugRun() : cpu_->Run();
+	}
+
+	cpu_debug_component_->OnEmulationStarted();
+	memory_map_component_->OnEmulationStarted();
 }
 
 void JucyBoy::PauseEmulation()
 {
-	if (!cpu_ || !cpu_->IsRunning()) return;
+	assert(cpu_debug_component_ && memory_map_component_ && ppu_debug_component_);
+	
+	if (cpu_)
+	{
+		try
+		{
+			// Join the thread. If an exception was thrown in the running loop, Stop will rethrow it.
+			cpu_->Stop();
+		}
+		catch (std::exception &e)
+		{
+			AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
+		}
+	}
 
-	cpu_->Stop();
-	cpu_debug_component_.UpdateStatus(cpu_debug_component_.isVisible());
-	memory_map_component_.UpdateStatus(memory_map_component_.isVisible());
-	ppu_debug_component_.UpdateStatus();
+	cpu_debug_component_->OnEmulationPaused();
+	memory_map_component_->OnEmulationPaused();
+}
+
+void JucyBoy::UpdateDebugComponents(bool compute_diff)
+{
+	cpu_debug_component_->UpdateState(compute_diff);
+	memory_map_component_->UpdateState(compute_diff);
+	ppu_debug_component_->UpdateState();
 }
 
 void JucyBoy::paint (Graphics& g)
@@ -135,23 +161,23 @@ void JucyBoy::resized()
 	auto working_area = getLocalBounds();
 	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
 
-	if (cpu_debug_component_.isVisible())
+	if (cpu_debug_component_ && cpu_debug_component_->isVisible())
 	{
 		auto cpu_debug_area = working_area.removeFromLeft(cpu_status_width_);
 		usage_instructions_area_ = cpu_debug_area.removeFromTop(40);
-		cpu_debug_component_.setBounds(cpu_debug_area);
+		cpu_debug_component_->setBounds(cpu_debug_area);
 	}
 
-	if (memory_map_component_.isVisible())
+	if (memory_map_component_ && memory_map_component_->isVisible())
 	{
 		auto memory_debug_area = working_area.removeFromLeft(memory_map_width_);
-		memory_map_component_.setBounds(memory_debug_area);
+		memory_map_component_->setBounds(memory_debug_area);
 	}
 
-	if (ppu_debug_component_.isVisible())
+	if (ppu_debug_component_ && ppu_debug_component_->isVisible())
 	{
 		auto ppu_tileset_area = working_area.removeFromLeft(ppu_tileset_width_);
-		ppu_debug_component_.setBounds(ppu_tileset_area);
+		ppu_debug_component_->setBounds(ppu_tileset_area);
 	}
 }
 
@@ -163,15 +189,16 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 	if (was_cpu_running)
 	{
 		PauseEmulation();
+		UpdateDebugComponents(false);
 	}
 
 	PopupMenu m;
 	m.addItem(1, "Load ROM");
-	m.addItem(2, "Reset");
+	m.addItem(2, "Reset", cpu_ != nullptr);
 	m.addSeparator();
-	m.addItem(3, cpu_debug_component_.isVisible() ? "Disable CPU debugging" : "Enable CPU debugging");
-	m.addItem(4, memory_map_component_.isVisible() ? "Disable memory map" : "Enable memory map");
-	m.addItem(5, ppu_debug_component_.isVisible() ? "Disable graphics debugging" : "Enable graphics debugging");
+	m.addItem(3, "Enable CPU debugging", cpu_debug_component_ != nullptr, cpu_debug_component_ && cpu_debug_component_->isVisible());
+	m.addItem(4, "Enable memory map", memory_map_component_ != nullptr, memory_map_component_ && memory_map_component_->isVisible());
+	m.addItem(5, "Enable graphics debugging", ppu_debug_component_ != nullptr, ppu_debug_component_ && ppu_debug_component_->isVisible());
 	const int result = m.show();
 	
 	switch (result)
@@ -206,13 +233,13 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 		}
 		break;
 	case 3:
-		EnableDebugging(cpu_debug_component_, !cpu_debug_component_.isVisible());
+		EnableDebugging(*cpu_debug_component_, !cpu_debug_component_->isVisible());
 		break;
 	case 4:
-		EnableDebugging(memory_map_component_, !memory_map_component_.isVisible());
+		EnableDebugging(*memory_map_component_, !memory_map_component_->isVisible());
 		break;
 	case 5:
-		EnableDebugging(ppu_debug_component_, !ppu_debug_component_.isVisible());
+		EnableDebugging(*ppu_debug_component_, !ppu_debug_component_->isVisible());
 		break;
 	default:
 		break;
@@ -230,6 +257,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 		if (cpu_->IsRunning())
 		{
 			PauseEmulation();
+			UpdateDebugComponents(true);
 		}
 		else
 		{
@@ -243,15 +271,13 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 		{
 			try
 			{
-				cpu_debug_component_.isVisible() ? cpu_->DebugStepOver() : cpu_->StepOver();
+				cpu_debug_component_->isVisible() ? cpu_->DebugStepOver() : cpu_->StepOver();
 			}
 			catch (std::exception &e)
 			{
 				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 			}
-			cpu_debug_component_.UpdateStatus(true);
-			memory_map_component_.UpdateStatus(true);
-			ppu_debug_component_.UpdateStatus();
+			UpdateDebugComponents(true);
 		}
 	}
 	
@@ -300,31 +326,15 @@ bool JucyBoy::keyStateChanged(bool /*isKeyDown*/)
 	return true;
 }
 
+// The listener callback is called from within the CPU's running loop.
+// The call has to be forwarded to the message thread in order to join the running loop thread.
+// Moreover, any update to the GUI components (as the listener callback of Reset) can only be done safely in the message thread.
 void JucyBoy::OnRunningLoopInterrupted()
 {
-	// The listener callback is called from within the CPU's running loop.
-	// The call has to be forwarded to the message thread in order to join the running loop thread.
-	// Moreover, any update to the GUI components (as the listener callback of Reset) can only be done safely in the message thread.
-	triggerAsyncUpdate();
-}
-
-void JucyBoy::handleAsyncUpdate()
-{
-	cpu_debug_component_.UpdateStatus(true);
-	memory_map_component_.UpdateStatus(true);
-	ppu_debug_component_.UpdateStatus();
-
-	try
-	{
-		if (!cpu_) return;
-
-		// Join the thread. If an exception was thrown in the running loop, Stop will rethrow it.
+	MessageManager::callAsync([this]() {
 		PauseEmulation();
-	}
-	catch (std::exception &e)
-	{
-		AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
-	}
+		UpdateDebugComponents(true);
+	});
 }
 
 void JucyBoy::EnableDebugging(Component &component, bool enable)
@@ -336,8 +346,8 @@ void JucyBoy::EnableDebugging(Component &component, bool enable)
 int JucyBoy::ComputeWindowWidth() const
 {
 	int total_width{ 160 * 4 };
-	if (cpu_debug_component_.isVisible()) total_width += cpu_status_width_;
-	if (memory_map_component_.isVisible()) total_width += memory_map_width_;
-	if (ppu_debug_component_.isVisible()) total_width += ppu_tileset_width_;
+	if (cpu_debug_component_ && cpu_debug_component_->isVisible()) total_width += cpu_status_width_;
+	if (memory_map_component_ && memory_map_component_->isVisible()) total_width += memory_map_width_;
+	if (ppu_debug_component_ && ppu_debug_component_->isVisible()) total_width += ppu_tileset_width_;
 	return total_width;
 }

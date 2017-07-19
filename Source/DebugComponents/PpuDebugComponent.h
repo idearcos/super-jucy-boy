@@ -6,12 +6,10 @@
 class PpuDebugComponent final : public OpenGLAppComponent
 {
 public:
-	PpuDebugComponent();
+	PpuDebugComponent(DebugPPU &debug_ppu);
 	~PpuDebugComponent();
 
-	void SetPpu(DebugPPU &debug_ppu) { debug_ppu_ = &debug_ppu; }
-
-	void UpdateStatus();
+	void UpdateState();
 
 	// OpenGl2DComponent overrides
 	void render() override;

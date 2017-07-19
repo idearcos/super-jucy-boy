@@ -88,7 +88,7 @@ private:
 	void CheckInterrupts();
 
 	// Memory R/W
-	uint8_t FetchByte();
+	inline uint8_t FetchByte() { return ReadByte(registers_.pc++); }
 	uint16_t FetchWord();
 	uint16_t PopWordFromStack();
 	void PushWordToStack(uint16_t value);

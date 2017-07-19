@@ -53,9 +53,20 @@ void DebugCPU::DebugRunningLoopFunction()
 	}
 }
 
+bool DebugCPU::IsBreakpointHit() const
+{
+	const auto breakpoint_hit = (breakpoints_.find(registers_.pc) != breakpoints_.end());
+	if (breakpoint_hit) NotifyBreakpointHit(registers_.pc);
+
+	return breakpoint_hit;
+}
+
 bool DebugCPU::IsInstructionBreakpointHit() const
 {
-	return (instruction_breakpoints_.find(mmu_->ReadByte(registers_.pc)) != instruction_breakpoints_.end());
+	const auto instruction_breakpoint_hit = (instruction_breakpoints_.find(mmu_->ReadByte(registers_.pc)) != instruction_breakpoints_.end());
+	if (instruction_breakpoint_hit) NotifyInstructionBreakpointHit(mmu_->ReadByte(registers_.pc));
+
+	return instruction_breakpoint_hit;
 }
 
 bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
@@ -153,6 +164,22 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	}
 }
 
+bool DebugCPU::IsReadWatchpointHit(Memory::Address address) const
+{
+	const auto watchpoint_hit = (read_watchpoints_.count(address) != 0);
+	if (watchpoint_hit) NotifyWatchpointHit({ address, Memory::Watchpoint::Type::Read });
+
+	return watchpoint_hit;
+}
+
+bool DebugCPU::IsWriteWatchpointHit(Memory::Address address) const
+{
+	const auto watchpoint_hit = (write_watchpoints_.count(address) != 0);
+	if (watchpoint_hit) NotifyWatchpointHit({ address, Memory::Watchpoint::Type::Write });
+
+	return watchpoint_hit;
+}
+
 std::vector<Memory::Watchpoint> DebugCPU::GetWatchpointList() const
 {
 	std::vector<Memory::Watchpoint> watchpoints;
@@ -196,3 +223,29 @@ void DebugCPU::RemoveWatchpoint(Memory::Watchpoint watchpoint)
 		break;
 	}
 }
+
+#pragma region Listener notification
+void DebugCPU::NotifyBreakpointHit(Memory::Address breakpoint) const
+{
+	for (const auto &listener : listeners_)
+	{
+		listener->OnBreakpointHit(breakpoint);
+	}
+}
+
+void DebugCPU::NotifyInstructionBreakpointHit(OpCode opcode) const
+{
+	for (const auto &listener : listeners_)
+	{
+		listener->OnInstructionBreakpointHit(opcode);
+	}
+}
+
+void DebugCPU::NotifyWatchpointHit(Memory::Watchpoint watchpoint) const
+{
+	for (const auto &listener : listeners_)
+	{
+		listener->OnWatchpointHit(watchpoint);
+	}
+}
+#pragma endregion

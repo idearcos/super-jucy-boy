@@ -5,7 +5,8 @@
 #include <iomanip>
 #include <algorithm>
 
-MemoryMapComponent::MemoryMapComponent()
+MemoryMapComponent::MemoryMapComponent(MMU &mmu) :
+	mmu_{ &mmu }
 {
 	// Add memory map list header
 	memory_map_list_header_.setJustificationType(Justification::centred);
@@ -16,12 +17,24 @@ MemoryMapComponent::MemoryMapComponent()
 	// Add memory map list
 	memory_map_list_box_.setModel(this);
 	addAndMakeVisible(memory_map_list_box_);
+
+	UpdateState(false);
 }
 
-void MemoryMapComponent::UpdateStatus(bool compute_diff)
+void MemoryMapComponent::OnEmulationStarted()
 {
-	if (!mmu_) return;
+	is_emulation_running_ = true;
+	memory_map_list_box_.repaint();
+}
 
+void MemoryMapComponent::OnEmulationPaused()
+{
+	is_emulation_running_ = false;
+	memory_map_list_box_.repaint();
+}
+
+void MemoryMapComponent::UpdateState(bool compute_diff)
+{
 	memory_map_ = mmu_->GetMemoryMap();
 
 	if (compute_diff)
@@ -33,7 +46,6 @@ void MemoryMapComponent::UpdateStatus(bool compute_diff)
 		std::fill(memory_map_colours_.begin(), memory_map_colours_.end(), Colours::black);
 	}
 
-	memory_map_list_box_.updateContent();
 	memory_map_list_box_.repaint();
 
 	previous_memory_map_state_ = memory_map_;
@@ -78,7 +90,7 @@ void MemoryMapComponent::paintListBoxItem(int rowNumber, Graphics& g, int width,
 	{
 		std::stringstream value;
 		value << " " << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << static_cast<int>(memory_map_[16 * rowNumber + i]);
-		row_text.append(value.str(), Font{ Font::getDefaultMonospacedFontName(), 12.0f, Font::plain }, memory_map_colours_[16 * rowNumber + i]);
+		row_text.append(value.str(), Font{ Font::getDefaultMonospacedFontName(), 12.0f, Font::plain }, is_emulation_running_ ? Colours::grey : memory_map_colours_[16 * rowNumber + i]);
 	}
 
 	row_text.draw(g, Rectangle<int>{ width, height }.toFloat());

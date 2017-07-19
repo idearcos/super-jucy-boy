@@ -6,10 +6,14 @@
 class CpuBreakpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener, public DebugCPU::Listener
 {
 public:
-	CpuBreakpointsComponent();
-	~CpuBreakpointsComponent();
+	CpuBreakpointsComponent(DebugCPU& debug_cpu);
+	~CpuBreakpointsComponent() = default;
 
-	void SetCpu(DebugCPU& cpu);
+	void OnEmulationStarted();
+	void OnEmulationPaused();
+
+	// DebugCPU::Listener overrides
+	void OnBreakpointHit(Memory::Address breakpoint) override;
 
 	// ListBoxModel overrides
 	int getNumRows() override;
@@ -19,13 +23,12 @@ public:
 	// TextEditor::Listener overrides
 	void textEditorReturnKeyPressed(TextEditor&) override;
 
-	void UpdateBreakpoints();
-
 	// Component overrides
 	void paint(Graphics& g) override;
 	void resized() override;
 
-	void UpdateHitBreakpoint(Memory::Address pc);
+private:
+	void UpdateBreakpoints();
 
 private:
 	std::vector<Memory::Address> breakpoints_;
@@ -35,7 +38,7 @@ private:
 
 	TextEditor breakpoint_add_editor_;
 
-	DebugCPU* cpu_{ nullptr };
+	DebugCPU* debug_cpu_{ nullptr };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CpuBreakpointsComponent)
 };

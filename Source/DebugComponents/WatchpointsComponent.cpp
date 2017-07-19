@@ -1,10 +1,12 @@
 #include "WatchpointsComponent.h"
-#include "../JucyBoy/Debug/DebugCPU.h"
 #include <sstream>
 #include <iomanip>
 
-WatchpointsComponent::WatchpointsComponent()
+WatchpointsComponent::WatchpointsComponent(DebugCPU& debug_cpu) :
+	debug_cpu_{ &debug_cpu }
 {
+	debug_cpu_->AddListener(*this);
+
 	// Add list of watchpoints
 	watchpoint_list_box_.setModel(this);
 	addAndMakeVisible(watchpoint_list_box_);
@@ -30,6 +32,30 @@ WatchpointsComponent::WatchpointsComponent()
 	watchpoint_type_write_.setToggleState(true, NotificationType::dontSendNotification);
 	addAndMakeVisible(watchpoint_type_read_);
 	addAndMakeVisible(watchpoint_type_write_);
+}
+
+void WatchpointsComponent::OnEmulationStarted()
+{
+	watchpoint_add_editor_.setEnabled(false);
+	watchpoint_type_read_.setEnabled(false);
+	watchpoint_type_write_.setEnabled(false);
+}
+
+void WatchpointsComponent::OnEmulationPaused()
+{
+	watchpoint_add_editor_.setEnabled(true);
+	watchpoint_type_read_.setEnabled(true);
+	watchpoint_type_write_.setEnabled(true);
+}
+
+void WatchpointsComponent::OnWatchpointHit(Memory::Watchpoint watchpoint)
+{
+	MessageManager::callAsync([this, watchpoint]() {
+		for (int i = 0; i < watchpoints_.size(); ++i)
+		{
+			if (watchpoints_[i] == watchpoint) watchpoint_list_box_.selectRow(i);
+		}
+	});
 }
 
 void WatchpointsComponent::paint(Graphics& g)

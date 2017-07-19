@@ -10,12 +10,12 @@
 class CpuDebugComponent final : public Component
 {
 public:
-	CpuDebugComponent();
+	CpuDebugComponent(DebugCPU& cpu);
 	~CpuDebugComponent() = default;
 
-	void SetCpu(DebugCPU& cpu);
-
-	void UpdateStatus(bool compute_diff);
+	void OnEmulationStarted();
+	void OnEmulationPaused();
+	void UpdateState(bool compute_diff);
 
 	void paint(Graphics&) override;
 	void resized() override;
@@ -25,8 +25,6 @@ private:
 	CpuBreakpointsComponent breakpoints_component_;
 	CpuInstructionBreakpointsComponent instruction_breakpoints_component_;
 	WatchpointsComponent watchpoints_component_;
-
-	DebugCPU* cpu_{ nullptr };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CpuDebugComponent)
 };

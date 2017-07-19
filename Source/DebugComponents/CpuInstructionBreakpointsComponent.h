@@ -6,10 +6,14 @@
 class CpuInstructionBreakpointsComponent final : public Component, public ListBoxModel, public ComboBox::Listener, public Button::Listener, public DebugCPU::Listener
 {
 public:
-	CpuInstructionBreakpointsComponent();
-	~CpuInstructionBreakpointsComponent();
+	CpuInstructionBreakpointsComponent(DebugCPU& debug_cpu);
+	~CpuInstructionBreakpointsComponent() = default;
 
-	void SetCpu(DebugCPU& cpu);
+	void OnEmulationStarted();
+	void OnEmulationPaused();
+
+	// DebugCPU::Listener overrides
+	void OnInstructionBreakpointHit(CPU::OpCode opcode) override;
 
 	// ListBoxModel overrides
 	int getNumRows() override;
@@ -39,7 +43,7 @@ private:
 	ComboBox instruction_breakpoint_add_combo_box_;
 	TextButton instruction_breakpoint_add_button_;
 
-	DebugCPU* cpu_{ nullptr };
+	DebugCPU* debug_cpu_{ nullptr };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CpuInstructionBreakpointsComponent)
 };

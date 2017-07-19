@@ -16,7 +16,7 @@
 #include "DebugComponents/MemoryMapComponent.h"
 #include "DebugComponents/PpuDebugComponent.h"
 
-class JucyBoy final : public Component, public CPU::Listener, public AsyncUpdater
+class JucyBoy final : public Component, public CPU::Listener, public DebugCPU::Listener
 {
 public:
 	JucyBoy();
@@ -32,13 +32,13 @@ public:
 	// CPU::Listener overrides
 	void OnRunningLoopInterrupted() override;
 
-	// Transfers the handling of exception in running loop to the message thread
-	void handleAsyncUpdate() override;
-
 private:
 	void LoadRom(std::string file_path);
 	void StartEmulation();
 	void PauseEmulation();
+	void UpdateDebugComponents(bool compute_diff);
+
+	void ConstructDebugComponents();
 
 	// Toggle GUI features on/off
 	void EnableDebugging(Component &component, bool enable);
@@ -66,9 +66,9 @@ private:
 	AudioPlayerComponent audio_player_component_;
 
 	Rectangle<int> usage_instructions_area_;
-	CpuDebugComponent cpu_debug_component_;
-	MemoryMapComponent memory_map_component_;
-	PpuDebugComponent ppu_debug_component_;
+	std::unique_ptr<CpuDebugComponent> cpu_debug_component_;
+	std::unique_ptr<MemoryMapComponent> memory_map_component_;
+	std::unique_ptr<PpuDebugComponent> ppu_debug_component_;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
 };

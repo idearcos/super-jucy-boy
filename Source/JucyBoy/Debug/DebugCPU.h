@@ -7,15 +7,16 @@ class MMU;
 class DebugCPU final : public CPU
 {
 public:
-	using BreakpointList = std::set<uint16_t>;
+	using BreakpointList = std::set<Memory::Address>;
 	using InstructionBreakpointList = std::set<OpCode>;
 
 	class Listener
 	{
 	public:
 		virtual ~Listener() {}
-		virtual void OnBreakpointHit(uint16_t /*breakpoint*/) {}
-		virtual void OnInstructionBreakpointHit(OpCode &/*opcode*/) {}
+		virtual void OnBreakpointHit(Memory::Address /*breakpoint*/) {}
+		virtual void OnInstructionBreakpointHit(OpCode /*opcode*/) {}
+		virtual void OnWatchpointHit(Memory::Watchpoint /*watchpoint*/) {}
 	};
 
 	DebugCPU(MMU &mmu);
@@ -48,14 +49,17 @@ public:
 private:
 	void DebugRunningLoopFunction();
 
-	inline bool IsBreakpointHit() const { return (breakpoints_.find(registers_.pc) != breakpoints_.end()); }
+	bool IsBreakpointHit() const;
 	bool IsInstructionBreakpointHit() const;
 	bool IsWatchpointHit(OpCode next_opcode) const;
 
-	inline bool IsReadWatchpointHit(Memory::Address address) const { return read_watchpoints_.count(address) != 0; }
-	inline bool IsWriteWatchpointHit(Memory::Address address) const { return write_watchpoints_.count(address) != 0; }
+	bool IsReadWatchpointHit(Memory::Address address) const;
+	bool IsWriteWatchpointHit(Memory::Address address) const;
 
 	// Listener notification
+	void NotifyBreakpointHit(Memory::Address breakpoint) const;
+	void NotifyInstructionBreakpointHit(OpCode opcode) const;
+	void NotifyWatchpointHit(Memory::Watchpoint watchpoint) const;
 
 private:
 	BreakpointList breakpoints_;
