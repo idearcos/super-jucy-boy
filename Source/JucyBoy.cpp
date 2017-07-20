@@ -115,19 +115,18 @@ void JucyBoy::StartEmulation()
 
 void JucyBoy::PauseEmulation()
 {
+	if (!cpu_) return;
+
 	assert(cpu_debug_component_ && memory_map_component_ && ppu_debug_component_);
-	
-	if (cpu_)
+
+	try
 	{
-		try
-		{
-			// Join the thread. If an exception was thrown in the running loop, Stop will rethrow it.
-			cpu_->Stop();
-		}
-		catch (std::exception &e)
-		{
-			AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
-		}
+		// Join the thread. If an exception was thrown in the running loop, Stop will rethrow it.
+		cpu_->Stop();
+	}
+	catch (std::exception &e)
+	{
+		AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 	}
 
 	cpu_debug_component_->OnEmulationPaused();
