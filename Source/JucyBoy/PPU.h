@@ -21,6 +21,10 @@ public:
 
 		VBLANK = 1,
 		EnteredVBLANK = 5,
+		VBLANK_Line153 = 9, // Line 153 of VBlank reports LY=153 for only 8 clock cycles...
+		EnteredVBLANK_Line153 = 13, // VBLANK mode of line 153 requests LY=LYC for line 153 upon entering
+		VBLANK_Line0 = 17, // The remaining clock cycles of VBLANK in line 153 report LY=0, and requests 
+		EnteredVBLANK_Line0 = 21, // VBLANK mode of line 0 requests LY=LYC for line 0 upon entering
 
 		OAM = 2,
 		EnteredOAM = 6, // Used to trigger LY = LYC comparison at the beginning of OAM (4 clock cycles after LY is incremented)
@@ -84,9 +88,6 @@ private:
 	// Helper functions
 	void EnableLcd(bool enabled);
 	void SetLcdState(State state);
-	inline uint8_t IncrementLine() { return SetLineNumber(current_line_ + 1); }
-	uint8_t SetLineNumber(uint8_t line_number);
-	void TriggerLineComparison();
 	uint8_t GetPaletteData(const Palette &palette) const;
 	void WriteOam(Memory::Address relative_address, uint8_t value);
 	inline bool CompareCurrentLine() const { return (current_line_ == line_compare_) && ((clock_cycles_lapsed_in_line_ >= 4) || (current_line_ == 0)); }
@@ -99,6 +100,9 @@ protected:
 	static constexpr size_t vram_state_duration_{ 172 };
 	static constexpr size_t hblank_state_duration_{ 204 };
 	static constexpr size_t line_duration_{ 456 };
+
+	static constexpr size_t vblank_line153_duration{ 8 };
+	static constexpr size_t vblank_line0_duration{ line_duration_ - vblank_line153_duration };
 
 	static constexpr Memory::Address tile_map_0_offset_{ 0x1800 };
 	static constexpr Memory::Address tile_map_1_offset_{ 0x1C00 };
