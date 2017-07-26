@@ -72,6 +72,9 @@ public:
 	void AddListener(Listener &listener) { listeners_.insert(&listener); }
 	void RemoveListener(Listener &listener) { listeners_.erase(&listener); }
 
+	template<class Archive>
+	void serialize(Archive &archive);
+
 private:
 	// Rendering
 	void RenderBackground(uint8_t line_number);
@@ -151,8 +154,8 @@ protected:
 	std::array<Sprite, 40> sprites_{};
 	std::vector<size_t> sprites_to_render_this_line_;
 
-	std::array<bool, 160 * 144> is_bg_transparent_{}; // Color number 0 on background is "transparent" and therefore sprites show on top of it
 	Framebuffer framebuffer_{};
+	std::array<bool, 160 * 144> is_bg_transparent_{}; // Color number 0 on background is "transparent" and therefore sprites show on top of it
 
 	struct OamDma
 	{
@@ -178,3 +181,20 @@ private:
 	PPU& operator=(const PPU&) = delete;
 	PPU& operator=(PPU&&) = delete;
 };
+
+template<class Archive>
+void PPU::serialize(Archive & archive)
+{
+	archive(current_state_, next_state_);
+	archive(clock_cycles_lapsed_in_state_, clock_cycles_lapsed_in_line_, vram_duration_this_line_, hblank_duration_this_line_);
+	archive(show_bg_, show_sprites_, sprite_height_, active_bg_tile_map_, active_tile_set_, show_window_, active_window_tile_map_, lcd_on_);
+	archive(hblank_interrupt_enabled_, vblank_interrupt_enabled_, oam_interrupt_enabled_, line_coincidence_interrupt_enabled_);
+	archive(scroll_y_, scroll_x_, current_line_, line_compare_);
+	archive(bg_palette_, obj_palettes_);
+	archive(window_y_, window_x_);
+	archive(vram_, oam_);
+	archive(tile_set_, tile_maps_);
+	archive(sprites_, sprites_to_render_this_line_);
+	archive(framebuffer_, is_bg_transparent_);
+	archive(oam_dma_.current_state_, oam_dma_.next_state_, oam_dma_.source_, oam_dma_.current_byte_index_);
+}

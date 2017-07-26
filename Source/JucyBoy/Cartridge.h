@@ -23,6 +23,9 @@ public:
 	void LoadRomBank(size_t rom_bank_number);
 	void LoadRamBank(size_t external_ram_bank_number);
 
+	template<class Archive>
+	void serialize(Archive &archive);
+
 private:
 	static size_t GetRomSize(uint8_t rom_size_code);
 
@@ -42,3 +45,10 @@ private:
 	// MBC implementation members
 	bool mbc1_ram_banking_mode_enabled_{ false };
 };
+
+template<class Archive>
+void Cartridge::serialize(Archive &archive)
+{
+	archive(external_ram_banks_);
+	archive(loaded_rom_bank_, loaded_external_ram_bank_, external_ram_enabled_, mbc1_ram_banking_mode_enabled_);
+}

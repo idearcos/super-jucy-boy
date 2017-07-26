@@ -24,6 +24,12 @@ public:
 	uint16_t operator++(int) { const auto original_value = static_cast<uint16_t>(*this); *this += 1; return original_value; }
 	uint16_t operator--(int) { const auto original_value = static_cast<uint16_t>(*this); *this -= 1; return original_value; }
 
+	template<class Archive>
+	void serialize(Archive &archive)
+	{
+		archive(low_, high_);
+	}
+
 private:
 	uint8_t low_;
 	uint8_t high_;

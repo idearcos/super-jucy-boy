@@ -27,6 +27,12 @@ public:
 	bool IsVerticallyFlipped() const { return vertical_flip_; }
 	bool IsRenderedAboveBackground() const { return render_above_background_; }
 
+	template<class Archive>
+	void serialize(Archive &archive)
+	{
+		archive(y_, x_, tile_number_, obj_palette_number_, horizontal_flip_, vertical_flip_, render_above_background_);
+	}
+
 private:
 	int y_{ -16 }; // A value of 0 in memory is translated to y = -16
 	int x_{ -8 }; // A value of 0 in memory is translated to x = -8

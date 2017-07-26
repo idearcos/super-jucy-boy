@@ -28,10 +28,23 @@ public:
 
 	void UpdatePressedKeys(std::vector<Keys> pressed_keys);
 
+	template<class Archive>
+	void serialize(Archive &archive);
+
 private:
-	std::atomic<uint8_t> pressed_buttons_{ 0xFF };
 	std::atomic<uint8_t> pressed_directions_{ 0xFF };
+	std::atomic<uint8_t> pressed_buttons_{ 0xFF };
 
 	bool direction_keys_requested_{ true };
 	bool button_keys_requested_{ true };
 };
+
+template<class Archive>
+void Joypad::serialize(Archive &archive)
+{
+	auto pressed_directions{ pressed_directions_.load() };
+	auto pressed_buttons{ pressed_buttons_.load() };
+	archive(pressed_directions, pressed_buttons, direction_keys_requested_, button_keys_requested_);
+	pressed_directions_.store(pressed_directions);
+	pressed_buttons_.store(pressed_buttons);
+}

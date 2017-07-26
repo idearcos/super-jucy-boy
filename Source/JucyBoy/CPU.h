@@ -28,10 +28,10 @@ public:
 	enum class Flags : uint8_t
 	{
 		None = 0x00,
-		C = 1 << 4,
-		H = 1 << 5,
-		N = 1 << 6,
-		Z = 1 << 7,
+		C = 0x10,
+		H = 0x20,
+		N = 0x40,
+		Z = 0x80,
 		All = 0xF0
 	};
 
@@ -65,6 +65,9 @@ public:
 	// Listeners management
 	void AddListener(Listener &listener) { listeners_.insert(&listener); }
 	void RemoveListener(Listener &listener) { listeners_.erase(&listener); }
+
+	template<class Archive>
+	void serialize(Archive &archive);
 
 protected:
 	void ExecuteOneInstruction();
@@ -206,3 +209,10 @@ inline CPU::Flags& operator |= (CPU::Flags &lhs, const CPU::Flags &rhs)
 	return lhs;
 }
 #pragma endregion
+
+template<class Archive>
+void CPU::serialize(Archive & archive)
+{
+	archive(registers_.af, registers_.bc, registers_.de, registers_.hl, registers_.pc, registers_.sp);
+	archive(previous_pc_, current_state_, interrupt_master_enable_, ime_requested_, enabled_interrupts_, requested_interrupts_);
+}

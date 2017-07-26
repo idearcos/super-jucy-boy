@@ -31,6 +31,9 @@ public:
 	// Debug / GUI interaction
 	Memory::Map GetMemoryMap() const;
 
+	template<class Archive>
+	void serialize(Archive &archive);
+
 private:
 	uint8_t OnWramRead(Memory::Address relative_address) const { return wram_[relative_address]; }
 	void OnWramWritten(Memory::Address relative_address, uint8_t value) { wram_[relative_address] = value; }
@@ -64,3 +67,9 @@ private:
 	MMU& operator=(const MMU&) = delete;
 	MMU& operator=(MMU&&) = delete;
 };
+
+template<class Archive>
+void MMU::serialize(Archive &archive)
+{
+	archive(wram_, hram_);
+}

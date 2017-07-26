@@ -22,6 +22,9 @@ public:
 	uint8_t OnIoMemoryRead(Memory::Address address) const;
 	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
 
+	template<class Archive>
+	void serialize(Archive &archive);
+
 private:
 	void IncreaseTimer();
 
@@ -48,4 +51,10 @@ private:
 	MMU* mmu_;
 };
 
+}
+
+template<class Archive>
+void jb::Timer::serialize(Archive &archive)
+{
+	archive(internal_counter_, timer_counter_, timer_period_, timer_modulo_, timer_enabled_, timer_overflow_state_);
 }

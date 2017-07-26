@@ -36,6 +36,9 @@ public:
 	using Listener = std::function<void(size_t right_sample, size_t left_sample)>;
 	std::function<void()> AddListener(Listener listener);
 
+	template<class Archive>
+	void serialize(Archive &archive);
+
 private:
 	void ClockLengthCounters();
 
@@ -58,3 +61,9 @@ private:
 
 	std::list<Listener> listeners_;
 };
+
+template<class Archive>
+void APU::serialize(Archive &archive)
+{
+	archive(frame_sequencer_divider_, frame_sequencer_step_, channel_1_, channel_2_, apu_enabled_, right_volume_, left_volume_, right_channels_enabled_, left_channels_enabled_);
+}

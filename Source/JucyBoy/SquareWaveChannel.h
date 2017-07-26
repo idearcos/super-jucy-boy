@@ -31,6 +31,9 @@ public:
 	bool IsChannelOn() const { return enabled_; }
 	void Reset();
 
+	template<class Archive>
+	void serialize(Archive &archive);
+
 protected:
 	virtual void Trigger();
 	inline void UpdateClockDividerPeriod() { clock_divider_.SetPeriod((2048 - frequency_) * 4); }
@@ -82,6 +85,9 @@ public:
 	uint8_t ReadNR10() const { return 0x80 | static_cast<uint8_t>(frequency_sweep_.shift) | static_cast<uint8_t>(frequency_sweep_.direction << 3) | static_cast<uint8_t>(frequency_sweep_.period << 4); }
 	void OnNR10Written(uint8_t value);
 
+	template<class Archive>
+	void serialize(Archive &archive);
+
 private:
 	void Trigger() override;
 	inline size_t CalculateNewFrequency() const { return frequency_sweep_.current_frequency + (frequency_sweep_.direction * (frequency_sweep_.current_frequency >> frequency_sweep_.shift)); }
@@ -98,3 +104,18 @@ private:
 		size_t cycles_left{ 0 };
 	} frequency_sweep_;
 };
+
+template<class Archive>
+void SquareWaveChannel::serialize(Archive &archive)
+{
+	archive(enabled_, frequency_, selected_duty_cycle_, duty_cycle_step_, length_counter_, length_counter_enabled_);
+	archive(envelope_.initial_volume, envelope_.direction, envelope_.period, envelope_.active, envelope_.current_volume, envelope_.cycles_left);
+	archive(clock_divider_);
+}
+
+template<class Archive>
+void SquareWaveChannelWithSweep::serialize(Archive &archive)
+{
+	archive(static_cast<SquareWaveChannel&>(*this));
+	archive(frequency_sweep_.period, frequency_sweep_.direction, frequency_sweep_.shift, frequency_sweep_.active, frequency_sweep_.current_frequency, frequency_sweep_.cycles_left);
+}

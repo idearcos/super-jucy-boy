@@ -31,6 +31,12 @@ public:
 
 	void Reset() { input_clock_cycles_left_ = period_; }
 
+	template<class Archive>
+	void serialize(Archive &archive)
+	{
+		archive(period_, input_clock_cycles_left_);
+	}
+
 private:
 	size_t period_;
 	size_t input_clock_cycles_left_;
