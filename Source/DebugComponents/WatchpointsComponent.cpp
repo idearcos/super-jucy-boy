@@ -36,14 +36,17 @@ WatchpointsComponent::WatchpointsComponent(DebugCPU& debug_cpu) :
 
 void WatchpointsComponent::OnEmulationStarted()
 {
-	watchpoint_add_editor_.setEnabled(false);
+	// Settings enabled to false in text editors hides the colored outline, so do the following instead
+	watchpoint_add_editor_.setReadOnly(true);
+	watchpoint_add_editor_.setMouseClickGrabsKeyboardFocus(false);
 	watchpoint_type_read_.setEnabled(false);
 	watchpoint_type_write_.setEnabled(false);
 }
 
 void WatchpointsComponent::OnEmulationPaused()
 {
-	watchpoint_add_editor_.setEnabled(true);
+	watchpoint_add_editor_.setReadOnly(false);
+	watchpoint_add_editor_.setMouseClickGrabsKeyboardFocus(true);
 	watchpoint_type_read_.setEnabled(true);
 	watchpoint_type_write_.setEnabled(true);
 }

@@ -29,12 +29,15 @@ CpuBreakpointsComponent::CpuBreakpointsComponent(DebugCPU& debug_cpu) :
 
 void CpuBreakpointsComponent::OnEmulationStarted()
 {
-	breakpoint_add_editor_.setEnabled(false);
+	// Settings enabled to false in text editors hides the colored outline, so do the following instead
+	breakpoint_add_editor_.setReadOnly(true);
+	breakpoint_add_editor_.setMouseClickGrabsKeyboardFocus(false);
 }
 
 void CpuBreakpointsComponent::OnEmulationPaused()
 {
-	breakpoint_add_editor_.setEnabled(true);
+	breakpoint_add_editor_.setReadOnly(false);
+	breakpoint_add_editor_.setMouseClickGrabsKeyboardFocus(true);
 }
 
 void CpuBreakpointsComponent::OnBreakpointHit(Memory::Address breakpoint)
