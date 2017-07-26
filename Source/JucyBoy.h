@@ -40,6 +40,10 @@ private:
 
 	void ConstructDebugComponents();
 
+	// Save/load state
+	void SaveState() const;
+	void LoadState();
+
 	// Toggle GUI features on/off
 	void EnableDebugging(Component &component, bool enable);
 	int ComputeWindowWidth() const;

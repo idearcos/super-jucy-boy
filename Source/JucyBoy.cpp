@@ -1,6 +1,10 @@
 #include "JucyBoy.h"
 #include <sstream>
+#include <fstream>
 #include <cassert>
+#include "cereal/archives/binary.hpp"
+#include "cereal/types/array.hpp"
+#include "cereal/types/vector.hpp"
 
 JucyBoy::JucyBoy()
 {
@@ -140,7 +144,7 @@ void JucyBoy::UpdateDebugComponents(bool compute_diff)
 	ppu_debug_component_->UpdateState();
 }
 
-void JucyBoy::paint (Graphics& g)
+void JucyBoy::paint(Graphics& g)
 {
 	g.fillAll(Colours::white);
 
@@ -180,7 +184,49 @@ void JucyBoy::resized()
 	}
 }
 
-void JucyBoy::mouseDown( const MouseEvent &event)
+void JucyBoy::SaveState() const
+{
+	auto save_state_file_path{ loaded_rom_file_path_ };
+	const auto last_dot_position = save_state_file_path.find_last_of('.');
+	if (std::string::npos != last_dot_position)
+	{
+		save_state_file_path.replace(last_dot_position, std::string::npos, ".sav");
+	}
+	else
+	{
+		save_state_file_path.append(".sav");
+	}
+
+	std::ofstream save_state_file{ save_state_file_path, std::ios::binary };
+
+	{cereal::BinaryOutputArchive  output_archive{ save_state_file };
+	output_archive(*cpu_, *mmu_, *ppu_, *apu_, *timer_, *joypad_, *cartridge_); }
+
+	save_state_file.close();
+}
+
+void JucyBoy::LoadState()
+{
+	auto save_state_file_path{ loaded_rom_file_path_ };
+	const auto last_dot_position = save_state_file_path.find_last_of('.');
+	if (std::string::npos != last_dot_position)
+	{
+		save_state_file_path.replace(last_dot_position, std::string::npos, ".sav");
+	}
+	else
+	{
+		save_state_file_path.append(".sav");
+	}
+
+	std::ifstream save_state_file{ save_state_file_path, std::ios::binary };
+
+	{cereal::BinaryInputArchive  input_archive{ save_state_file };
+	input_archive(*cpu_, *mmu_, *ppu_, *apu_, *timer_, *joypad_, *cartridge_); }
+
+	save_state_file.close();
+}
+
+void JucyBoy::mouseDown(const MouseEvent &event)
 {
 	if (!event.mods.isRightButtonDown()) { return; }
 
@@ -192,14 +238,18 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 	}
 
 	PopupMenu m;
-	m.addItem(1, "Load ROM");
-	m.addItem(2, "Reset", cpu_ != nullptr);
+	int item_index{ 0 };
+	m.addItem(++item_index, "Load ROM");
+	m.addItem(++item_index, "Reset", cpu_ != nullptr);
 	m.addSeparator();
-	m.addItem(3, "Enable CPU debugging", cpu_debug_component_ != nullptr, cpu_debug_component_ && cpu_debug_component_->isVisible());
-	m.addItem(4, "Enable memory map", memory_map_component_ != nullptr, memory_map_component_ && memory_map_component_->isVisible());
-	m.addItem(5, "Enable graphics debugging", ppu_debug_component_ != nullptr, ppu_debug_component_ && ppu_debug_component_->isVisible());
+	m.addItem(++item_index, "Save state", cpu_ != nullptr);
+	m.addItem(++item_index, "Load state", cpu_ != nullptr);
+	m.addSeparator();
+	m.addItem(++item_index, "Enable CPU debugging", cpu_debug_component_ != nullptr, cpu_debug_component_ && cpu_debug_component_->isVisible());
+	m.addItem(++item_index, "Enable memory map", memory_map_component_ != nullptr, memory_map_component_ && memory_map_component_->isVisible());
+	m.addItem(++item_index, "Enable graphics debugging", ppu_debug_component_ != nullptr, ppu_debug_component_ && ppu_debug_component_->isVisible());
 	const int result = m.show();
-	
+
 	switch (result)
 	{
 	case 0:
@@ -232,12 +282,18 @@ void JucyBoy::mouseDown( const MouseEvent &event)
 		}
 		break;
 	case 3:
-		EnableDebugging(*cpu_debug_component_, !cpu_debug_component_->isVisible());
+		SaveState();
 		break;
 	case 4:
-		EnableDebugging(*memory_map_component_, !memory_map_component_->isVisible());
+		LoadState();
 		break;
 	case 5:
+		EnableDebugging(*cpu_debug_component_, !cpu_debug_component_->isVisible());
+		break;
+	case 6:
+		EnableDebugging(*memory_map_component_, !memory_map_component_->isVisible());
+		break;
+	case 7:
 		EnableDebugging(*ppu_debug_component_, !ppu_debug_component_->isVisible());
 		break;
 	default:
@@ -279,7 +335,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 			UpdateDebugComponents(true);
 		}
 	}
-	
+
 	return true;
 }
 
