@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="TfnRnX" name="SuperJucyBoy" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.idearcos.SuperJucyBoy" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.1" defines="GLEW_STATIC">
+              jucerVersion="4.3.1" defines="GLEW_STATIC&#10;DONT_SET_USING_JUCE_NAMESPACE">
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
       <GROUP id="{F1A5EA92-351C-9FCF-06FA-0EB39BA6EE8A}" name="DebugComponents">

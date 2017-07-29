@@ -16,17 +16,17 @@
 #include "DebugComponents/MemoryMapComponent.h"
 #include "DebugComponents/PpuDebugComponent.h"
 
-class JucyBoy final : public Component, public CPU::Listener, public DebugCPU::Listener
+class JucyBoy final : public juce::Component, public CPU::Listener, public DebugCPU::Listener
 {
 public:
 	JucyBoy();
 	~JucyBoy();
 
-	void paint (Graphics&) override;
+	void paint (juce::Graphics&) override;
 	void resized() override;
 
-	void mouseDown(const MouseEvent &event) override;
-	bool keyPressed(const KeyPress &key) override;
+	void mouseDown(const juce::MouseEvent &event) override;
+	bool keyPressed(const juce::KeyPress &key) override;
 	bool keyStateChanged(bool isKeyDown) override;
 
 	// CPU::Listener overrides
@@ -56,7 +56,7 @@ private:
 	std::unique_ptr<MMU> mmu_;
 	std::unique_ptr<DebugPPU> ppu_;
 	std::unique_ptr<APU> apu_;
-	std::unique_ptr<jb::Timer> timer_;
+	std::unique_ptr<Timer> timer_;
 	std::unique_ptr<Joypad> joypad_;
 	std::unique_ptr<Cartridge> cartridge_;
 
@@ -67,7 +67,7 @@ private:
 	GameScreenComponent game_screen_component_;
 	AudioPlayerComponent audio_player_component_;
 
-	Rectangle<int> usage_instructions_area_;
+	juce::Rectangle<int> usage_instructions_area_;
 	CpuDebugComponent cpu_debug_component_;
 	MemoryMapComponent memory_map_component_;
 	PpuDebugComponent ppu_debug_component_;

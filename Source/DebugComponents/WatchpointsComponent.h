@@ -5,7 +5,7 @@
 #include "../JucyBoy/Debug/DebugCPU.h"
 #include <set>
 
-class WatchpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener, public DebugCPU::Listener
+class WatchpointsComponent final : public juce::Component, public juce::ListBoxModel, public juce::TextEditor::Listener, public DebugCPU::Listener
 {
 public:
 	WatchpointsComponent();
@@ -19,26 +19,26 @@ public:
 	// DebugCPU::Listener overrides
 	void OnWatchpointHit(Memory::Watchpoint watchpoint) override;
 
-	void paint(Graphics&) override;
+	void paint(juce::Graphics&) override;
 	void resized() override;
 
 	// ListBoxModel overrides
 	int getNumRows() override;
-	void paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected) override;
+	void paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
 	void deleteKeyPressed(int lastRowSelected) override;
 
 	// TextEditor::Listener overrides
-	void textEditorReturnKeyPressed(TextEditor &) override;
+	void textEditorReturnKeyPressed(juce::TextEditor &) override;
 
 private:
 	std::set<Memory::Watchpoint> watchpoints_;
-	Label watchpoint_list_header_;
-	ListBox watchpoint_list_box_;
+	juce::Label watchpoint_list_header_;
+	juce::ListBox watchpoint_list_box_;
 
-	TextEditor watchpoint_add_editor_;
-	ToggleButton watchpoint_type_read_{ "Read" };
-	ToggleButton watchpoint_type_write_{ "Write" };
-	Rectangle<int> watchpoint_add_area_;
+	juce::TextEditor watchpoint_add_editor_;
+	juce::ToggleButton watchpoint_type_read_{ "Read" };
+	juce::ToggleButton watchpoint_type_write_{ "Write" };
+	juce::Rectangle<int> watchpoint_add_area_;
 
 	DebugCPU* debug_cpu_{ nullptr };
 

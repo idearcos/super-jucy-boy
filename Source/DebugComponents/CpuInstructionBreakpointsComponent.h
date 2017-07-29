@@ -4,7 +4,7 @@
 #include "../JucyBoy/Debug/DebugCPU.h"
 #include <set>
 
-class CpuInstructionBreakpointsComponent final : public Component, public ListBoxModel, public ComboBox::Listener, public Button::Listener, public DebugCPU::Listener
+class CpuInstructionBreakpointsComponent final : public juce::Component, public juce::ListBoxModel, public juce::ComboBox::Listener, public juce::Button::Listener, public DebugCPU::Listener
 {
 public:
 	CpuInstructionBreakpointsComponent();
@@ -20,27 +20,27 @@ public:
 
 	// ListBoxModel overrides
 	int getNumRows() override;
-	void paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected) override;
+	void paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
 	void deleteKeyPressed(int lastRowSelected) override;
 
 	// ComboBox::Listener overrides
-	void comboBoxChanged(ComboBox*) override {}
+	void comboBoxChanged(juce::ComboBox*) override {}
 
 	// Button::Listener overrides
-	void buttonClicked(Button*) override;
+	void buttonClicked(juce::Button*) override;
 
 	// Component overrides
-	void paint(Graphics&) override;
+	void paint(juce::Graphics&) override;
 	void resized() override;
 
 private:
 	std::set<CPU::OpCode> instruction_breakpoints_;
 
-	Label instruction_breakpoint_list_header_;
-	ListBox instruction_breakpoint_list_box_;
+	juce::Label instruction_breakpoint_list_header_;
+	juce::ListBox instruction_breakpoint_list_box_;
 
-	ComboBox instruction_breakpoint_add_combo_box_;
-	TextButton instruction_breakpoint_add_button_;
+	juce::ComboBox instruction_breakpoint_add_combo_box_;
+	juce::TextButton instruction_breakpoint_add_button_;
 
 	DebugCPU* debug_cpu_{ nullptr };
 

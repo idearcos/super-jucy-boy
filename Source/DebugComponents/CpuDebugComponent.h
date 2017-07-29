@@ -7,7 +7,7 @@
 #include "WatchpointsComponent.h"
 #include "../JucyBoy/Debug/DebugCPU.h"
 
-class CpuDebugComponent final : public Component
+class CpuDebugComponent final : public juce::Component
 {
 public:
 	CpuDebugComponent();
@@ -19,7 +19,7 @@ public:
 	void OnEmulationPaused();
 	void UpdateState(bool compute_diff);
 
-	void paint(Graphics&) override;
+	void paint(juce::Graphics&) override;
 	void resized() override;
 
 private:

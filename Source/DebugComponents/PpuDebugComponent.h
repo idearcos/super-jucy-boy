@@ -3,7 +3,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JucyBoy/Debug/DebugPPU.h"
 
-class PpuDebugComponent final : public OpenGLAppComponent
+class PpuDebugComponent final : public juce::OpenGLAppComponent
 {
 public:
 	PpuDebugComponent();
@@ -19,7 +19,7 @@ public:
 	void shutdown() override;
 
 	// juce::Component overrides
-	void paint(Graphics&) override {}
+	void paint(juce::Graphics&) override {}
 	void resized() override {}
 
 private:

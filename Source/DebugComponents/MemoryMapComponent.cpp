@@ -8,9 +8,9 @@
 MemoryMapComponent::MemoryMapComponent()
 {
 	// Add memory map list header
-	memory_map_list_header_.setJustificationType(Justification::centred);
-	memory_map_list_header_.setColour(Label::ColourIds::outlineColourId, Colours::orange);
-	memory_map_list_header_.setText("Memory Map", NotificationType::dontSendNotification);
+	memory_map_list_header_.setJustificationType(juce::Justification::centred);
+	memory_map_list_header_.setColour(juce::Label::ColourIds::outlineColourId, juce::Colours::orange);
+	memory_map_list_header_.setText("Memory Map", juce::NotificationType::dontSendNotification);
 	addAndMakeVisible(memory_map_list_header_);
 
 	// Add memory map list
@@ -40,11 +40,12 @@ void MemoryMapComponent::UpdateState(bool compute_diff)
 
 	if (compute_diff)
 	{
-		std::transform(memory_map_.begin(), memory_map_.end(), previous_memory_map_state_.begin(), memory_map_colours_.begin(), [](size_t lhs, size_t rhs) -> Colour {return (lhs == rhs) ? Colours::black : Colours::red; });
+		std::transform(memory_map_.begin(), memory_map_.end(), previous_memory_map_state_.begin(), memory_map_colours_.begin(),
+			[](size_t lhs, size_t rhs) -> juce::Colour {return (lhs == rhs) ? juce::Colours::black : juce::Colours::red; });
 	}
 	else
 	{
-		std::fill(memory_map_colours_.begin(), memory_map_colours_.end(), Colours::black);
+		std::fill(memory_map_colours_.begin(), memory_map_colours_.end(), juce::Colours::black);
 	}
 
 	memory_map_list_box_.repaint();
@@ -52,11 +53,11 @@ void MemoryMapComponent::UpdateState(bool compute_diff)
 	previous_memory_map_state_ = memory_map_;
 }
 
-void MemoryMapComponent::paint(Graphics& g)
+void MemoryMapComponent::paint(juce::Graphics& g)
 {
-	g.fillAll(Colours::white);
+	g.fillAll(juce::Colours::white);
 
-	g.setColour(Colours::orange);
+	g.setColour(juce::Colours::orange);
 	g.drawRect(getLocalBounds(), 1);
 }
 
@@ -73,26 +74,27 @@ int MemoryMapComponent::getNumRows()
 	return static_cast<int>(memory_map_.size() / 16);
 }
 
-void MemoryMapComponent::paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected)
+void MemoryMapComponent::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
 {
 	if ((rowNumber < 0) || (rowNumber >= getNumRows())) { return; }
 
-	if (rowIsSelected)	g.fillAll(Colours::lightblue);
-	else				g.fillAll(Colours::white);
+	if (rowIsSelected)	g.fillAll(juce::Colours::lightblue);
+	else				g.fillAll(juce::Colours::white);
 
-	AttributedString row_text;
-	row_text.setJustification(Justification::centred);
+	juce::AttributedString row_text;
+	row_text.setJustification(juce::Justification::centred);
 
 	std::stringstream address;
 	address << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << 16 * rowNumber << " ";
-	row_text.append(address.str(), Font{ Font::getDefaultMonospacedFontName(), 12.0f, Font::plain }, Colours::grey);
+	row_text.append(address.str(), juce::Font{ juce::Font::getDefaultMonospacedFontName(), 12.0f, juce::Font::plain }, juce::Colours::grey);
 
 	for (int i = 0; i < 16; ++i)
 	{
 		std::stringstream value;
 		value << " " << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << static_cast<int>(memory_map_[16 * rowNumber + i]);
-		row_text.append(value.str(), Font{ Font::getDefaultMonospacedFontName(), 12.0f, Font::plain }, is_emulation_running_ ? Colours::grey : memory_map_colours_[16 * rowNumber + i]);
+		row_text.append(value.str(), juce::Font{ juce::Font::getDefaultMonospacedFontName(), 12.0f, juce::Font::plain },
+			is_emulation_running_ ? juce::Colours::grey : memory_map_colours_[16 * rowNumber + i]);
 	}
 
-	row_text.draw(g, Rectangle<int>{ width, height }.toFloat());
+	row_text.draw(g, juce::Rectangle<int>{ width, height }.toFloat());
 }

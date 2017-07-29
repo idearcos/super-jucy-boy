@@ -1,9 +1,6 @@
 #include "Timer.h"
 #include "MMU.h"
 
-namespace jb
-{
-
 Timer::Timer(MMU &mmu) :
 	mmu_{ &mmu }
 {
@@ -135,6 +132,4 @@ void Timer::IncreaseTimer()
 		timer_overflow_state_ = TimerOverflowState::JustOverflowed;
 		mmu_->SetBit(Memory::IF, 2);
 	}
-}
-
 }

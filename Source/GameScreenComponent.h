@@ -15,7 +15,7 @@ public:
 	void shutdown() override final;
 	void render() override;
 
-	void paint(Graphics&) override {}
+	void paint(juce::Graphics&) override {}
 	void resized() override {}
 
 	void OnNewFrame(const PPU::Framebuffer &ppu_framebuffer) override;

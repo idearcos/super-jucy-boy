@@ -37,11 +37,11 @@ void CpuDebugComponent::UpdateState(bool compute_diff)
 	registers_component_.UpdateState(compute_diff);
 }
 
-void CpuDebugComponent::paint(Graphics& g)
+void CpuDebugComponent::paint(juce::Graphics& g)
 {
-	g.fillAll(Colours::white);
+	g.fillAll(juce::Colours::white);
 
-	g.setColour(Colours::orange);
+	g.setColour(juce::Colours::orange);
 	g.drawRect(getLocalBounds(), 1);
 }
 

@@ -9,18 +9,18 @@ CpuBreakpointsComponent::CpuBreakpointsComponent()
 	addAndMakeVisible(breakpoint_list_box_);
 
 	// Add breakpoint list header
-	breakpoint_list_header_.setJustificationType(Justification::centred);
-	breakpoint_list_header_.setColour(Label::ColourIds::outlineColourId, Colours::orange);
-	breakpoint_list_header_.setText("Breakpoints", NotificationType::dontSendNotification);
+	breakpoint_list_header_.setJustificationType(juce::Justification::centred);
+	breakpoint_list_header_.setColour(juce::Label::ColourIds::outlineColourId, juce::Colours::orange);
+	breakpoint_list_header_.setText("Breakpoints", juce::NotificationType::dontSendNotification);
 	addAndMakeVisible(breakpoint_list_header_);
 
 	// Add text editor for new breakpoints
 	breakpoint_add_editor_.addListener(this);
 	breakpoint_add_editor_.setPopupMenuEnabled(false);
-	breakpoint_add_editor_.setTextToShowWhenEmpty("Add breakpoint...", Colours::grey);
+	breakpoint_add_editor_.setTextToShowWhenEmpty("Add breakpoint...", juce::Colours::grey);
 	breakpoint_add_editor_.setInputRestrictions(4, "0123456789ABCDEFabcdef");
 	breakpoint_add_editor_.setIndents(static_cast<int>(breakpoint_add_editor_.getFont().getHeight()), 0);
-	breakpoint_add_editor_.setColour(TextEditor::ColourIds::outlineColourId, Colours::orange);
+	breakpoint_add_editor_.setColour(juce::TextEditor::ColourIds::outlineColourId, juce::Colours::orange);
 	addAndMakeVisible(breakpoint_add_editor_);
 }
 
@@ -51,7 +51,7 @@ void CpuBreakpointsComponent::OnEmulationPaused()
 
 void CpuBreakpointsComponent::OnBreakpointHit(Memory::Address breakpoint)
 {
-	MessageManager::callAsync([this, breakpoint]() {
+	juce::MessageManager::callAsync([this, breakpoint]() {
 		const auto it = breakpoints_.find(breakpoint);
 		if (it != breakpoints_.end())
 		{
@@ -65,12 +65,12 @@ int CpuBreakpointsComponent::getNumRows()
 	return static_cast<int>(breakpoints_.size());
 }
 
-void CpuBreakpointsComponent::paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected)
+void CpuBreakpointsComponent::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
 {
 	if ((rowNumber < 0) || (rowNumber >= breakpoints_.size())) { return; }
 
-	if (rowIsSelected)	g.fillAll(Colours::lightblue);
-	else				g.fillAll(Colours::white);
+	if (rowIsSelected)	g.fillAll(juce::Colours::lightblue);
+	else				g.fillAll(juce::Colours::white);
 
 	auto it = breakpoints_.begin();
 	std::advance(it, rowNumber);
@@ -78,7 +78,7 @@ void CpuBreakpointsComponent::paintListBoxItem(int rowNumber, Graphics& g, int w
 	std::stringstream breakpoint_string;
 	breakpoint_string << "PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << *it;
 
-	g.drawText(breakpoint_string.str(), 0, 0, width, height, Justification::centred);
+	g.drawText(breakpoint_string.str(), 0, 0, width, height, juce::Justification::centred);
 }
 
 void CpuBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
@@ -96,7 +96,7 @@ void CpuBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 	breakpoint_list_box_.deselectAllRows();
 }
 
-void CpuBreakpointsComponent::textEditorReturnKeyPressed(TextEditor&)
+void CpuBreakpointsComponent::textEditorReturnKeyPressed(juce::TextEditor&)
 {
 	const auto breakpoint = std::stoi(breakpoint_add_editor_.getText().toStdString(), 0, 16);
 	if (breakpoint < std::numeric_limits<Memory::Address>::min() || breakpoint > std::numeric_limits<Memory::Address>::max()) return;
@@ -108,11 +108,11 @@ void CpuBreakpointsComponent::textEditorReturnKeyPressed(TextEditor&)
 	breakpoint_list_box_.updateContent();
 }
 
-void CpuBreakpointsComponent::paint(Graphics& g)
+void CpuBreakpointsComponent::paint(juce::Graphics& g)
 {
-	g.fillAll(Colours::white);
+	g.fillAll(juce::Colours::white);
 
-	g.setColour(Colours::orange);
+	g.setColour(juce::Colours::orange);
 	g.drawRect(getLocalBounds(), 1);
 }
 
@@ -125,5 +125,5 @@ void CpuBreakpointsComponent::resized()
 	breakpoint_list_box_.setBounds(working_area.reduced(1, 0));
 
 	const auto vertical_indent = (breakpoint_add_editor_.getHeight() - breakpoint_add_editor_.getFont().getHeight()) / 2.0;
-	breakpoint_add_editor_.setBorder(BorderSize<int>{ static_cast<int>(vertical_indent), 0, 0, 0 });
+	breakpoint_add_editor_.setBorder(juce::BorderSize<int>{ static_cast<int>(vertical_indent), 0, 0, 0 });
 }

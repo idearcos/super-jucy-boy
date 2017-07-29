@@ -17,7 +17,7 @@ GameScreenComponent::GameScreenComponent() :
 	openGLContext.setContinuousRepainting(false);
 
 	//TODO: more proper version checking using OpenGL directly
-	openGLContext.setOpenGLVersionRequired(OpenGLContext::OpenGLVersion::openGL3_2);
+	openGLContext.setOpenGLVersionRequired(juce::OpenGLContext::OpenGLVersion::openGL3_2);
 
 	framebuffer_.fill(255);
 }

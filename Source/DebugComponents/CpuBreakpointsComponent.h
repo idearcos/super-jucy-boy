@@ -3,7 +3,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JucyBoy/Debug/DebugCPU.h"
 
-class CpuBreakpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener, public DebugCPU::Listener
+class CpuBreakpointsComponent final : public juce::Component, public juce::ListBoxModel, public juce::TextEditor::Listener, public DebugCPU::Listener
 {
 public:
 	CpuBreakpointsComponent();
@@ -19,23 +19,23 @@ public:
 
 	// ListBoxModel overrides
 	int getNumRows() override;
-	void paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected) override;
+	void paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
 	void deleteKeyPressed(int lastRowSelected) override;
 
 	// TextEditor::Listener overrides
-	void textEditorReturnKeyPressed(TextEditor&) override;
+	void textEditorReturnKeyPressed(juce::TextEditor&) override;
 
 	// Component overrides
-	void paint(Graphics& g) override;
+	void paint(juce::Graphics& g) override;
 	void resized() override;
 
 private:
 	std::set<Memory::Address> breakpoints_;
 
-	Label breakpoint_list_header_;
-	ListBox breakpoint_list_box_;
+	juce::Label breakpoint_list_header_;
+	juce::ListBox breakpoint_list_box_;
 
-	TextEditor breakpoint_add_editor_;
+	juce::TextEditor breakpoint_add_editor_;
 
 	DebugCPU* debug_cpu_{ nullptr };
 

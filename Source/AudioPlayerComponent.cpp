@@ -35,7 +35,7 @@ void AudioPlayerComponent::releaseResources()
 
 }
 
-void AudioPlayerComponent::getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill)
+void AudioPlayerComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill)
 {
 	if (output_buffers_[0].abstract_fifo.getNumReady() < bufferToFill.numSamples || output_buffers_[1].abstract_fifo.getNumReady()  < bufferToFill.numSamples)
 	{

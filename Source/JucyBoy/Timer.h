@@ -6,9 +6,6 @@
 
 class MMU;
 
-namespace jb
-{
-
 class Timer final : public CPU::Listener
 {
 public:
@@ -51,10 +48,8 @@ private:
 	MMU* mmu_;
 };
 
-}
-
 template<class Archive>
-void jb::Timer::serialize(Archive &archive)
+void Timer::serialize(Archive &archive)
 {
 	archive(internal_counter_, timer_counter_, timer_period_, timer_modulo_, timer_enabled_, timer_overflow_state_);
 }

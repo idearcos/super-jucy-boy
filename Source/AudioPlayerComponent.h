@@ -14,13 +14,13 @@ public:
 
 	void ClearBuffer();
 
-	void paint(Graphics&) override {}
+	void paint(juce::Graphics&) override {}
 	void resized() override {}
 
 	// juce::AudioAppComponent overrides
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
 	void releaseResources() override;
-	void getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) override;
+	void getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill) override;
 
 	// APU Listener functions
 	void OnNewSample(size_t right_sample, size_t left_sample);

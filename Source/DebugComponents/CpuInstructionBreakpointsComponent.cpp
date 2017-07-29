@@ -10,9 +10,9 @@ CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent()
 	addAndMakeVisible(instruction_breakpoint_list_box_);
 
 	// Add instruction breakpoint list header
-	instruction_breakpoint_list_header_.setJustificationType(Justification::centred);
-	instruction_breakpoint_list_header_.setColour(Label::ColourIds::outlineColourId, Colours::orange);
-	instruction_breakpoint_list_header_.setText("Instruction breakpoints", NotificationType::dontSendNotification);
+	instruction_breakpoint_list_header_.setJustificationType(juce::Justification::centred);
+	instruction_breakpoint_list_header_.setColour(juce::Label::ColourIds::outlineColourId, juce::Colours::orange);
+	instruction_breakpoint_list_header_.setText("Instruction breakpoints", juce::NotificationType::dontSendNotification);
 	addAndMakeVisible(instruction_breakpoint_list_header_);
 
 	// Add combo box for new instruction breakpoints
@@ -64,7 +64,7 @@ void CpuInstructionBreakpointsComponent::OnEmulationPaused()
 
 void CpuInstructionBreakpointsComponent::OnInstructionBreakpointHit(CPU::OpCode opcode)
 {
-	MessageManager::callAsync([this, opcode]() {
+	juce::MessageManager::callAsync([this, opcode]() {
 		const auto it = instruction_breakpoints_.find(opcode);
 		if (it != instruction_breakpoints_.end())
 		{
@@ -78,17 +78,17 @@ int CpuInstructionBreakpointsComponent::getNumRows()
 	return static_cast<int>(instruction_breakpoints_.size());
 }
 
-void CpuInstructionBreakpointsComponent::paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected)
+void CpuInstructionBreakpointsComponent::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
 {
 	if ((rowNumber < 0) || (rowNumber >= instruction_breakpoints_.size())) { return; }
 
-	if (rowIsSelected)	g.fillAll(Colours::lightblue);
-	else				g.fillAll(Colours::white);
+	if (rowIsSelected)	g.fillAll(juce::Colours::lightblue);
+	else				g.fillAll(juce::Colours::white);
 
 	auto it = instruction_breakpoints_.begin();
 	std::advance(it, rowNumber);
 
-	g.drawText(instruction_breakpoint_add_combo_box_.getItemText(*it), 0, 0, width, height, Justification::centred);
+	g.drawText(instruction_breakpoint_add_combo_box_.getItemText(*it), 0, 0, width, height, juce::Justification::centred);
 }
 
 void CpuInstructionBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
@@ -106,7 +106,7 @@ void CpuInstructionBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 	instruction_breakpoint_list_box_.deselectAllRows();
 }
 
-void CpuInstructionBreakpointsComponent::buttonClicked(Button*)
+void CpuInstructionBreakpointsComponent::buttonClicked(juce::Button*)
 {
 	const auto insert_result = instruction_breakpoints_.insert(static_cast<CPU::OpCode>(instruction_breakpoint_add_combo_box_.getSelectedId() - 1));
 	if (insert_result.second && debug_cpu_) debug_cpu_->AddInstructionBreakpoint(*insert_result.first);
@@ -114,11 +114,11 @@ void CpuInstructionBreakpointsComponent::buttonClicked(Button*)
 	instruction_breakpoint_list_box_.updateContent();
 }
 
-void CpuInstructionBreakpointsComponent::paint(Graphics& g)
+void CpuInstructionBreakpointsComponent::paint(juce::Graphics& g)
 {
-	g.fillAll(Colours::white);
+	g.fillAll(juce::Colours::white);
 
-	g.setColour(Colours::orange);
+	g.setColour(juce::Colours::orange);
 	g.drawRect(getLocalBounds(), 1);
 }
 

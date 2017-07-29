@@ -8,7 +8,7 @@ PpuDebugComponent::PpuDebugComponent() :
 {
 	openGLContext.setComponentPaintingEnabled(false);
 	openGLContext.setContinuousRepainting(false);
-	openGLContext.setOpenGLVersionRequired(OpenGLContext::OpenGLVersion::openGL3_2);
+	openGLContext.setOpenGLVersionRequired(juce::OpenGLContext::OpenGLVersion::openGL3_2);
 
 	UpdateState();
 }

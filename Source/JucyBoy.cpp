@@ -44,7 +44,7 @@ void JucyBoy::LoadRom(std::string file_path)
 	cpu_ = std::make_unique<DebugCPU>(*mmu_);
 	ppu_ = std::make_unique<DebugPPU>(*mmu_);
 	apu_ = std::make_unique<APU>();
-	timer_ = std::make_unique<jb::Timer>(*mmu_);
+	timer_ = std::make_unique<Timer>(*mmu_);
 	joypad_ = std::make_unique<Joypad>();
 	cartridge_ = std::make_unique<Cartridge>(file_path);
 
@@ -117,7 +117,7 @@ void JucyBoy::PauseEmulation()
 	}
 	catch (std::exception &e)
 	{
-		AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
+		juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 	}
 
 	cpu_debug_component_.OnEmulationPaused();
@@ -131,17 +131,17 @@ void JucyBoy::UpdateDebugComponents(bool compute_diff)
 	ppu_debug_component_.UpdateState();
 }
 
-void JucyBoy::paint(Graphics& g)
+void JucyBoy::paint(juce::Graphics& g)
 {
-	g.fillAll(Colours::white);
+	g.fillAll(juce::Colours::white);
 
-	g.setColour(Colours::orange);
+	g.setColour(juce::Colours::orange);
 	g.setFont(14.0f);
 
 	std::stringstream usage_instructions;
 	usage_instructions << "Space: run / stop" << std::endl;
 	usage_instructions << "Right: step over" << std::endl;
-	g.drawFittedText(usage_instructions.str(), usage_instructions_area_, Justification::centred, 2);
+	g.drawFittedText(usage_instructions.str(), usage_instructions_area_, juce::Justification::centred, 2);
 
 	g.drawRect(usage_instructions_area_, 1);
 }
@@ -213,7 +213,7 @@ void JucyBoy::LoadState()
 	save_state_file.close();
 }
 
-void JucyBoy::mouseDown(const MouseEvent &event)
+void JucyBoy::mouseDown(const juce::MouseEvent &event)
 {
 	if (!event.mods.isRightButtonDown()) { return; }
 
@@ -224,7 +224,7 @@ void JucyBoy::mouseDown(const MouseEvent &event)
 		UpdateDebugComponents(false);
 	}
 
-	PopupMenu m;
+	juce::PopupMenu m;
 	int item_index{ 0 };
 	m.addItem(++item_index, "Load ROM");
 	m.addItem(++item_index, "Reset", cpu_ != nullptr);
@@ -243,7 +243,7 @@ void JucyBoy::mouseDown(const MouseEvent &event)
 		// Did not select anything
 		break;
 	case 1:
-		{FileChooser rom_chooser{ "Select a ROM file to load...", File::getSpecialLocation(File::currentExecutableFile), "*.gb" };
+		{juce::FileChooser rom_chooser{ "Select a ROM file to load...", juce::File::getSpecialLocation(juce::File::currentExecutableFile), "*.gb" };
 		if (rom_chooser.browseForFileToOpen()) {
 			auto rom_file = rom_chooser.getResult();
 			try
@@ -253,7 +253,7 @@ void JucyBoy::mouseDown(const MouseEvent &event)
 			}
 			catch (std::exception &e)
 			{
-				AlertWindow::showMessageBox(AlertWindow::AlertIconType::WarningIcon, "Failed to open ROM file", String{ "Error: " } +e.what());
+				juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to open ROM file", juce::String{ "Error: " } + e.what());
 			}
 		}}
 		break;
@@ -265,7 +265,7 @@ void JucyBoy::mouseDown(const MouseEvent &event)
 		}
 		catch (std::exception &e)
 		{
-			AlertWindow::showMessageBox(AlertWindow::AlertIconType::WarningIcon, "Failed to open ROM file", String{ "Error: " } +e.what());
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to open ROM file", juce::String{ "Error: " } + e.what());
 		}
 		break;
 	case 3:
@@ -290,10 +290,10 @@ void JucyBoy::mouseDown(const MouseEvent &event)
 	if (was_cpu_running && cpu_) { StartEmulation(); }
 }
 
-bool JucyBoy::keyPressed(const KeyPress &key)
+bool JucyBoy::keyPressed(const juce::KeyPress &key)
 {
 	// Switch statement does not work below because the keys are not compile time constants...
-	if (key.getKeyCode() == KeyPress::spaceKey)
+	if (key.getKeyCode() == juce::KeyPress::spaceKey)
 	{
 		if (!cpu_) { return true; }
 		if (cpu_->IsRunning())
@@ -306,7 +306,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 			StartEmulation();
 		}
 	}
-	else if (key.getKeyCode() == KeyPress::rightKey)
+	else if (key.getKeyCode() == juce::KeyPress::rightKey)
 	{
 		if (!cpu_) { return true; }
 		if (!cpu_->IsRunning())
@@ -317,7 +317,7 @@ bool JucyBoy::keyPressed(const KeyPress &key)
 			}
 			catch (std::exception &e)
 			{
-				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
+				juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 			}
 			UpdateDebugComponents(true);
 		}
@@ -330,35 +330,35 @@ bool JucyBoy::keyStateChanged(bool /*isKeyDown*/)
 {
 	std::vector<Joypad::Keys> pressed_keys;
 
-	if (KeyPress::isKeyCurrentlyDown('a'))
+	if (juce::KeyPress::isKeyCurrentlyDown('a'))
 	{
 		pressed_keys.push_back(Joypad::Keys::Left);
 	}
-	if (KeyPress::isKeyCurrentlyDown('s'))
+	if (juce::KeyPress::isKeyCurrentlyDown('s'))
 	{
 		pressed_keys.push_back(Joypad::Keys::Down);
 	}
-	if (KeyPress::isKeyCurrentlyDown('d'))
+	if (juce::KeyPress::isKeyCurrentlyDown('d'))
 	{
 		pressed_keys.push_back(Joypad::Keys::Right);
 	}
-	if (KeyPress::isKeyCurrentlyDown('w'))
+	if (juce::KeyPress::isKeyCurrentlyDown('w'))
 	{
 		pressed_keys.push_back(Joypad::Keys::Up);
 	}
-	if (KeyPress::isKeyCurrentlyDown('j'))
+	if (juce::KeyPress::isKeyCurrentlyDown('j'))
 	{
 		pressed_keys.push_back(Joypad::Keys::B);
 	}
-	if (KeyPress::isKeyCurrentlyDown('k'))
+	if (juce::KeyPress::isKeyCurrentlyDown('k'))
 	{
 		pressed_keys.push_back(Joypad::Keys::A);
 	}
-	if (KeyPress::isKeyCurrentlyDown(KeyPress::returnKey))
+	if (juce::KeyPress::isKeyCurrentlyDown(juce::KeyPress::returnKey))
 	{
 		pressed_keys.push_back(Joypad::Keys::Start);
 	}
-	if (KeyPress::isKeyCurrentlyDown(KeyPress::tabKey))
+	if (juce::KeyPress::isKeyCurrentlyDown(juce::KeyPress::tabKey))
 	{
 		pressed_keys.push_back(Joypad::Keys::Select);
 	}
@@ -373,7 +373,7 @@ bool JucyBoy::keyStateChanged(bool /*isKeyDown*/)
 // Moreover, any update to the GUI components (as the listener callback of Reset) can only be done safely in the message thread.
 void JucyBoy::OnRunningLoopInterrupted()
 {
-	MessageManager::callAsync([this]() {
+	juce::MessageManager::callAsync([this]() {
 		PauseEmulation();
 		UpdateDebugComponents(true);
 	});

@@ -9,24 +9,24 @@ WatchpointsComponent::WatchpointsComponent()
 	addAndMakeVisible(watchpoint_list_box_);
 
 	// Add watchpoints header
-	watchpoint_list_header_.setJustificationType(Justification::centred);
-	watchpoint_list_header_.setColour(Label::ColourIds::outlineColourId, Colours::orange);
-	watchpoint_list_header_.setText("Watchpoints", NotificationType::dontSendNotification);
+	watchpoint_list_header_.setJustificationType(juce::Justification::centred);
+	watchpoint_list_header_.setColour(juce::Label::ColourIds::outlineColourId, juce::Colours::orange);
+	watchpoint_list_header_.setText("Watchpoints", juce::NotificationType::dontSendNotification);
 	addAndMakeVisible(watchpoint_list_header_);
 
 	// Add text editor for new watchpoints
 	watchpoint_add_editor_.addListener(this);
 	watchpoint_add_editor_.setPopupMenuEnabled(false);
-	watchpoint_add_editor_.setTextToShowWhenEmpty("Add watchpoint...", Colours::grey);
+	watchpoint_add_editor_.setTextToShowWhenEmpty("Add watchpoint...", juce::Colours::grey);
 	watchpoint_add_editor_.setInputRestrictions(4, "0123456789ABCDEFabcdef");
 	watchpoint_add_editor_.setIndents(static_cast<int>(watchpoint_add_editor_.getFont().getHeight()), 0);
-	watchpoint_add_editor_.setColour(TextEditor::ColourIds::outlineColourId, Colours::orange);
+	watchpoint_add_editor_.setColour(juce::TextEditor::ColourIds::outlineColourId, juce::Colours::orange);
 	addAndMakeVisible(watchpoint_add_editor_);
 
 	// Add radio buttons for watchpoint type
 	watchpoint_type_read_.setRadioGroupId(1);
 	watchpoint_type_write_.setRadioGroupId(1);
-	watchpoint_type_write_.setToggleState(true, NotificationType::dontSendNotification);
+	watchpoint_type_write_.setToggleState(true, juce::NotificationType::dontSendNotification);
 	addAndMakeVisible(watchpoint_type_read_);
 	addAndMakeVisible(watchpoint_type_write_);
 }
@@ -62,7 +62,7 @@ void WatchpointsComponent::OnEmulationPaused()
 
 void WatchpointsComponent::OnWatchpointHit(Memory::Watchpoint watchpoint)
 {
-	MessageManager::callAsync([this, watchpoint]() {
+	juce::MessageManager::callAsync([this, watchpoint]() {
 		const auto it = watchpoints_.find(watchpoint);
 		if (it != watchpoints_.end())
 		{
@@ -71,11 +71,11 @@ void WatchpointsComponent::OnWatchpointHit(Memory::Watchpoint watchpoint)
 	});
 }
 
-void WatchpointsComponent::paint(Graphics& g)
+void WatchpointsComponent::paint(juce::Graphics& g)
 {
-	g.fillAll(Colours::white);
+	g.fillAll(juce::Colours::white);
 
-	g.setColour(Colours::orange);
+	g.setColour(juce::Colours::orange);
 	g.drawRect(getLocalBounds(), 1);
 	g.drawRect(watchpoint_add_area_, 1);
 }
@@ -95,7 +95,7 @@ void WatchpointsComponent::resized()
 	watchpoint_type_write_.setBounds(working_area);
 
 	const auto vertical_indent = (watchpoint_add_editor_.getHeight() - watchpoint_add_editor_.getFont().getHeight()) / 2.0;
-	watchpoint_add_editor_.setBorder(BorderSize<int>{ static_cast<int>(vertical_indent), 0, 0, 0 });
+	watchpoint_add_editor_.setBorder(juce::BorderSize<int>{ static_cast<int>(vertical_indent), 0, 0, 0 });
 }
 
 int WatchpointsComponent::getNumRows()
@@ -103,12 +103,12 @@ int WatchpointsComponent::getNumRows()
 	return static_cast<int>(watchpoints_.size());
 }
 
-void WatchpointsComponent::paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected)
+void WatchpointsComponent::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
 {
 	if ((rowNumber < 0) || (rowNumber >= getNumRows())) { return; }
 
-	if (rowIsSelected)	g.fillAll(Colours::lightblue);
-	else				g.fillAll(Colours::white);
+	if (rowIsSelected)	g.fillAll(juce::Colours::lightblue);
+	else				g.fillAll(juce::Colours::white);
 
 	auto it = watchpoints_.begin();
 	std::advance(it, rowNumber);
@@ -127,10 +127,10 @@ void WatchpointsComponent::paintListBoxItem(int rowNumber, Graphics& g, int widt
 		break;
 	}
 
-	g.drawText(row_text.str(), 0, 0, width, height, Justification::centred);
+	g.drawText(row_text.str(), 0, 0, width, height, juce::Justification::centred);
 }
 
-void WatchpointsComponent::textEditorReturnKeyPressed(TextEditor &)
+void WatchpointsComponent::textEditorReturnKeyPressed(juce::TextEditor &)
 {
 	const auto watchpoint_address = std::stoi(watchpoint_add_editor_.getText().toStdString(), 0, 16);
 	if (watchpoint_address < std::numeric_limits<Memory::Address>::min() || watchpoint_address > std::numeric_limits<Memory::Address>::max()) return;
