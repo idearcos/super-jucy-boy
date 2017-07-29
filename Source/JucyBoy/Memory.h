@@ -40,6 +40,7 @@ namespace Memory
 		Type type{ Type::Write };
 
 		bool operator==(const Watchpoint &rhs) { return (address == rhs.address) && (type == rhs.type); }
+		friend bool operator<(const Watchpoint &lhs, const Watchpoint &rhs);
 	};
 
 	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address);

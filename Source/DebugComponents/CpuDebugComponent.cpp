@@ -1,16 +1,19 @@
 #include "CpuDebugComponent.h"
 
-CpuDebugComponent::CpuDebugComponent(DebugCPU& debug_cpu) :
-	registers_component_{ debug_cpu },
-	breakpoints_component_{ debug_cpu },
-	instruction_breakpoints_component_{ debug_cpu },
-	watchpoints_component_{ debug_cpu }
-
+CpuDebugComponent::CpuDebugComponent()
 {
 	addAndMakeVisible(registers_component_);
 	addAndMakeVisible(breakpoints_component_);
 	addAndMakeVisible(instruction_breakpoints_component_);
 	addAndMakeVisible(watchpoints_component_);
+}
+
+void CpuDebugComponent::SetCpu(DebugCPU& debug_cpu)
+{
+	registers_component_.SetCpu(debug_cpu);
+	breakpoints_component_.SetCpu(debug_cpu);
+	instruction_breakpoints_component_.SetCpu(debug_cpu);
+	watchpoints_component_.SetCpu(debug_cpu);
 }
 
 void CpuDebugComponent::OnEmulationStarted()

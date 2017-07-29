@@ -2,8 +2,7 @@
 #include <sstream>
 #include <iomanip>
 
-CpuRegistersComponent::CpuRegistersComponent(DebugCPU& debug_cpu) :
-	debug_cpu_{ &debug_cpu }
+CpuRegistersComponent::CpuRegistersComponent()
 {
 	// Add registers listbox
 	registers_list_.setModel(this);
@@ -121,6 +120,8 @@ void CpuRegistersComponent::OnEmulationPaused()
 
 void CpuRegistersComponent::UpdateState(bool compute_diff)
 {
+	if (!debug_cpu_) return;
+
 	compute_diff_ = compute_diff;
 
 	previous_registers_state_ = registers_state_;

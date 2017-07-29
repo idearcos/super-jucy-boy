@@ -38,8 +38,6 @@ private:
 	void PauseEmulation();
 	void UpdateDebugComponents(bool compute_diff);
 
-	void ConstructDebugComponents();
-
 	// Save/load state
 	void SaveState() const;
 	void LoadState();
@@ -70,9 +68,9 @@ private:
 	AudioPlayerComponent audio_player_component_;
 
 	Rectangle<int> usage_instructions_area_;
-	std::unique_ptr<CpuDebugComponent> cpu_debug_component_;
-	std::unique_ptr<MemoryMapComponent> memory_map_component_;
-	std::unique_ptr<PpuDebugComponent> ppu_debug_component_;
+	CpuDebugComponent cpu_debug_component_;
+	MemoryMapComponent memory_map_component_;
+	PpuDebugComponent ppu_debug_component_;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
 };

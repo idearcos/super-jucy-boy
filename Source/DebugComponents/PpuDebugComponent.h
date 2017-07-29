@@ -6,8 +6,10 @@
 class PpuDebugComponent final : public OpenGLAppComponent
 {
 public:
-	PpuDebugComponent(DebugPPU &debug_ppu);
+	PpuDebugComponent();
 	~PpuDebugComponent();
+
+	void SetPpu(DebugPPU &debug_ppu) { debug_ppu_ = &debug_ppu; }
 
 	void UpdateState();
 

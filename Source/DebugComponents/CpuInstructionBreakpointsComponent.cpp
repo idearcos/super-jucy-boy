@@ -3,11 +3,8 @@
 #include <iomanip>
 #include "../JucyBoy/InstructionMnemonics.h"
 
-CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent(DebugCPU& debug_cpu) :
-	debug_cpu_{ &debug_cpu }
+CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent()
 {
-	debug_cpu_->AddListener(*this);
-
 	// Add list of instruction breakpoints
 	instruction_breakpoint_list_box_.setModel(this);
 	addAndMakeVisible(instruction_breakpoint_list_box_);
@@ -41,10 +38,22 @@ CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent(DebugCPU&
 	addAndMakeVisible(instruction_breakpoint_add_button_);
 }
 
+void CpuInstructionBreakpointsComponent::SetCpu(DebugCPU& debug_cpu)
+{
+	debug_cpu_ = &debug_cpu;
+	debug_cpu_->AddListener(*this);
+
+	for (const auto &instruction_breakpoint : instruction_breakpoints_)
+	{
+		debug_cpu_->AddInstructionBreakpoint(instruction_breakpoint);
+	}
+}
+
 void CpuInstructionBreakpointsComponent::OnEmulationStarted()
 {
 	instruction_breakpoint_add_combo_box_.setEnabled(false);
 	instruction_breakpoint_add_button_.setEnabled(false);
+	instruction_breakpoint_list_box_.deselectAllRows();
 }
 
 void CpuInstructionBreakpointsComponent::OnEmulationPaused()
@@ -56,9 +65,10 @@ void CpuInstructionBreakpointsComponent::OnEmulationPaused()
 void CpuInstructionBreakpointsComponent::OnInstructionBreakpointHit(CPU::OpCode opcode)
 {
 	MessageManager::callAsync([this, opcode]() {
-		for (int i = 0; i < instruction_breakpoints_.size(); ++i)
+		const auto it = instruction_breakpoints_.find(opcode);
+		if (it != instruction_breakpoints_.end())
 		{
-			if (instruction_breakpoints_[i] == opcode) instruction_breakpoint_list_box_.selectRow(i);
+			instruction_breakpoint_list_box_.selectRow(static_cast<int>(std::distance(instruction_breakpoints_.begin(), it)));
 		}
 	});
 }
@@ -75,25 +85,32 @@ void CpuInstructionBreakpointsComponent::paintListBoxItem(int rowNumber, Graphic
 	if (rowIsSelected)	g.fillAll(Colours::lightblue);
 	else				g.fillAll(Colours::white);
 
-	g.drawText(instruction_breakpoint_add_combo_box_.getItemText(instruction_breakpoints_[rowNumber]), 0, 0, width, height, Justification::centred);
+	auto it = instruction_breakpoints_.begin();
+	std::advance(it, rowNumber);
+
+	g.drawText(instruction_breakpoint_add_combo_box_.getItemText(*it), 0, 0, width, height, Justification::centred);
 }
 
 void CpuInstructionBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 {
-	debug_cpu_->RemoveInstructionBreakpoint(instruction_breakpoints_[lastRowSelected]);
-	UpdateInstructionBreakpoints();
+	if (lastRowSelected >= instruction_breakpoints_.size()) return;
+
+	auto it = instruction_breakpoints_.begin();
+	std::advance(it, lastRowSelected);
+
+	if (debug_cpu_) debug_cpu_->RemoveInstructionBreakpoint(*it);
+
+	instruction_breakpoints_.erase(it);
+
+	instruction_breakpoint_list_box_.updateContent();
+	instruction_breakpoint_list_box_.deselectAllRows();
 }
 
 void CpuInstructionBreakpointsComponent::buttonClicked(Button*)
 {
-	debug_cpu_->AddInstructionBreakpoint(static_cast<CPU::OpCode>(instruction_breakpoint_add_combo_box_.getSelectedId() - 1));
-	UpdateInstructionBreakpoints();
-}
+	const auto insert_result = instruction_breakpoints_.insert(static_cast<CPU::OpCode>(instruction_breakpoint_add_combo_box_.getSelectedId() - 1));
+	if (insert_result.second && debug_cpu_) debug_cpu_->AddInstructionBreakpoint(*insert_result.first);
 
-void CpuInstructionBreakpointsComponent::UpdateInstructionBreakpoints()
-{
-	const auto cpu_instruction_breakpoints = debug_cpu_->GetInstructionBreakpoints();
-	instruction_breakpoints_ = std::vector<CPU::OpCode>{ cpu_instruction_breakpoints.cbegin(), cpu_instruction_breakpoints.cend() };
 	instruction_breakpoint_list_box_.updateContent();
 }
 
@@ -115,12 +132,4 @@ void CpuInstructionBreakpointsComponent::resized()
 
 	instruction_breakpoint_add_combo_box_.setBounds(addition_controls_area.removeFromLeft(3 * addition_controls_area.getWidth() / 4));
 	instruction_breakpoint_add_button_.setBounds(addition_controls_area);
-}
-
-void CpuInstructionBreakpointsComponent::UpdateHitInstructionBreakpoint(CPU::OpCode opcode)
-{
-	for (int i = 0; i < instruction_breakpoints_.size(); ++i)
-	{
-		if (instruction_breakpoints_[i] == opcode) instruction_breakpoint_list_box_.selectRow(i);
-	}
 }

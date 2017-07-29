@@ -5,8 +5,7 @@
 #include <iomanip>
 #include <algorithm>
 
-MemoryMapComponent::MemoryMapComponent(MMU &mmu) :
-	mmu_{ &mmu }
+MemoryMapComponent::MemoryMapComponent()
 {
 	// Add memory map list header
 	memory_map_list_header_.setJustificationType(Justification::centred);
@@ -35,6 +34,8 @@ void MemoryMapComponent::OnEmulationPaused()
 
 void MemoryMapComponent::UpdateState(bool compute_diff)
 {
+	if (!mmu_) return;
+
 	memory_map_ = mmu_->GetMemoryMap();
 
 	if (compute_diff)

@@ -2,12 +2,15 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JucyBoy/Debug/DebugCPU.h"
+#include <set>
 
 class CpuInstructionBreakpointsComponent final : public Component, public ListBoxModel, public ComboBox::Listener, public Button::Listener, public DebugCPU::Listener
 {
 public:
-	CpuInstructionBreakpointsComponent(DebugCPU& debug_cpu);
+	CpuInstructionBreakpointsComponent();
 	~CpuInstructionBreakpointsComponent() = default;
+
+	void SetCpu(DebugCPU& debug_cpu);
 
 	void OnEmulationStarted();
 	void OnEmulationPaused();
@@ -26,16 +29,12 @@ public:
 	// Button::Listener overrides
 	void buttonClicked(Button*) override;
 
-	void UpdateInstructionBreakpoints();
-
 	// Component overrides
 	void paint(Graphics&) override;
 	void resized() override;
 
-	void UpdateHitInstructionBreakpoint(CPU::OpCode opcode);
-
 private:
-	std::vector<CPU::OpCode> instruction_breakpoints_;
+	std::set<CPU::OpCode> instruction_breakpoints_;
 
 	Label instruction_breakpoint_list_header_;
 	ListBox instruction_breakpoint_list_box_;

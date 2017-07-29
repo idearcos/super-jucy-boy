@@ -180,20 +180,6 @@ bool DebugCPU::IsWriteWatchpointHit(Memory::Address address) const
 	return watchpoint_hit;
 }
 
-std::vector<Memory::Watchpoint> DebugCPU::GetWatchpointList() const
-{
-	std::vector<Memory::Watchpoint> watchpoints;
-	for (auto watchpoint_address : read_watchpoints_)
-	{
-		watchpoints.emplace_back(watchpoint_address, Memory::Watchpoint::Type::Read);
-	}
-	for (auto watchpoint_address : write_watchpoints_)
-	{
-		watchpoints.emplace_back(watchpoint_address, Memory::Watchpoint::Type::Write);
-	}
-	return watchpoints;
-}
-
 void DebugCPU::AddWatchpoint(Memory::Watchpoint watchpoint)
 {
 	switch (watchpoint.type)

@@ -60,4 +60,9 @@ namespace Memory
 		else if (address < 0xFFFF) { return std::make_pair(Region::HRAM, address - 0xFF80); }
 		else { return std::make_pair(Region::Interrupts, address - 0xFFFF); }
 	}
+
+	bool operator<(const Memory::Watchpoint &lhs, const Memory::Watchpoint &rhs)
+	{
+		return (lhs.address < rhs.address) || ((lhs.address == rhs.address) && (static_cast<size_t>(lhs.type) < static_cast<size_t>(rhs.type)));
+	}
 }

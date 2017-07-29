@@ -10,8 +10,10 @@
 class CpuDebugComponent final : public Component
 {
 public:
-	CpuDebugComponent(DebugCPU& cpu);
+	CpuDebugComponent();
 	~CpuDebugComponent() = default;
+
+	void SetCpu(DebugCPU& debug_cpu);
 
 	void OnEmulationStarted();
 	void OnEmulationPaused();

@@ -6,8 +6,10 @@
 class CpuBreakpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener, public DebugCPU::Listener
 {
 public:
-	CpuBreakpointsComponent(DebugCPU& debug_cpu);
+	CpuBreakpointsComponent();
 	~CpuBreakpointsComponent() = default;
+
+	void SetCpu(DebugCPU& debug_cpu);
 
 	void OnEmulationStarted();
 	void OnEmulationPaused();
@@ -28,10 +30,7 @@ public:
 	void resized() override;
 
 private:
-	void UpdateBreakpoints();
-
-private:
-	std::vector<Memory::Address> breakpoints_;
+	std::set<Memory::Address> breakpoints_;
 
 	Label breakpoint_list_header_;
 	ListBox breakpoint_list_box_;

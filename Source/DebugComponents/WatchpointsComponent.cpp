@@ -2,11 +2,8 @@
 #include <sstream>
 #include <iomanip>
 
-WatchpointsComponent::WatchpointsComponent(DebugCPU& debug_cpu) :
-	debug_cpu_{ &debug_cpu }
+WatchpointsComponent::WatchpointsComponent()
 {
-	debug_cpu_->AddListener(*this);
-
 	// Add list of watchpoints
 	watchpoint_list_box_.setModel(this);
 	addAndMakeVisible(watchpoint_list_box_);
@@ -34,6 +31,17 @@ WatchpointsComponent::WatchpointsComponent(DebugCPU& debug_cpu) :
 	addAndMakeVisible(watchpoint_type_write_);
 }
 
+void WatchpointsComponent::SetCpu(DebugCPU& debug_cpu)
+{
+	debug_cpu_ = &debug_cpu;
+	debug_cpu_->AddListener(*this);
+
+	for (const auto &watchpoint : watchpoints_)
+	{
+		debug_cpu_->AddWatchpoint(watchpoint);
+	}
+}
+
 void WatchpointsComponent::OnEmulationStarted()
 {
 	// Settings enabled to false in text editors hides the colored outline, so do the following instead
@@ -41,6 +49,7 @@ void WatchpointsComponent::OnEmulationStarted()
 	watchpoint_add_editor_.setMouseClickGrabsKeyboardFocus(false);
 	watchpoint_type_read_.setEnabled(false);
 	watchpoint_type_write_.setEnabled(false);
+	watchpoint_list_box_.deselectAllRows();
 }
 
 void WatchpointsComponent::OnEmulationPaused()
@@ -54,9 +63,10 @@ void WatchpointsComponent::OnEmulationPaused()
 void WatchpointsComponent::OnWatchpointHit(Memory::Watchpoint watchpoint)
 {
 	MessageManager::callAsync([this, watchpoint]() {
-		for (int i = 0; i < watchpoints_.size(); ++i)
+		const auto it = watchpoints_.find(watchpoint);
+		if (it != watchpoints_.end())
 		{
-			if (watchpoints_[i] == watchpoint) watchpoint_list_box_.selectRow(i);
+			watchpoint_list_box_.selectRow(static_cast<int>(std::distance(watchpoints_.begin(), it)));
 		}
 	});
 }
@@ -100,9 +110,12 @@ void WatchpointsComponent::paintListBoxItem(int rowNumber, Graphics& g, int widt
 	if (rowIsSelected)	g.fillAll(Colours::lightblue);
 	else				g.fillAll(Colours::white);
 
+	auto it = watchpoints_.begin();
+	std::advance(it, rowNumber);
+
 	std::stringstream row_text;
-	row_text << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << watchpoints_[rowNumber].address << " | ";
-	switch (watchpoints_[rowNumber].type)
+	row_text << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << it->address << " | ";
+	switch (it->type)
 	{
 	case Memory::Watchpoint::Type::Read:
 		row_text << "Read";
@@ -122,28 +135,35 @@ void WatchpointsComponent::textEditorReturnKeyPressed(TextEditor &)
 	const auto watchpoint_address = std::stoi(watchpoint_add_editor_.getText().toStdString(), 0, 16);
 	if (watchpoint_address < std::numeric_limits<Memory::Address>::min() || watchpoint_address > std::numeric_limits<Memory::Address>::max()) return;
 
-	watchpoint_add_editor_.clear();
-
+	std::unique_ptr<Memory::Watchpoint> watchpoint;
 	if (watchpoint_type_read_.getToggleState())
 	{
-		debug_cpu_->AddWatchpoint(Memory::Watchpoint{ static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Read });
+		watchpoint = std::make_unique<Memory::Watchpoint>(static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Read);
 	}
 	else if (watchpoint_type_write_.getToggleState())
 	{
-		debug_cpu_->AddWatchpoint(Memory::Watchpoint{ static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Write });
+		watchpoint = std::make_unique<Memory::Watchpoint>(static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Write);
 	}
+	if (!watchpoint) return;
 
-	watchpoints_ = debug_cpu_->GetWatchpointList();
+	const auto insert_result = watchpoints_.insert(*watchpoint);
+	if (insert_result.second && debug_cpu_) debug_cpu_->AddWatchpoint(*insert_result.first);
 
+	watchpoint_add_editor_.clear();
 	watchpoint_list_box_.updateContent();
-	watchpoint_list_box_.repaint();
 }
 
 void WatchpointsComponent::deleteKeyPressed(int lastRowSelected)
 {
-	debug_cpu_->RemoveWatchpoint(watchpoints_[lastRowSelected]);
+	if (lastRowSelected >= watchpoints_.size()) return;
 
-	watchpoints_ = debug_cpu_->GetWatchpointList();
+	auto it = watchpoints_.begin();
+	std::advance(it, lastRowSelected);
+
+	if (debug_cpu_) debug_cpu_->RemoveWatchpoint(*it);
+
+	watchpoints_.erase(it);
+
 	watchpoint_list_box_.updateContent();
-	watchpoint_list_box_.repaint();
+	watchpoint_list_box_.deselectAllRows();
 }

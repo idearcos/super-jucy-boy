@@ -2,11 +2,8 @@
 #include <sstream>
 #include <iomanip>
 
-CpuBreakpointsComponent::CpuBreakpointsComponent(DebugCPU& debug_cpu) :
-	debug_cpu_{ &debug_cpu }
+CpuBreakpointsComponent::CpuBreakpointsComponent()
 {
-	debug_cpu_->AddListener(*this);
-
 	// Add list of breakpoints
 	breakpoint_list_box_.setModel(this);
 	addAndMakeVisible(breakpoint_list_box_);
@@ -27,11 +24,23 @@ CpuBreakpointsComponent::CpuBreakpointsComponent(DebugCPU& debug_cpu) :
 	addAndMakeVisible(breakpoint_add_editor_);
 }
 
+void CpuBreakpointsComponent::SetCpu(DebugCPU& debug_cpu)
+{
+	debug_cpu_ = &debug_cpu;
+	debug_cpu_->AddListener(*this);
+
+	for (const auto &breakpoint : breakpoints_)
+	{
+		debug_cpu_->AddBreakpoint(breakpoint);
+	}
+}
+
 void CpuBreakpointsComponent::OnEmulationStarted()
 {
 	// Settings enabled to false in text editors hides the colored outline, so do the following instead
 	breakpoint_add_editor_.setReadOnly(true);
 	breakpoint_add_editor_.setMouseClickGrabsKeyboardFocus(false);
+	breakpoint_list_box_.deselectAllRows();
 }
 
 void CpuBreakpointsComponent::OnEmulationPaused()
@@ -43,9 +52,10 @@ void CpuBreakpointsComponent::OnEmulationPaused()
 void CpuBreakpointsComponent::OnBreakpointHit(Memory::Address breakpoint)
 {
 	MessageManager::callAsync([this, breakpoint]() {
-		for (int i = 0; i < breakpoints_.size(); ++i)
+		const auto it = breakpoints_.find(breakpoint);
+		if (it != breakpoints_.end())
 		{
-			if (breakpoints_[i] == breakpoint) breakpoint_list_box_.selectRow(i);
+			breakpoint_list_box_.selectRow(static_cast<int>(std::distance(breakpoints_.begin(), it)));
 		}
 	});
 }
@@ -62,16 +72,28 @@ void CpuBreakpointsComponent::paintListBoxItem(int rowNumber, Graphics& g, int w
 	if (rowIsSelected)	g.fillAll(Colours::lightblue);
 	else				g.fillAll(Colours::white);
 
+	auto it = breakpoints_.begin();
+	std::advance(it, rowNumber);
+
 	std::stringstream breakpoint_string;
-	breakpoint_string << "PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << breakpoints_[rowNumber];
+	breakpoint_string << "PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << *it;
 
 	g.drawText(breakpoint_string.str(), 0, 0, width, height, Justification::centred);
 }
 
 void CpuBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 {
-	debug_cpu_->RemoveBreakpoint(breakpoints_[lastRowSelected]);
-	UpdateBreakpoints();
+	if (lastRowSelected >= breakpoints_.size()) return;
+
+	auto it = breakpoints_.begin();
+	std::advance(it, lastRowSelected);
+
+	if (debug_cpu_) debug_cpu_->RemoveBreakpoint(*it);
+
+	breakpoints_.erase(it);
+
+	breakpoint_list_box_.updateContent();
+	breakpoint_list_box_.deselectAllRows();
 }
 
 void CpuBreakpointsComponent::textEditorReturnKeyPressed(TextEditor&)
@@ -79,16 +101,10 @@ void CpuBreakpointsComponent::textEditorReturnKeyPressed(TextEditor&)
 	const auto breakpoint = std::stoi(breakpoint_add_editor_.getText().toStdString(), 0, 16);
 	if (breakpoint < std::numeric_limits<Memory::Address>::min() || breakpoint > std::numeric_limits<Memory::Address>::max()) return;
 
+	const auto insert_result = breakpoints_.insert(static_cast<Memory::Address>(breakpoint));
+	if (insert_result.second && debug_cpu_) debug_cpu_->AddBreakpoint(static_cast<Memory::Address>(*insert_result.first));
+
 	breakpoint_add_editor_.clear();
-
-	debug_cpu_->AddBreakpoint(static_cast<Memory::Address>(breakpoint));
-	UpdateBreakpoints();
-}
-
-void CpuBreakpointsComponent::UpdateBreakpoints()
-{
-	const auto cpu_breakpoints = debug_cpu_->GetBreakpoints();
-	breakpoints_ = std::vector<Memory::Address>{ cpu_breakpoints.cbegin(), cpu_breakpoints.cend() };
 	breakpoint_list_box_.updateContent();
 }
 

@@ -3,13 +3,15 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JucyBoy/Memory.h"
 #include "../JucyBoy/Debug/DebugCPU.h"
-#include <vector>
+#include <set>
 
 class WatchpointsComponent final : public Component, public ListBoxModel, public TextEditor::Listener, public DebugCPU::Listener
 {
 public:
-	WatchpointsComponent(DebugCPU& debug_cpu);
+	WatchpointsComponent();
 	~WatchpointsComponent() = default;
+
+	void SetCpu(DebugCPU& debug_cpu);
 
 	void OnEmulationStarted();
 	void OnEmulationPaused();
@@ -29,7 +31,7 @@ public:
 	void textEditorReturnKeyPressed(TextEditor &) override;
 
 private:
-	std::vector<Memory::Watchpoint> watchpoints_;
+	std::set<Memory::Watchpoint> watchpoints_;
 	Label watchpoint_list_header_;
 	ListBox watchpoint_list_box_;
 

@@ -28,8 +28,6 @@ public:
 	// Status retrieval
 	inline Registers GetRegistersState() const { return registers_; }
 	inline Flags GetFlagsState() const { return ReadFlags(); }
-	inline BreakpointList GetBreakpoints() const { return breakpoints_; }
-	inline InstructionBreakpointList GetInstructionBreakpoints() const { return instruction_breakpoints_; }
 
 	// Breakpoints
 	inline void AddBreakpoint(Memory::Address address) { breakpoints_.insert(address); } //TODO: allow only when not running!
@@ -38,7 +36,6 @@ public:
 	inline void RemoveInstructionBreakpoint(OpCode opcode) { instruction_breakpoints_.erase(opcode); } //TODO: allow only when not running!
 
 	// Watchpoints
-	std::vector<Memory::Watchpoint> GetWatchpointList() const;
 	void AddWatchpoint(Memory::Watchpoint watchpoint);
 	void RemoveWatchpoint(Memory::Watchpoint watchpoint);
 	

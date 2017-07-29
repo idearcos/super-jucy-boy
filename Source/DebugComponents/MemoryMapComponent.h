@@ -9,8 +9,10 @@ class MMU;
 class MemoryMapComponent final : public Component, public ListBoxModel
 {
 public:
-	MemoryMapComponent(MMU &mmu);
+	MemoryMapComponent();
 	~MemoryMapComponent() = default;
+
+	void SetMmu(MMU &mmu) { mmu_ = &mmu; }
 
 	void OnEmulationStarted();
 	void OnEmulationPaused();
