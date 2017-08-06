@@ -73,7 +73,7 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 {
 	//TODO: also check OAM DMA for watchpoints
 	//TODO: check Call from interrupts
-	Memory::Address address{ 0 };
+	Memory::Address address;
 	switch (next_opcode)
 	{
 	case 0x02:
@@ -164,7 +164,7 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	}
 }
 
-bool DebugCPU::IsReadWatchpointHit(Memory::Address address) const
+bool DebugCPU::IsReadWatchpointHit(const Memory::Address &address) const
 {
 	const auto watchpoint_hit = (read_watchpoints_.count(address) != 0);
 	if (watchpoint_hit) NotifyWatchpointHit({ address, Memory::Watchpoint::Type::Read });
@@ -172,7 +172,7 @@ bool DebugCPU::IsReadWatchpointHit(Memory::Address address) const
 	return watchpoint_hit;
 }
 
-bool DebugCPU::IsWriteWatchpointHit(Memory::Address address) const
+bool DebugCPU::IsWriteWatchpointHit(const Memory::Address &address) const
 {
 	const auto watchpoint_hit = (write_watchpoints_.count(address) != 0);
 	if (watchpoint_hit) NotifyWatchpointHit({ address, Memory::Watchpoint::Type::Write });
@@ -211,7 +211,7 @@ void DebugCPU::RemoveWatchpoint(Memory::Watchpoint watchpoint)
 }
 
 #pragma region Listener notification
-void DebugCPU::NotifyBreakpointHit(Memory::Address breakpoint) const
+void DebugCPU::NotifyBreakpointHit(const Memory::Address &breakpoint) const
 {
 	for (const auto &listener : listeners_)
 	{

@@ -142,13 +142,13 @@ void CPU::PushWordToStack(uint16_t value)
 	WriteByte(--registers_.sp, value & 0xFF);
 }
 
-uint8_t CPU::ReadByte(uint16_t address) const
+uint8_t CPU::ReadByte(const Memory::Address &address) const
 {
 	NotifyMachineCycleLapse();
 	return mmu_->ReadByte(address);
 }
 
-void CPU::WriteByte(uint16_t address, uint8_t value) const
+void CPU::WriteByte(const Memory::Address &address, uint8_t value) const
 {
 	NotifyMachineCycleLapse();
 	mmu_->WriteByte(address, value);
@@ -309,10 +309,10 @@ void CPU::AddToHl(uint16_t value)
 	registers_.hl += value;
 }
 
-void CPU::Call(Memory::Address address)
+void CPU::Call(const Memory::Address &address)
 {
 	PushWordToStack(registers_.pc);
-	registers_.pc = address;
+	registers_.pc = static_cast<uint16_t>(address);
 }
 
 void CPU::Return()
@@ -398,24 +398,22 @@ void CPU::TestBit(uint8_t reg, int bit_num)
 #pragma endregion
 
 #pragma region MMU mapped memory read/write functions
-uint8_t CPU::OnIoMemoryRead(Memory::Address address) const
+uint8_t CPU::OnIoMemoryRead(const Memory::Address&) const
 {
-	assert(address == Memory::IF);
 	return (0xE0 | requested_interrupts_);
 }
 
-void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
+void CPU::OnIoMemoryWritten(const Memory::Address&, uint8_t value)
 {
-	assert(address == Memory::IF);
 	requested_interrupts_ = value & 0x1F;
 }
 
-uint8_t CPU::OnInterruptsRead(Memory::Address) const
+uint8_t CPU::OnInterruptsRead(const Memory::Address&) const
 {
 	return (0xE0 | enabled_interrupts_);
 }
 
-void CPU::OnInterruptsWritten(Memory::Address, uint8_t value)
+void CPU::OnInterruptsWritten(const Memory::Address&, uint8_t value)
 {
 	enabled_interrupts_ = value & 0x1F;
 }

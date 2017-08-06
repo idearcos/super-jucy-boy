@@ -15,7 +15,7 @@ public:
 	void OnEmulationPaused();
 
 	// DebugCPU::Listener overrides
-	void OnBreakpointHit(Memory::Address breakpoint) override;
+	void OnBreakpointHit(const Memory::Address &breakpoint) override;
 
 	// ListBoxModel overrides
 	int getNumRows() override;

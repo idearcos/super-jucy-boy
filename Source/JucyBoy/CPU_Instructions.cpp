@@ -62,7 +62,7 @@ void CPU::PopulateInstructions()
 
 	// LD (a16), SP
 	instructions_[0x08] = [this]() {
-		auto address = FetchWord();
+		Memory::Address address{ FetchWord() };
 		WriteByte(address, registers_.sp & 0xFF);
 		WriteByte(++address, (registers_.sp >> 8) & 0xFF);
 	};

@@ -4,12 +4,10 @@
 #include <limits>
 #include <vector>
 #include <array>
+#include <tuple>
 
 namespace Memory
 {
-	using Address = uint16_t;
-	using Map = std::array<uint8_t, std::numeric_limits<Address>::max() + 1>;
-
 	enum class Region
 	{
 		ROM_Bank0,		// 0x0000 - 0x3FFF
@@ -26,6 +24,100 @@ namespace Memory
 		Count
 	};
 
+	class Address
+	{
+	public:
+		constexpr Address(uint16_t absolute) : Address(absolute, AbsoluteToRegionAndRelative(absolute)) {}
+		constexpr Address() : Address(0) {}
+
+		inline uint16_t GetAbsolute() const { return absolute_; }
+		inline Region GetRegion() const { return region_; }
+		inline uint16_t GetRelative() const { return relative_; }
+
+		constexpr explicit operator uint16_t() const { return absolute_; }
+
+		Address& operator+=(const uint16_t rhs)
+		{
+			absolute_ += rhs;
+			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
+			return *this;
+		}
+		friend Address operator+(Address lhs, uint16_t rhs) { lhs += rhs; return lhs; }
+		
+		Address& operator-=(const uint16_t rhs)
+		{
+			absolute_ -= rhs;
+			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
+			return *this;
+		}
+		friend Address operator-(Address lhs, uint16_t rhs) { lhs -= rhs; return lhs; }
+
+		Address& operator++()
+		{
+			++absolute_;
+			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
+			return *this;
+		}
+		Address operator++(int)
+		{
+			Address tmp(*this);
+			operator++();
+			return tmp;
+		}
+
+		Address& operator&=(uint16_t rhs)
+		{
+			absolute_ &= rhs;
+			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
+			return *this;
+		}
+		friend Address operator&(Address lhs, uint16_t rhs) { lhs &= rhs; return lhs; }
+
+		friend bool operator==(const Address& lhs, const Address& rhs) { return lhs.absolute_ == rhs.absolute_; }
+		friend bool operator!=(const Address& lhs, const Address& rhs) { return !(lhs == rhs); }
+
+		friend bool operator< (const Address& lhs, const Address& rhs) { return lhs.absolute_ < rhs.absolute_; }
+		friend bool operator> (const Address& lhs, const Address& rhs) { return rhs < lhs; }
+		friend bool operator<=(const Address& lhs, const Address& rhs) { return !(lhs > rhs); }
+		friend bool operator>=(const Address& lhs, const Address& rhs) { return !(lhs < rhs); }
+
+		template<class Archive>
+		void serialize(Archive &archive)
+		{
+			archive(absolute_);
+			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
+		}
+
+	private:
+		constexpr Address(uint16_t absolute, std::tuple<Region, uint16_t> region_and_relative) :
+			absolute_{ absolute },
+			region_{ std::get<0>(region_and_relative) },
+			relative_{ std::get<1>(region_and_relative) }
+		{}
+
+		constexpr static std::tuple<Region, uint16_t> AbsoluteToRegionAndRelative(uint16_t absolute)
+		{
+			if (absolute < 0x4000)		return std::make_tuple(Region::ROM_Bank0, absolute);
+			else if (absolute < 0x8000) return std::make_tuple(Region::ROM_OtherBanks, static_cast<uint16_t>(absolute - 0x4000));
+			else if (absolute < 0xA000) return std::make_tuple(Region::VRAM, static_cast<uint16_t>(absolute - 0x8000));
+			else if (absolute < 0xC000) return std::make_tuple(Region::ERAM, static_cast<uint16_t>(absolute - 0xA000));
+			else if (absolute < 0xE000) return std::make_tuple(Region::WRAM, static_cast<uint16_t>(absolute - 0xC000));
+			else if (absolute < 0xFE00) return std::make_tuple(Region::WRAM_Echo, static_cast<uint16_t>(absolute - 0xE000));
+			else if (absolute < 0xFEA0) return std::make_tuple(Region::OAM, static_cast<uint16_t>(absolute - 0xFE00));
+			else if (absolute < 0xFF00) return std::make_tuple(Region::Unused, static_cast<uint16_t>(absolute - 0xFEA0));
+			else if (absolute < 0xFF80) return std::make_tuple(Region::IO, static_cast<uint16_t>(absolute - 0xFF00));
+			else if (absolute < 0xFFFF) return std::make_tuple(Region::HRAM, static_cast<uint16_t>(absolute - 0xFF80));
+			else						return std::make_tuple(Region::Interrupts, static_cast<uint16_t>(absolute - 0xFFFF));
+		}
+
+	private:
+		uint16_t absolute_;
+		Region region_;
+		uint16_t relative_;
+	};
+
+	using Map = std::array<uint8_t, std::numeric_limits<uint16_t>::max() + 1>;
+
 	struct Watchpoint
 	{
 		enum class Type
@@ -40,11 +132,13 @@ namespace Memory
 		Type type{ Type::Write };
 
 		bool operator==(const Watchpoint &rhs) { return (address == rhs.address) && (type == rhs.type); }
-		friend bool operator<(const Watchpoint &lhs, const Watchpoint &rhs);
+		friend bool operator<(const Watchpoint &lhs, const Watchpoint &rhs)
+		{
+			return (lhs.address < rhs.address) || ((lhs.address == rhs.address) && (static_cast<size_t>(lhs.type) < static_cast<size_t>(rhs.type)));
+		}
 	};
 
-	std::pair<Region, Memory::Address> GetRegionAndRelativeAddress(Address address);
-
+	// Memory region sizes
 	static constexpr size_t rom_bank_size_			{ 0x4000 };
 	static constexpr size_t vram_size_				{ 0x2000 };
 	static constexpr size_t external_ram_bank_size_	{ 0x2000 };
@@ -56,22 +150,9 @@ namespace Memory
 	static constexpr size_t hram_size_				{ 0x007F };
 	static constexpr size_t interrupts_region_size_	{ 0x0001 };
 
-	static constexpr Address rom_bank_mask			{ 0x3FFF };
-	static constexpr Address vram_mask				{ 0x1FFF };
-	static constexpr Address external_ram_bank_mask_{ 0x1FFF };
-	static constexpr Address wram_mask				{ 0x1FFF };
-	static constexpr Address oam_mask				{ 0x00FF };
-	static constexpr Address unused_region_mask		{ 0x007F };
-	static constexpr Address io_region_mask			{ 0x007F };
-	static constexpr Address hram_mask				{ 0x007F };
-	static constexpr Address interrupts_region_mask	{ 0x0000 };
-
-#pragma region Region start addresses
 	static constexpr Address isr_start_			{ 0x0040 };
 	static constexpr Address io_region_start_	{ 0xFF00 };
-#pragma endregion
 
-#pragma region IO addresses
 	// Joypad
 	static constexpr Address JOYP	{ 0xFF00 };
 
@@ -123,5 +204,4 @@ namespace Memory
 
 	// CPU Interrupts
 	static constexpr Address IE		{ 0xFFFF };
-#pragma endregion
 }

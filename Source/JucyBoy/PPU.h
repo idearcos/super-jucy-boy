@@ -61,12 +61,12 @@ public:
 	void OnMachineCycleLapse() override;
 
 	// MMU mapped memory read/write functions
-	uint8_t OnVramRead(Memory::Address relative_address) const;
-	void OnVramWritten(Memory::Address relative_address, uint8_t value);
-	uint8_t OnOamRead(Memory::Address relative_address) const;
-	void OnOamWritten(Memory::Address relative_address, uint8_t value);
-	uint8_t OnIoMemoryRead(Memory::Address address);
-	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
+	uint8_t OnVramRead(const Memory::Address &address) const;
+	void OnVramWritten(const Memory::Address &address, uint8_t value);
+	uint8_t OnOamRead(const Memory::Address &address) const;
+	void OnOamWritten(const Memory::Address &address, uint8_t value);
+	uint8_t OnIoMemoryRead(const Memory::Address &address);
+	void OnIoMemoryWritten(const Memory::Address &address, uint8_t value);
 
 	// Listeners management
 	void AddListener(Listener &listener) { listeners_.insert(&listener); }
@@ -92,7 +92,7 @@ private:
 	void EnableLcd(bool enabled);
 	void SetLcdState(State state);
 	uint8_t GetPaletteData(const Palette &palette) const;
-	void WriteOam(Memory::Address relative_address, uint8_t value);
+	void WriteOam(const Memory::Address &address, uint8_t value);
 	inline bool CompareCurrentLine() const { return (current_line_ == line_compare_) && ((clock_cycles_lapsed_in_line_ >= 4) || (current_line_ == 0)); }
 
 	// Listener notification
@@ -107,8 +107,8 @@ protected:
 	static constexpr size_t vblank_line153_duration{ 8 };
 	static constexpr size_t vblank_line0_duration{ line_duration_ - vblank_line153_duration };
 
-	static constexpr Memory::Address tile_map_0_offset_{ 0x1800 };
-	static constexpr Memory::Address tile_map_1_offset_{ 0x1C00 };
+	static constexpr uint16_t tile_map_0_offset_{ 0x1800 };
+	static constexpr uint16_t tile_map_1_offset_{ 0x1C00 };
 
 	// LCD mode state machine
 	State current_state_{ State::LcdTurnedOn };

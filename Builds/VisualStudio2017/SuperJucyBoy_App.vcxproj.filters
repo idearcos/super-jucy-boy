@@ -409,9 +409,6 @@
     <ClCompile Include="..\..\Source\JucyBoy\Joypad.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\JucyBoy\Memory.cpp">
-      <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\JucyBoy\MMU.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClCompile>

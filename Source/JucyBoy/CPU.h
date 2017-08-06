@@ -57,10 +57,10 @@ public:
 	void StepOver();
 
 	// MMU mapped memory read/write functions
-	uint8_t OnIoMemoryRead(Memory::Address address) const;
-	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
-	uint8_t OnInterruptsRead(Memory::Address address) const;
-	void OnInterruptsWritten(Memory::Address address, uint8_t value);
+	uint8_t OnIoMemoryRead(const Memory::Address &address) const;
+	void OnIoMemoryWritten(const Memory::Address &address, uint8_t value);
+	uint8_t OnInterruptsRead(const Memory::Address &address) const;
+	void OnInterruptsWritten(const Memory::Address &address, uint8_t value);
 
 	// Listeners management
 	void AddListener(Listener &listener) { listeners_.insert(&listener); }
@@ -95,8 +95,8 @@ private:
 	uint16_t FetchWord();
 	uint16_t PopWordFromStack();
 	void PushWordToStack(uint16_t value);
-	uint8_t ReadByte(uint16_t address) const;
-	void WriteByte(uint16_t address, uint8_t value) const;
+	uint8_t ReadByte(const Memory::Address &address) const;
+	void WriteByte(const Memory::Address &address, uint8_t value) const;
 
 	// Instruction helper functions
 	void IncrementRegister(uint8_t &reg);
@@ -110,7 +110,7 @@ private:
 	void Or(uint8_t value);
 	void Compare(uint8_t value);
 	void AddToHl(uint16_t value);
-	void Call(Memory::Address address);
+	void Call(const Memory::Address &address);
 	void Return();
 
 	// CB instruction helper functions

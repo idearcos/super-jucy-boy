@@ -56,32 +56,32 @@ void JucyBoy::LoadRom(std::string file_path)
 	cpu_->CPU::AddListener(*this);
 
 	// Map memory read/write functions to MMU
-	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return ppu_->OnVramRead(relative_address); }, Memory::Region::VRAM);
-	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return ppu_->OnOamRead(relative_address); }, Memory::Region::OAM);
-	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return cpu_->OnInterruptsRead(relative_address); }, Memory::Region::Interrupts);
+	mmu_->MapMemoryRead([this](const Memory::Address &address) { return ppu_->OnVramRead(address); }, Memory::Region::VRAM);
+	mmu_->MapMemoryRead([this](const Memory::Address &address) { return ppu_->OnOamRead(address); }, Memory::Region::OAM);
+	mmu_->MapMemoryRead([this](const Memory::Address &address) { return cpu_->OnInterruptsRead(address); }, Memory::Region::Interrupts);
 
-	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { ppu_->OnVramWritten(relative_address, value); }, Memory::Region::VRAM);
-	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { ppu_->OnOamWritten(relative_address, value); }, Memory::Region::OAM);
-	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { cpu_->OnInterruptsWritten(relative_address, value); }, Memory::Region::Interrupts);
+	mmu_->MapMemoryWrite([this](const Memory::Address &address, uint8_t value) { ppu_->OnVramWritten(address, value); }, Memory::Region::VRAM);
+	mmu_->MapMemoryWrite([this](const Memory::Address &address, uint8_t value) { ppu_->OnOamWritten(address, value); }, Memory::Region::OAM);
+	mmu_->MapMemoryWrite([this](const Memory::Address &address, uint8_t value) { cpu_->OnInterruptsWritten(address, value); }, Memory::Region::Interrupts);
 
 	// Map IO register read/write functions to MMU
-	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return cpu_->OnIoMemoryRead(relative_address); }, Memory::IF, Memory::IF);
-	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return ppu_->OnIoMemoryRead(relative_address); }, Memory::LCDC, Memory::WX);
-	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return apu_->OnIoMemoryRead(relative_address); }, Memory::NR10, Memory::NR52);
-	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return timer_->OnIoMemoryRead(relative_address); }, Memory::DIV, Memory::TAC);
-	mmu_->MapIoRegisterRead([this](Memory::Address relative_address) { return joypad_->OnIoMemoryRead(relative_address); }, Memory::JOYP, Memory::JOYP);
-	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return cartridge_->OnRomBank0Read(relative_address); }, Memory::Region::ROM_Bank0);
-	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return cartridge_->OnRomBankNRead(relative_address); }, Memory::Region::ROM_OtherBanks);
-	mmu_->MapMemoryRead([this](Memory::Address relative_address) { return cartridge_->OnExternalRamRead(relative_address); }, Memory::Region::ERAM);
+	mmu_->MapIoRegisterRead([this](const Memory::Address &address) { return cpu_->OnIoMemoryRead(address); }, Memory::IF, Memory::IF);
+	mmu_->MapIoRegisterRead([this](const Memory::Address &address) { return ppu_->OnIoMemoryRead(address); }, Memory::LCDC, Memory::WX);
+	mmu_->MapIoRegisterRead([this](const Memory::Address &address) { return apu_->OnIoMemoryRead(address); }, Memory::NR10, Memory::NR52);
+	mmu_->MapIoRegisterRead([this](const Memory::Address &address) { return timer_->OnIoMemoryRead(address); }, Memory::DIV, Memory::TAC);
+	mmu_->MapIoRegisterRead([this](const Memory::Address &address) { return joypad_->OnIoMemoryRead(address); }, Memory::JOYP, Memory::JOYP);
+	mmu_->MapMemoryRead([this](const Memory::Address &address) { return cartridge_->OnRomBank0Read(address); }, Memory::Region::ROM_Bank0);
+	mmu_->MapMemoryRead([this](const Memory::Address &address) { return cartridge_->OnRomBankNRead(address); }, Memory::Region::ROM_OtherBanks);
+	mmu_->MapMemoryRead([this](const Memory::Address &address) { return cartridge_->OnExternalRamRead(address); }, Memory::Region::ERAM);
 
-	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { cpu_->OnIoMemoryWritten(relative_address, value); }, Memory::IF, Memory::IF);
-	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { ppu_->OnIoMemoryWritten(relative_address, value); }, Memory::LCDC, Memory::WX);
-	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { apu_->OnIoMemoryWritten(relative_address, value); }, Memory::NR10, Memory::NR52);
-	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { timer_->OnIoMemoryWritten(relative_address, value); }, Memory::DIV, Memory::TAC);
-	mmu_->MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { joypad_->OnIoMemoryWritten(relative_address, value); }, Memory::JOYP, Memory::JOYP);
-	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { cartridge_->OnRomBank0Written(relative_address, value); }, Memory::Region::ROM_Bank0);
-	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { cartridge_->OnRomBankNWritten(relative_address, value); }, Memory::Region::ROM_OtherBanks);
-	mmu_->MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { cartridge_->OnExternalRamWritten(relative_address, value); }, Memory::Region::ERAM);
+	mmu_->MapIoRegisterWrite([this](const Memory::Address &address, uint8_t value) { cpu_->OnIoMemoryWritten(address, value); }, Memory::IF, Memory::IF);
+	mmu_->MapIoRegisterWrite([this](const Memory::Address &address, uint8_t value) { ppu_->OnIoMemoryWritten(address, value); }, Memory::LCDC, Memory::WX);
+	mmu_->MapIoRegisterWrite([this](const Memory::Address &address, uint8_t value) { apu_->OnIoMemoryWritten(address, value); }, Memory::NR10, Memory::NR52);
+	mmu_->MapIoRegisterWrite([this](const Memory::Address &address, uint8_t value) { timer_->OnIoMemoryWritten(address, value); }, Memory::DIV, Memory::TAC);
+	mmu_->MapIoRegisterWrite([this](const Memory::Address &address, uint8_t value) { joypad_->OnIoMemoryWritten(address, value); }, Memory::JOYP, Memory::JOYP);
+	mmu_->MapMemoryWrite([this](const Memory::Address &address, uint8_t value) { cartridge_->OnRomBank0Written(address, value); }, Memory::Region::ROM_Bank0);
+	mmu_->MapMemoryWrite([this](const Memory::Address &address, uint8_t value) { cartridge_->OnRomBankNWritten(address, value); }, Memory::Region::ROM_OtherBanks);
+	mmu_->MapMemoryWrite([this](const Memory::Address &address, uint8_t value) { cartridge_->OnExternalRamWritten(address, value); }, Memory::Region::ERAM);
 
 	// PPU listeners
 	ppu_->AddListener(game_screen_component_);
@@ -249,7 +249,7 @@ void JucyBoy::mouseDown(const juce::MouseEvent &event)
 			try
 			{
 				LoadRom(rom_file.getFullPathName().toStdString());
-				StartEmulation();
+				if (!cpu_debug_component_.isVisible()) StartEmulation();
 			}
 			catch (std::exception &e)
 			{
@@ -261,7 +261,7 @@ void JucyBoy::mouseDown(const juce::MouseEvent &event)
 		try
 		{
 			LoadRom(loaded_rom_file_path_);
-			StartEmulation();
+			if (!cpu_debug_component_.isVisible()) StartEmulation();
 		}
 		catch (std::exception &e)
 		{

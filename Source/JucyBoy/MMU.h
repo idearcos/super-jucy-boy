@@ -14,19 +14,19 @@ public:
 	// Sets certain memory registers' initial state
 	void Reset();
 
-	uint8_t ReadByte(Memory::Address address) const;
-	void WriteByte(Memory::Address address, uint8_t value);
+	inline uint8_t ReadByte(const Memory::Address &address) const { return mapped_memory_reads_[static_cast<size_t>(address.GetRegion())](address); }
+	void WriteByte(const Memory::Address &address, uint8_t value) { mapped_memory_writes_[static_cast<size_t>(address.GetRegion())](address, value); }
 
-	inline void SetBit(Memory::Address address, int bit_num) { WriteByte(address, (1 << bit_num) | ReadByte(address)); }
-	inline void ClearBit(Memory::Address address, int bit_num) { WriteByte(address, ~(1 << bit_num) & ReadByte(address)); }
-	inline bool IsBitSet(Memory::Address address, int bit_num) { return (ReadByte(address) & (1 << bit_num)) != 0; }
+	inline void SetBit(const Memory::Address &address, int bit_num) { WriteByte(address, (1 << bit_num) | ReadByte(address)); }
+	inline void ClearBit(const Memory::Address &address, int bit_num) { WriteByte(address, ~(1 << bit_num) & ReadByte(address)); }
+	inline bool IsBitSet(const Memory::Address &address, int bit_num) { return (ReadByte(address) & (1 << bit_num)) != 0; }
 
-	using MemoryReadFunction = std::function<uint8_t(Memory::Address relative_address)>;
-	using MemoryWriteFunction = std::function<void(Memory::Address relative_address, uint8_t value)>;
+	using MemoryReadFunction = std::function<uint8_t(const Memory::Address &address)>;
+	using MemoryWriteFunction = std::function<void(const Memory::Address &address, uint8_t value)>;
 	void MapMemoryRead(MemoryReadFunction &&memory_read_function, Memory::Region region);
 	void MapMemoryWrite(MemoryWriteFunction &&memory_write_function, Memory::Region region);
-	void MapIoRegisterRead(MemoryReadFunction &&io_register_read_function, Memory::Address first_register, Memory::Address last_register);
-	void MapIoRegisterWrite(MemoryWriteFunction &&io_register_write_function, Memory::Address first_register, Memory::Address last_register);
+	void MapIoRegisterRead(MemoryReadFunction &&io_register_read_function, const Memory::Address &first_register, const Memory::Address &last_register);
+	void MapIoRegisterWrite(MemoryWriteFunction &&io_register_write_function, const Memory::Address &first_register, const Memory::Address &last_register);
 
 	// Debug / GUI interaction
 	Memory::Map GetMemoryMap() const;
@@ -35,20 +35,20 @@ public:
 	void serialize(Archive &archive);
 
 private:
-	uint8_t OnWramRead(Memory::Address relative_address) const { return wram_[relative_address]; }
-	void OnWramWritten(Memory::Address relative_address, uint8_t value) { wram_[relative_address] = value; }
+	uint8_t OnWramRead(const Memory::Address &address) const { return wram_[address.GetRelative()]; }
+	void OnWramWritten(const Memory::Address &address, uint8_t value) { wram_[address.GetRelative()] = value; }
 
-	uint8_t OnUnusedMemoryRead(Memory::Address) const { return 0xFF; }
-	void OnUnusedMemoryWritten(Memory::Address, uint8_t) { return; }
+	uint8_t OnUnusedMemoryRead(const Memory::Address&) const { return 0xFF; }
+	void OnUnusedMemoryWritten(const Memory::Address&, uint8_t) { return; }
 
-	uint8_t OnIoMemoryRead(Memory::Address relative_address) const { return mapped_io_register_reads_[relative_address](Memory::io_region_start_ + relative_address); }
-	void OnIoMemoryWritten(Memory::Address relative_address, uint8_t value) { mapped_io_register_writes_[relative_address](Memory::io_region_start_ + relative_address, value); }
+	uint8_t OnIoMemoryRead(const Memory::Address &address) const { return mapped_io_register_reads_[address.GetRelative()](address); }
+	void OnIoMemoryWritten(const Memory::Address &address, uint8_t value) { mapped_io_register_writes_[address.GetRelative()](address, value); }
 
-	uint8_t OnUnmappedIoRegisterRead(Memory::Address address) const { return unmapped_io_registers_[address & Memory::io_region_mask]; }
-	void OnUnmappedIoRegisterWritten(Memory::Address address, uint8_t value) { unmapped_io_registers_[address & Memory::io_region_mask] = value; }
+	uint8_t OnUnmappedIoRegisterRead(const Memory::Address &address) const { return unmapped_io_registers_[address.GetRelative()]; }
+	void OnUnmappedIoRegisterWritten(const Memory::Address &address, uint8_t value) { unmapped_io_registers_[address.GetRelative()] = value; }
 
-	uint8_t OnHramRead(Memory::Address relative_address) const { return hram_[relative_address]; }
-	void OnHramWritten(Memory::Address relative_address, uint8_t value) { hram_[relative_address] = value; }
+	uint8_t OnHramRead(const Memory::Address &address) const { return hram_[address.GetRelative()]; }
+	void OnHramWritten(const Memory::Address &address, uint8_t value) { hram_[address.GetRelative()] = value; }
 
 private:
 	std::array<MemoryReadFunction, static_cast<size_t>(Memory::Region::Count)> mapped_memory_reads_;

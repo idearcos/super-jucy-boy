@@ -169,7 +169,6 @@
     <ClCompile Include="..\..\Source\JucyBoy\CPU_Instructions.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\InstructionMnemonics.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\Joypad.cpp"/>
-    <ClCompile Include="..\..\Source\JucyBoy\Memory.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\MMU.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\PPU.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\SquareWaveChannel.cpp"/>

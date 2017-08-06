@@ -114,7 +114,7 @@ void WatchpointsComponent::paintListBoxItem(int rowNumber, juce::Graphics& g, in
 	std::advance(it, rowNumber);
 
 	std::stringstream row_text;
-	row_text << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << it->address << " | ";
+	row_text << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << it->address.GetAbsolute() << " | ";
 	switch (it->type)
 	{
 	case Memory::Watchpoint::Type::Read:
@@ -133,16 +133,16 @@ void WatchpointsComponent::paintListBoxItem(int rowNumber, juce::Graphics& g, in
 void WatchpointsComponent::textEditorReturnKeyPressed(juce::TextEditor &)
 {
 	const auto watchpoint_address = std::stoi(watchpoint_add_editor_.getText().toStdString(), 0, 16);
-	if (watchpoint_address < std::numeric_limits<Memory::Address>::min() || watchpoint_address > std::numeric_limits<Memory::Address>::max()) return;
+	if (watchpoint_address < std::numeric_limits<uint16_t>::min() || watchpoint_address > std::numeric_limits<uint16_t>::max()) return;
 
 	std::unique_ptr<Memory::Watchpoint> watchpoint;
 	if (watchpoint_type_read_.getToggleState())
 	{
-		watchpoint = std::make_unique<Memory::Watchpoint>(static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Read);
+		watchpoint = std::make_unique<Memory::Watchpoint>(watchpoint_address, Memory::Watchpoint::Type::Read);
 	}
 	else if (watchpoint_type_write_.getToggleState())
 	{
-		watchpoint = std::make_unique<Memory::Watchpoint>(static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Write);
+		watchpoint = std::make_unique<Memory::Watchpoint>(watchpoint_address, Memory::Watchpoint::Type::Write);
 	}
 	if (!watchpoint) return;
 

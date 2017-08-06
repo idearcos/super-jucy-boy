@@ -16,8 +16,8 @@ public:
 	void OnMachineCycleLapse() override;
 
 	// MMU mapped memory read/write functions
-	uint8_t OnIoMemoryRead(Memory::Address address) const;
-	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
+	uint8_t OnIoMemoryRead(const Memory::Address &address) const;
+	void OnIoMemoryWritten(const Memory::Address &address, uint8_t value);
 
 	template<class Archive>
 	void serialize(Archive &archive);

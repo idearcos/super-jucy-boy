@@ -49,7 +49,7 @@ void CpuBreakpointsComponent::OnEmulationPaused()
 	breakpoint_add_editor_.setMouseClickGrabsKeyboardFocus(true);
 }
 
-void CpuBreakpointsComponent::OnBreakpointHit(Memory::Address breakpoint)
+void CpuBreakpointsComponent::OnBreakpointHit(const Memory::Address &breakpoint)
 {
 	juce::MessageManager::callAsync([this, breakpoint]() {
 		const auto it = breakpoints_.find(breakpoint);
@@ -76,7 +76,7 @@ void CpuBreakpointsComponent::paintListBoxItem(int rowNumber, juce::Graphics& g,
 	std::advance(it, rowNumber);
 
 	std::stringstream breakpoint_string;
-	breakpoint_string << "PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << *it;
+	breakpoint_string << "PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << static_cast<uint16_t>(*it);
 
 	g.drawText(breakpoint_string.str(), 0, 0, width, height, juce::Justification::centred);
 }
@@ -99,10 +99,10 @@ void CpuBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 void CpuBreakpointsComponent::textEditorReturnKeyPressed(juce::TextEditor&)
 {
 	const auto breakpoint = std::stoi(breakpoint_add_editor_.getText().toStdString(), 0, 16);
-	if (breakpoint < std::numeric_limits<Memory::Address>::min() || breakpoint > std::numeric_limits<Memory::Address>::max()) return;
+	if (breakpoint < std::numeric_limits<uint16_t>::min() || breakpoint > std::numeric_limits<uint16_t>::max()) return;
 
-	const auto insert_result = breakpoints_.insert(static_cast<Memory::Address>(breakpoint));
-	if (insert_result.second && debug_cpu_) debug_cpu_->AddBreakpoint(static_cast<Memory::Address>(*insert_result.first));
+	const auto insert_result = breakpoints_.insert(static_cast<uint16_t>(breakpoint));
+	if (insert_result.second && debug_cpu_) debug_cpu_->AddBreakpoint(*insert_result.first);
 
 	breakpoint_add_editor_.clear();
 	breakpoint_list_box_.updateContent();
