@@ -94,50 +94,50 @@
             externalLibraries="glew32s.lib">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" libraryPath="../../glew-2.0.0/lib/Release/x64"
-                       headerPath="../../glew-2.0.0/include&#10;../../cereal-1.2.2/include"/>
+                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"
+                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" libraryPath="../../glew-2.0.0/lib/Release/x64"
-                       headerPath="../../glew-2.0.0/include&#10;../../cereal-1.2.2/include"/>
+                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"
+                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_events" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_opengl" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_basics" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="./JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="./Dependencies/JUCE/modules"/>
       </MODULEPATHS>
     </VS2015>
     <VS2017 targetFolder="Builds/VisualStudio2017" extraCompilerFlags="/bigobj"
             externalLibraries="glew32s.lib">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" headerPath="../../glew-2.0.0/include&#10;../../cereal-1.2.2/include"
-                       libraryPath="../../glew-2.0.0/lib/Release/x64"/>
+                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" headerPath="../../glew-2.0.0/include&#10;../../cereal-1.2.2/include"
-                       libraryPath="../../glew-2.0.0/lib/Release/x64"/>
+                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_opengl" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="./JUCE/modules"/>
-        <MODULEPATH id="juce_audio_basics" path="./JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="./Dependencies/JUCE/modules"/>
       </MODULEPATHS>
     </VS2017>
   </EXPORTFORMATS>
