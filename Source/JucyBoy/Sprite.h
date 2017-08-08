@@ -13,10 +13,10 @@ public:
 	void SetTileNumber(uint8_t tile_number) { tile_number_ = tile_number; }
 	void SetOptions(uint8_t options)
 	{
-		obj_palette_number_ = ((options & (1 << 4)) != 0) ? 1 : 0;
-		horizontal_flip_ = (options & (1 << 5)) != 0;
-		vertical_flip_ = (options & (1 << 6)) != 0;
-		render_above_background_ = (options & (1 << 7)) == 0;
+		obj_palette_number_ = ((options & 0x10) != 0) ? 1 : 0;
+		horizontal_flip_ = (options & 0x20) != 0;
+		vertical_flip_ = (options & 0x40) != 0;
+		render_above_background_ = (options & 0x80) == 0;
 	}
 
 	int GetY() const { return y_; }

@@ -210,50 +210,52 @@ void CPU::CheckInterrupts()
 #pragma endregion
 
 #pragma region Instruction helper functions
-void CPU::IncrementRegister(uint8_t &reg)
+uint8_t CPU::IncrementRegister(uint8_t value)
 {
 	ClearFlag(Flags::Z | Flags::H | Flags::N);
-	const auto result = ++reg;
-	if ((result & 0x0F) == 0x00) { SetFlag(Flags::H); }
-	if (result == 0) { SetFlag(Flags::Z); }
+	++value;
+	if ((value & 0x0F) == 0x00) { SetFlag(Flags::H); }
+	if (value == 0) { SetFlag(Flags::Z); }
+	return value;
 }
 
-void CPU::DecrementRegister(uint8_t &reg)
+uint8_t CPU::DecrementRegister(uint8_t value)
 {
 	ClearFlag(Flags::Z | Flags::H);
 	SetFlag(Flags::N);
-	const auto result = --reg;
-	if ((result & 0x0F) == 0x0F) { SetFlag(Flags::H); }
-	if (result == 0) { SetFlag(Flags::Z); }
+	--value;
+	if ((value & 0x0F) == 0x0F) { SetFlag(Flags::H); }
+	if (value == 0) { SetFlag(Flags::Z); }
+	return value;
 }
 
 void CPU::Add(uint8_t value)
 {
 	ClearFlag(Flags::All);
-	if ((registers_.af.GetHigh() + value) > 0xFF) SetFlag(Flags::C);
-	if (((registers_.af.GetHigh() & 0x0F) + (value & 0x0F)) > 0x0F) SetFlag(Flags::H);
-	registers_.af.GetHigh() += value;
-	if (registers_.af.GetHigh() == 0) SetFlag(Flags::Z);
+	if ((registers_.af.High() + value) > 0xFF) SetFlag(Flags::C);
+	if (((registers_.af.High() & 0x0F) + (value & 0x0F)) > 0x0F) SetFlag(Flags::H);
+	registers_.af.High() += value;
+	if (registers_.af.High() == 0) SetFlag(Flags::Z);
 }
 
 void CPU::Adc(uint8_t value)
 {
 	const auto carry_value = IsFlagSet(Flags::C) ? 1 : 0;
 	ClearFlag(Flags::All);
-	if ((registers_.af.GetHigh() + value + carry_value) > 0xFF) SetFlag(Flags::C);
-	if (((registers_.af.GetHigh() & 0x0F) + (value & 0x0F) + carry_value) > 0x0F) SetFlag(Flags::H);
-	registers_.af.GetHigh() += static_cast<uint8_t>(value + carry_value);
-	if (registers_.af.GetHigh() == 0) SetFlag(Flags::Z);
+	if ((registers_.af.High() + value + carry_value) > 0xFF) SetFlag(Flags::C);
+	if (((registers_.af.High() & 0x0F) + (value & 0x0F) + carry_value) > 0x0F) SetFlag(Flags::H);
+	registers_.af.High() += static_cast<uint8_t>(value + carry_value);
+	if (registers_.af.High() == 0) SetFlag(Flags::Z);
 }
 
 void CPU::Sub(uint8_t value)
 {
 	ClearFlag(Flags::All);
 	SetFlag(Flags::N);
-	if ((registers_.af.GetHigh() - value) < 0) SetFlag(Flags::C);
-	if (((registers_.af.GetHigh() & 0x0F) - (value & 0x0F)) < 0) SetFlag(Flags::H);
-	registers_.af.GetHigh() -= value;
-	if (registers_.af.GetHigh() == 0) SetFlag(Flags::Z);
+	if ((registers_.af.High() - value) < 0) SetFlag(Flags::C);
+	if (((registers_.af.High() & 0x0F) - (value & 0x0F)) < 0) SetFlag(Flags::H);
+	registers_.af.High() -= value;
+	if (registers_.af.High() == 0) SetFlag(Flags::Z);
 }
 
 void CPU::Sbc(uint8_t value)
@@ -261,44 +263,44 @@ void CPU::Sbc(uint8_t value)
 	const auto carry_value = IsFlagSet(Flags::C) ? 1 : 0;
 	ClearFlag(Flags::All);
 	SetFlag(Flags::N);
-	if ((registers_.af.GetHigh() - value - carry_value) < 0) SetFlag(Flags::C);
-	if (((registers_.af.GetHigh() & 0x0F) - (value & 0x0F) - carry_value) < 0) SetFlag(Flags::H);
-	registers_.af.GetHigh() -= static_cast<uint8_t>(value + carry_value);
-	if (registers_.af.GetHigh() == 0) SetFlag(Flags::Z);
+	if ((registers_.af.High() - value - carry_value) < 0) SetFlag(Flags::C);
+	if (((registers_.af.High() & 0x0F) - (value & 0x0F) - carry_value) < 0) SetFlag(Flags::H);
+	registers_.af.High() -= static_cast<uint8_t>(value + carry_value);
+	if (registers_.af.High() == 0) SetFlag(Flags::Z);
 }
 
 void CPU::And(uint8_t value)
 {
-	const uint8_t result = registers_.af.GetHigh() & value;
+	const uint8_t result = registers_.af.High() & value;
 	ClearFlag(Flags::All);
 	SetFlag(Flags::H);
 	if (result == 0) SetFlag(Flags::Z);
-	registers_.af.GetHigh() = result;
+	registers_.af.High() = result;
 }
 
 void CPU::Xor(uint8_t value)
 {
-	const uint8_t result = registers_.af.GetHigh() ^ value;
+	const uint8_t result = registers_.af.High() ^ value;
 	ClearFlag(Flags::All);
 	if (result == 0) SetFlag(Flags::Z);
-	registers_.af.GetHigh() = result;
+	registers_.af.High() = result;
 }
 
 void CPU::Or(uint8_t value)
 {
-	const uint8_t result = registers_.af.GetHigh() | value;
+	const uint8_t result = registers_.af.High() | value;
 	ClearFlag(Flags::All);
 	if (result == 0) SetFlag(Flags::Z);
-	registers_.af.GetHigh() = result;
+	registers_.af.High() = result;
 }
 
 void CPU::Compare(uint8_t value)
 {
 	ClearFlag(Flags::All);
 	SetFlag(Flags::N);
-	if ((registers_.af.GetHigh() - value) < 0) SetFlag(Flags::C);
-	if (((registers_.af.GetHigh() & 0x0F) - (value & 0x0F)) < 0) SetFlag(Flags::H);
-	if (registers_.af.GetHigh() == value) SetFlag(Flags::Z);
+	if ((registers_.af.High() - value) < 0) SetFlag(Flags::C);
+	if (((registers_.af.High() & 0x0F) - (value & 0x0F)) < 0) SetFlag(Flags::H);
+	if (registers_.af.High() == value) SetFlag(Flags::Z);
 }
 
 void CPU::AddToHl(uint16_t value)
@@ -323,77 +325,85 @@ void CPU::Return()
 #pragma endregion
 
 #pragma region CB instruction helper functions
-void CPU::Rlc(uint8_t &reg)
+uint8_t CPU::Rlc(uint8_t value)
 {
 	ClearFlag(Flags::All);
-	if ((reg & 0x80) != 0) SetFlag(Flags::C);
-	reg = (reg << 1) | ((reg & 0x80) >> 7);
-	if (reg == 0) SetFlag(Flags::Z);
+	if ((value & 0x80) != 0) SetFlag(Flags::C);
+	value = (value << 1) | ((value & 0x80) >> 7);
+	if (value == 0) SetFlag(Flags::Z);
+	return value;
 }
 
-void CPU::Rrc(uint8_t &reg)
+uint8_t CPU::Rrc(uint8_t value)
 {
 	ClearFlag(Flags::All);
-	if ((reg & 0x01) != 0) SetFlag(Flags::C);
-	reg = (reg >> 1) | ((reg & 0x01) << 7);
-	if (reg == 0) SetFlag(Flags::Z);
+	if ((value & 0x01) != 0) SetFlag(Flags::C);
+	value = (value >> 1) | ((value & 0x01) << 7);
+	if (value == 0) SetFlag(Flags::Z);
+	return value;
 }
 
-void CPU::Rl(uint8_t &reg)
-{
-	const auto carry_value = static_cast<uint8_t>(IsFlagSet(Flags::C) ? 1 : 0);
-	ClearFlag(Flags::All);
-	if ((reg & 0x80) != 0) SetFlag(Flags::C);
-	reg = (reg << 1) | carry_value;
-	if (reg == 0) SetFlag(Flags::Z);
-}
-
-void CPU::Rr(uint8_t &reg)
+uint8_t CPU::Rl(uint8_t value)
 {
 	const auto carry_value = static_cast<uint8_t>(IsFlagSet(Flags::C) ? 1 : 0);
 	ClearFlag(Flags::All);
-	if ((reg & 0x01) != 0) SetFlag(Flags::C);
-	reg = (reg >> 1) | (carry_value << 7);
-	if (reg == 0) SetFlag(Flags::Z);
+	if ((value & 0x80) != 0) SetFlag(Flags::C);
+	value = (value << 1) | carry_value;
+	if (value == 0) SetFlag(Flags::Z);
+	return value;
 }
 
-void CPU::Sla(uint8_t &reg)
+uint8_t CPU::Rr(uint8_t value)
+{
+	const auto carry_value = static_cast<uint8_t>(IsFlagSet(Flags::C) ? 0x80 : 0);
+	ClearFlag(Flags::All);
+	if ((value & 0x01) != 0) SetFlag(Flags::C);
+	value = (value >> 1) | carry_value;
+	if (value == 0) SetFlag(Flags::Z);
+	return value;
+}
+
+uint8_t CPU::Sla(uint8_t value)
 {
 	ClearFlag(Flags::All);
-	if ((reg & 0x80) != 0) SetFlag(Flags::C);
-	reg <<= 1;
-	if (reg == 0) SetFlag(Flags::Z);
+	if ((value & 0x80) != 0) SetFlag(Flags::C);
+	value <<= 1;
+	if (value == 0) SetFlag(Flags::Z);
+	return value;
 }
 
-void CPU::Sra(uint8_t &reg)
+uint8_t CPU::Sra(uint8_t value)
 {
 	ClearFlag(Flags::All);
-	const auto current_bit7 = static_cast<uint8_t>(reg & 0x80);
-	if ((reg & 0x01) != 0) SetFlag(Flags::C);
-	reg = (reg >> 1) | current_bit7;
-	if (reg == 0) SetFlag(Flags::Z);
+	const auto current_bit7 = static_cast<uint8_t>(value & 0x80);
+	if ((value & 0x01) != 0) SetFlag(Flags::C);
+	value = (value >> 1) | current_bit7;
+	if (value == 0) SetFlag(Flags::Z);
+	return value;
 }
 
-void CPU::Swap(uint8_t &reg)
+uint8_t CPU::Swap(uint8_t value)
 {
 	ClearFlag(Flags::All);
-	if (reg == 0) SetFlag(Flags::Z);
-	reg = ((reg & 0xF0) >> 4) | ((reg & 0x0F) << 4);
+	if (value == 0) SetFlag(Flags::Z);
+	value = ((value & 0xF0) >> 4) | ((value & 0x0F) << 4);
+	return value;
 }
 
-void CPU::Srl(uint8_t &reg)
+uint8_t CPU::Srl(uint8_t value)
 {
 	ClearFlag(Flags::All);
-	if ((reg & 0x01) != 0) SetFlag(Flags::C);
-	reg >>= 1;
-	if (reg == 0) SetFlag(Flags::Z);
+	if ((value & 0x01) != 0) SetFlag(Flags::C);
+	value >>= 1;
+	if (value == 0) SetFlag(Flags::Z);
+	return value;
 }
 
-void CPU::TestBit(uint8_t reg, int bit_num)
+void CPU::Test(uint8_t reg, int bit_mask)
 {
 	ClearFlag(Flags::N | Flags::Z);
 	SetFlag(Flags::H);
-	if ((reg & (1 << bit_num)) == 0) SetFlag(Flags::Z);
+	if ((reg & bit_mask) == 0) SetFlag(Flags::Z);
 }
 #pragma endregion
 
@@ -440,17 +450,17 @@ void CPU::NotifyMachineCycleLapse() const
 #pragma region Flag operations
 void CPU::SetFlag(Flags flag)
 {
-	registers_.af.GetLow() = static_cast<uint8_t>(ReadFlags() | flag);
+	registers_.af.Low() = static_cast<uint8_t>(ReadFlags() | flag);
 }
 
 void CPU::ClearFlag(Flags flag)
 {
-	registers_.af.GetLow() = static_cast<uint8_t>(ReadFlags() & ~flag);
+	registers_.af.Low() = static_cast<uint8_t>(ReadFlags() & ~flag);
 }
 
 void CPU::ToggleFlag(Flags flag)
 {
-	registers_.af.GetLow() = static_cast<uint8_t>(ReadFlags() ^ flag);
+	registers_.af.Low() = static_cast<uint8_t>(ReadFlags() ^ flag);
 }
 
 bool CPU::IsFlagSet(Flags flag) const
@@ -460,6 +470,6 @@ bool CPU::IsFlagSet(Flags flag) const
 
 CPU::Flags CPU::ReadFlags() const
 {
-	return static_cast<Flags>(registers_.af.GetLow());
+	return static_cast<Flags>(registers_.af.Low());
 }
 #pragma endregion

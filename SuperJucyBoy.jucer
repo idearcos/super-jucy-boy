@@ -90,7 +90,7 @@
     <FILE id="IxbJmR" name="README.md" compile="0" resource="1" file="README.md"/>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <VS2015 targetFolder="Builds/VisualStudio2015" extraCompilerFlags="/bigobj"
+    <VS2015 targetFolder="Builds/VisualStudio2015" extraCompilerFlags=""
             externalLibraries="glew32s.lib">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
@@ -98,7 +98,8 @@
                        headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
                        isDebug="0" optimisation="3" targetName="SuperJucyBoy" libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"
-                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"/>
+                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       alwaysGenerateDebugSymbols="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_events" path="./Dependencies/JUCE/modules"/>
@@ -115,7 +116,7 @@
         <MODULEPATH id="juce_audio_devices" path="./Dependencies/JUCE/modules"/>
       </MODULEPATHS>
     </VS2015>
-    <VS2017 targetFolder="Builds/VisualStudio2017" extraCompilerFlags="/bigobj"
+    <VS2017 targetFolder="Builds/VisualStudio2017" extraCompilerFlags=""
             externalLibraries="glew32s.lib">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
@@ -123,7 +124,7 @@
                        libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
                        isDebug="0" optimisation="3" targetName="SuperJucyBoy" headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
-                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"/>
+                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64" alwaysGenerateDebugSymbols="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_opengl" path="./Dependencies/JUCE/modules"/>

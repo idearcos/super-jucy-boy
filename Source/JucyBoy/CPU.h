@@ -99,8 +99,8 @@ private:
 	void WriteByte(const Memory::Address &address, uint8_t value) const;
 
 	// Instruction helper functions
-	void IncrementRegister(uint8_t &reg);
-	void DecrementRegister(uint8_t &reg);
+	uint8_t IncrementRegister(uint8_t value);
+	uint8_t DecrementRegister(uint8_t value);
 	void Add(uint8_t value);
 	void Adc(uint8_t value);
 	void Sub(uint8_t value);
@@ -114,15 +114,15 @@ private:
 	void Return();
 
 	// CB instruction helper functions
-	void Rlc(uint8_t &reg); // Rotate left
-	void Rrc(uint8_t &reg); // Rotate right
-	void Rl(uint8_t &reg); // Rotate left through carry
-	void Rr(uint8_t &reg); // Rotate right through carry
-	void Sla(uint8_t &reg); // Shift left arithmetic
-	void Sra(uint8_t &reg); // Shift right arithmetic
-	void Swap(uint8_t &reg); // Exchange low and high nibbles
-	void Srl(uint8_t &reg); // Shift right logical
-	void TestBit(uint8_t reg, int bit_num);
+	uint8_t Rlc(uint8_t value); // Rotate left
+	uint8_t Rrc(uint8_t value); // Rotate right
+	uint8_t Rl(uint8_t value); // Rotate left through carry
+	uint8_t Rr(uint8_t value); // Rotate right through carry
+	uint8_t Sla(uint8_t value); // Shift left arithmetic
+	uint8_t Sra(uint8_t value); // Shift right arithmetic
+	uint8_t Swap(uint8_t value); // Exchange low and high nibbles
+	uint8_t Srl(uint8_t value); // Shift right logical
+	void Test(uint8_t reg, int bit_mask);
 
 	// Flag operations
 	void SetFlag(Flags flag);

@@ -61,16 +61,16 @@ juce::AttributedString CpuRegistersComponent::FormatRegisterPairString(std::stri
 	formatted_string.append(": ");
 
 	{std::stringstream high;
-	high << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(register_pair_value.GetHigh());
+	high << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(register_pair_value.High());
 	const auto color = is_emulation_running ? juce::Colours::grey
-		: ((compute_diff && (register_pair_value.GetHigh() != register_pair_previous_value.GetHigh())) ? juce::Colours::red
+		: ((compute_diff && (register_pair_value.High() != register_pair_previous_value.High())) ? juce::Colours::red
 			: juce::Colours::black);
 	formatted_string.append(high.str(), color); }
 
 	{std::stringstream low;
-	low << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(register_pair_value.GetLow());
+	low << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(register_pair_value.Low());
 	const auto color = is_emulation_running ? juce::Colours::grey
-		: ((compute_diff && (register_pair_value.GetLow() != register_pair_previous_value.GetLow())) ? juce::Colours::red
+		: ((compute_diff && (register_pair_value.Low() != register_pair_previous_value.Low())) ? juce::Colours::red
 			: juce::Colours::black);
 	formatted_string.append(low.str(), color); }
 
