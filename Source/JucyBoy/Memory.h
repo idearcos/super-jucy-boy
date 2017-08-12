@@ -81,6 +81,8 @@ namespace Memory
 		friend bool operator<=(const Address& lhs, const Address& rhs) { return !(lhs > rhs); }
 		friend bool operator>=(const Address& lhs, const Address& rhs) { return !(lhs < rhs); }
 
+		friend uint16_t operator-(const Address &lhs, const Address &rhs) { return lhs.GetAbsolute() - rhs.GetAbsolute(); }
+
 		template<class Archive>
 		void serialize(Archive &archive)
 		{
@@ -150,8 +152,8 @@ namespace Memory
 	static constexpr size_t hram_size_				{ 0x007F };
 	static constexpr size_t interrupts_region_size_	{ 0x0001 };
 
-	static constexpr Address isr_start_			{ 0x0040 };
-	static constexpr Address io_region_start_	{ 0xFF00 };
+	static constexpr Address ISR	{ 0x0040 };
+	static constexpr Address IO		{ 0xFF00 };
 
 	// Joypad
 	static constexpr Address JOYP	{ 0xFF00 };
@@ -187,6 +189,8 @@ namespace Memory
 	static constexpr Address NR50	{ 0xFF24 };
 	static constexpr Address NR51	{ 0xFF25 };
 	static constexpr Address NR52	{ 0xFF26 };
+	static constexpr Address WaveStart	{ 0xFF30 };
+	static constexpr Address WaveEnd	{ 0xFF3F };
 
 	// PPU
 	static constexpr Address LCDC	{ 0xFF40 };

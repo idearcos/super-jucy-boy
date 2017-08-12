@@ -28,46 +28,6 @@ MMU::MMU()
 	unmapped_io_registers_.fill(0xFF);
 }
 
-void MMU::Reset()
-{
-	wram_.fill(0);
-	hram_.fill(0);
-	unmapped_io_registers_.fill(0xFF);
-
-	WriteByte(Memory::JOYP, 0xCF);
-	WriteByte(Memory::TIMA, 0x00);
-	WriteByte(Memory::TMA, 0x00);
-	WriteByte(Memory::TAC, 0x00);
-	WriteByte(Memory::NR10, 0x80);
-	WriteByte(Memory::NR11, 0xBF);
-	WriteByte(Memory::NR12, 0xF3);
-	WriteByte(Memory::NR14, 0xBF);
-	WriteByte(Memory::NR21, 0x3F);
-	WriteByte(Memory::NR22, 0x00);
-	WriteByte(Memory::NR24, 0xBF);
-	WriteByte(Memory::NR30, 0x7F);
-	WriteByte(Memory::NR31, 0xFF);
-	WriteByte(Memory::NR32, 0x9F);
-	WriteByte(Memory::NR33, 0xBF);
-	WriteByte(Memory::NR41, 0xFF);
-	WriteByte(Memory::NR42, 0x00);
-	WriteByte(Memory::NR43, 0x00);
-	WriteByte(Memory::NR44, 0xBF);
-	WriteByte(Memory::NR50, 0x77);
-	WriteByte(Memory::NR51, 0xF3);
-	WriteByte(Memory::NR52, 0xF1);
-	WriteByte(Memory::LCDC, 0x91);
-	WriteByte(Memory::SCY, 0x00);
-	WriteByte(Memory::SCX, 0x00);
-	WriteByte(Memory::LYC, 0x00);
-	WriteByte(Memory::BGP, 0xFC);
-	WriteByte(Memory::OBP0, 0xFF);
-	WriteByte(Memory::OBP1, 0xFF);
-	WriteByte(Memory::WY, 0x00);
-	WriteByte(Memory::WX, 0x00);
-	WriteByte(Memory::IE, 0x00);
-}
-
 #pragma region Memory read/write function mapping
 void MMU::MapMemoryRead(MemoryReadFunction &&memory_read_function, Memory::Region region)
 {

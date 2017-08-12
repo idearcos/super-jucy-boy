@@ -11,9 +11,6 @@ public:
 	MMU();
 	virtual ~MMU() = default;
 
-	// Sets certain memory registers' initial state
-	void Reset();
-
 	inline uint8_t ReadByte(const Memory::Address &address) const { return mapped_memory_reads_[static_cast<size_t>(address.GetRegion())](address); }
 	void WriteByte(const Memory::Address &address, uint8_t value) { mapped_memory_writes_[static_cast<size_t>(address.GetRegion())](address, value); }
 

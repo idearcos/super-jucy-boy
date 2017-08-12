@@ -179,7 +179,7 @@ void CPU::CheckInterrupts()
 				NotifyMachineCycleLapse();
 
 				// Call appropriate Interrupt Service Routine
-				Call(Memory::isr_start_ + (interrupt * 0x08));
+				Call(Memory::ISR + (interrupt * 0x08));
 
 				// Interrupt Master Enable and the corresponding bit in the IF register become cleared
 				interrupt_master_enable_ = false;

@@ -645,11 +645,11 @@ void CPU::PopulateInstructions()
 
 #pragma region Instructions 0xE0 - 0xEF
 	// LDH (a8), A
-	instructions_[0xE0] = [this]() { WriteByte(Memory::io_region_start_ + FetchByte(), registers_.af.High()); };
+	instructions_[0xE0] = [this]() { WriteByte(Memory::IO + FetchByte(), registers_.af.High()); };
 	// POP HL
 	instructions_[0xE1] = [this]() { registers_.hl = PopWordFromStack(); };
 	// LD (C), A
-	instructions_[0xE2] = [this]() { WriteByte(Memory::io_region_start_ + registers_.bc.Low(), registers_.af.High()); };
+	instructions_[0xE2] = [this]() { WriteByte(Memory::IO + registers_.bc.Low(), registers_.af.High()); };
 	// PUSH HL
 	instructions_[0xE5] = [this]() { PushWordToStack(registers_.hl); };
 	// AND d8
@@ -680,11 +680,11 @@ void CPU::PopulateInstructions()
 
 #pragma region Instructions 0xF0 - 0xFF
 	// LDH A, (a8)
-	instructions_[0xF0] = [this]() { registers_.af.High() = ReadByte(Memory::io_region_start_ + FetchByte()); };
+	instructions_[0xF0] = [this]() { registers_.af.High() = ReadByte(Memory::IO + FetchByte()); };
 	// POP AF
 	instructions_[0xF1] = [this]() { registers_.af = PopWordFromStack() & 0xFFF0; };
 	// LD A, (C)
-	instructions_[0xF2] = [this]() { registers_.af.High() = ReadByte(Memory::io_region_start_ + registers_.bc.Low()); };
+	instructions_[0xF2] = [this]() { registers_.af.High() = ReadByte(Memory::IO + registers_.bc.Low()); };
 	// DI
 	instructions_[0xF3] = [this]() { interrupt_master_enable_ = false; };
 	// PUSH AF

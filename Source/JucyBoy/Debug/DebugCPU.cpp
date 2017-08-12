@@ -144,17 +144,17 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0xDC:
 		return IsWriteWatchpointHit(registers_.sp - 1) || IsWriteWatchpointHit(registers_.sp - 2);
 	case 0xE0:
-		return IsWriteWatchpointHit(Memory::io_region_start_ + mmu_->ReadByte(registers_.pc + 1));
+		return IsWriteWatchpointHit(Memory::IO + mmu_->ReadByte(registers_.pc + 1));
 	case 0xE2:
-		return IsWriteWatchpointHit(Memory::io_region_start_ + registers_.bc.Low());
+		return IsWriteWatchpointHit(Memory::IO + registers_.bc.Low());
 	case 0xEA:
 		address = mmu_->ReadByte(registers_.pc + 1);
 		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
 		return IsWriteWatchpointHit(address);
 	case 0xF0:
-		return IsReadWatchpointHit(Memory::io_region_start_ + mmu_->ReadByte(registers_.pc + 1));
+		return IsReadWatchpointHit(Memory::IO + mmu_->ReadByte(registers_.pc + 1));
 	case 0xF2:
-		return IsReadWatchpointHit(Memory::io_region_start_ + registers_.bc.Low());
+		return IsReadWatchpointHit(Memory::IO + registers_.bc.Low());
 	case 0xFA:
 		address = mmu_->ReadByte(registers_.pc + 1);
 		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
