@@ -8,6 +8,8 @@
 
 JucyBoy::JucyBoy()
 {
+	setLookAndFeel(&look_and_feel_);
+
 	setSize(ComputeWindowWidth(), 144 * 4);
 	setWantsKeyboardFocus(true);
 
@@ -224,18 +226,19 @@ void JucyBoy::mouseDown(const juce::MouseEvent &event)
 		UpdateDebugComponents(false);
 	}
 
-	juce::PopupMenu m;
+	juce::PopupMenu menu;
+	menu.setLookAndFeel(&look_and_feel_);
 	int item_index{ 0 };
-	m.addItem(++item_index, "Load ROM");
-	m.addItem(++item_index, "Reset", cpu_ != nullptr);
-	m.addSeparator();
-	m.addItem(++item_index, "Save state", cpu_ != nullptr);
-	m.addItem(++item_index, "Load state", cpu_ != nullptr);
-	m.addSeparator();
-	m.addItem(++item_index, "Enable CPU debugging", true, cpu_debug_component_.isVisible());
-	m.addItem(++item_index, "Enable memory map", true, memory_map_component_.isVisible());
-	m.addItem(++item_index, "Enable graphics debugging", true, ppu_debug_component_.isVisible());
-	const int result = m.show();
+	menu.addItem(++item_index, "Load ROM");
+	menu.addItem(++item_index, "Reset", cpu_ != nullptr);
+	menu.addSeparator();
+	menu.addItem(++item_index, "Save state", cpu_ != nullptr);
+	menu.addItem(++item_index, "Load state", cpu_ != nullptr);
+	menu.addSeparator();
+	menu.addItem(++item_index, "Enable CPU debugging", true, cpu_debug_component_.isVisible());
+	menu.addItem(++item_index, "Enable memory map", true, memory_map_component_.isVisible());
+	menu.addItem(++item_index, "Enable graphics debugging", true, ppu_debug_component_.isVisible());
+	const int result = menu.show();
 
 	switch (result)
 	{

@@ -72,5 +72,7 @@ private:
 	MemoryMapComponent memory_map_component_;
 	PpuDebugComponent ppu_debug_component_;
 
+	juce::LookAndFeel_V4 look_and_feel_{ juce::LookAndFeel_V4::getLightColourScheme() };
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
 };
