@@ -85,6 +85,7 @@
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -127,6 +128,7 @@
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -158,6 +160,9 @@
     <ClCompile Include="..\..\Source\DebugComponents\MemoryMapComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\PpuDebugComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\WatchpointsComponent.cpp"/>
+    <ClCompile Include="..\..\Source\JucyBoy\APU\NoiseChannel.cpp"/>
+    <ClCompile Include="..\..\Source\JucyBoy\APU\SquareChannel.cpp"/>
+    <ClCompile Include="..\..\Source\JucyBoy\APU\WaveChannel.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\Debug\DebugCPU.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\Debug\DebugPPU.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\APU.cpp"/>
@@ -169,7 +174,6 @@
     <ClCompile Include="..\..\Source\JucyBoy\Joypad.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\MMU.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\PPU.cpp"/>
-    <ClCompile Include="..\..\Source\JucyBoy\SquareWaveChannel.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\Timer.cpp"/>
     <ClCompile Include="..\..\Source\AudioPlayerComponent.cpp"/>
     <ClCompile Include="..\..\Source\GameScreenComponent.cpp"/>
@@ -1754,6 +1758,10 @@
     <ClInclude Include="..\..\Source\DebugComponents\MemoryMapComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\PpuDebugComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\WatchpointsComponent.h"/>
+    <ClInclude Include="..\..\Source\JucyBoy\APU\ClockDivider.h"/>
+    <ClInclude Include="..\..\Source\JucyBoy\APU\NoiseChannel.h"/>
+    <ClInclude Include="..\..\Source\JucyBoy\APU\SquareChannel.h"/>
+    <ClInclude Include="..\..\Source\JucyBoy\APU\WaveChannel.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\Debug\DebugCPU.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\Debug\DebugPPU.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\APU.h"/>
@@ -1767,7 +1775,6 @@
     <ClInclude Include="..\..\Source\JucyBoy\PPU.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\Registers.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\Sprite.h"/>
-    <ClInclude Include="..\..\Source\JucyBoy\SquareWaveChannel.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\Timer.h"/>
     <ClInclude Include="..\..\Source\AudioPlayerComponent.h"/>
     <ClInclude Include="..\..\Source\GameScreenComponent.h"/>

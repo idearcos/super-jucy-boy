@@ -5,6 +5,9 @@
     <Filter Include="SuperJucyBoy\Source\DebugComponents">
       <UniqueIdentifier>{7C7CC8A2-B990-C50F-C0D3-544DF403EA7A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SuperJucyBoy\Source\JucyBoy\APU">
+      <UniqueIdentifier>{BC802E21-6A9F-D039-2DA6-30B9861CD218}</UniqueIdentifier>
+    </Filter>
     <Filter Include="SuperJucyBoy\Source\JucyBoy\Debug">
       <UniqueIdentifier>{A747F363-1F50-9D99-79EA-D5EDEC5DB89E}</UniqueIdentifier>
     </Filter>
@@ -382,6 +385,15 @@
     <ClCompile Include="..\..\Source\DebugComponents\WatchpointsComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\JucyBoy\APU\NoiseChannel.cpp">
+      <Filter>SuperJucyBoy\Source\JucyBoy\APU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\JucyBoy\APU\SquareChannel.cpp">
+      <Filter>SuperJucyBoy\Source\JucyBoy\APU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\JucyBoy\APU\WaveChannel.cpp">
+      <Filter>SuperJucyBoy\Source\JucyBoy\APU</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\JucyBoy\Debug\DebugCPU.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy\Debug</Filter>
     </ClCompile>
@@ -413,9 +425,6 @@
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\JucyBoy\PPU.cpp">
-      <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\JucyBoy\SquareWaveChannel.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\JucyBoy\Timer.cpp">
@@ -2163,6 +2172,18 @@
     <ClInclude Include="..\..\Source\DebugComponents\WatchpointsComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\JucyBoy\APU\ClockDivider.h">
+      <Filter>SuperJucyBoy\Source\JucyBoy\APU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\JucyBoy\APU\NoiseChannel.h">
+      <Filter>SuperJucyBoy\Source\JucyBoy\APU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\JucyBoy\APU\SquareChannel.h">
+      <Filter>SuperJucyBoy\Source\JucyBoy\APU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\JucyBoy\APU\WaveChannel.h">
+      <Filter>SuperJucyBoy\Source\JucyBoy\APU</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\Debug\DebugCPU.h">
       <Filter>SuperJucyBoy\Source\JucyBoy\Debug</Filter>
     </ClInclude>
@@ -2200,9 +2221,6 @@
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\Sprite.h">
-      <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\JucyBoy\SquareWaveChannel.h">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\Timer.h">

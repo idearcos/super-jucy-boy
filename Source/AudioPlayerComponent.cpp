@@ -1,7 +1,6 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioPlayerComponent.h"
-#include "JucyBoy/APU.h"
-
+#include <numeric>
 
 AudioPlayerComponent::AudioPlayerComponent()
 {
@@ -15,19 +14,20 @@ AudioPlayerComponent::~AudioPlayerComponent()
 
 void AudioPlayerComponent::ClearBuffer()
 {
-	for (auto &output_buffer : output_buffers_)
-	{
-		output_buffer.abstract_fifo.reset();
-	}
+	abstract_fifo_.reset();
 }
 
 void AudioPlayerComponent::prepareToPlay(int /*samplesPerBlockExpected*/, double sampleRate)
 {
+	juce::AudioDeviceManager::AudioDeviceSetup audio_device_setup;
+	deviceManager.getAudioDeviceSetup(audio_device_setup);
+	audio_device_setup.bufferSize = 240;
+	deviceManager.setAudioDeviceSetup(audio_device_setup, false);
+	deviceManager.getAudioDeviceSetup(audio_device_setup);
+
 	output_sample_rate_ = static_cast<size_t>(sampleRate);
 	downsampling_ratio_integer_part_ = APU::sample_rate_ / output_sample_rate_;
 	downsampling_ratio_remainder_ = APU::sample_rate_ % output_sample_rate_;
-
-	num_apu_samples_in_next_output_sample_ = downsampling_ratio_integer_part_;
 }
 
 void AudioPlayerComponent::releaseResources()
@@ -37,73 +37,98 @@ void AudioPlayerComponent::releaseResources()
 
 void AudioPlayerComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill)
 {
-	if (output_buffers_[0].abstract_fifo.getNumReady() < bufferToFill.numSamples || output_buffers_[1].abstract_fifo.getNumReady()  < bufferToFill.numSamples)
+	bufferToFill.clearActiveBufferRegion();
+
+	if (abstract_fifo_.getNumReady() < bufferToFill.numSamples)
 	{
-		bufferToFill.clearActiveBufferRegion();
 		return;
 	}
 
+	int startIndexes[2]{ 0, 0 }, blockSizes[2]{ 0, 0 };
+	abstract_fifo_.prepareToRead(bufferToFill.numSamples, startIndexes[0], blockSizes[0], startIndexes[1], blockSizes[1]);
+	int writeOffsets[2]{ 0, blockSizes[0] };
+
 	// Convert APU amplitude from [0, APU::max_amplitude_] to [0, +0.50], then to [-0.25, +0.25]
-	const auto amplitude_divisor = APU::max_amplitude_ * 2.0f;
+	constexpr auto max_amplitude{ 0.50f };
+	constexpr auto half_max_amplitude{ max_amplitude / 2.0f };
+	constexpr auto amplitude_divisor = APU::max_amplitude_ / max_amplitude;
 
-	for (int channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
+	//TODO: handle case of mono by mixing both outputs
+
+	for (int output_channel = 0; output_channel < bufferToFill.buffer->getNumChannels(); ++output_channel)
 	{
-		const auto output_index = channel % output_buffers_.size();
-		int startIndex1{ 0 }, blockSize1{ 0 }, startIndex2{ 0 }, blockSize2{ 0 };
-		output_buffers_[output_index].abstract_fifo.prepareToRead(bufferToFill.numSamples, startIndex1, blockSize1, startIndex2, blockSize2);
+		const auto output_index = output_channel % APU::num_outputs_;
 
-		float* const buffer = bufferToFill.buffer->getWritePointer(channel, bufferToFill.startSample);
+		float* const buffer = bufferToFill.buffer->getWritePointer(output_channel, bufferToFill.startSample);
 
-		for (int sample = 0; sample < blockSize1; ++sample)
+		// 2 blocks of data in the circular buffer
+		for (int block_index = 0; block_index < 2; ++block_index)
 		{
-			buffer[sample] = output_buffers_[output_index].samples[startIndex1 + sample] / amplitude_divisor - 0.25f;
-		}
-		for (int sample = 0; sample < blockSize2; ++sample)
-		{
-			buffer[blockSize1 + sample] = output_buffers_[output_index].samples[startIndex2 + sample] / amplitude_divisor - 0.25f;
+			// Samples per block
+			for (int sample_index = 0; sample_index < blockSizes[block_index]; ++sample_index)
+			{
+				// Sum all 4 channels
+				for (int channel_index = 0; channel_index < APU::num_channels_; ++channel_index)
+				{
+					buffer[writeOffsets[block_index] + sample_index] += output_buffers_[output_index][channel_index][startIndexes[block_index] + sample_index];
+				}
+
+				// Then convert the amplitude to the range of [-0.25, +0.25]
+				buffer[writeOffsets[block_index] + sample_index] /= amplitude_divisor;
+				buffer[writeOffsets[block_index] + sample_index] -= half_max_amplitude;
+			}
 		}
 	}
 
-	for (auto &output_buffer : output_buffers_)
-	{
-		output_buffer.abstract_fifo.finishedRead(bufferToFill.numSamples);
-	}
+	abstract_fifo_.finishedRead(bufferToFill.numSamples);
 }
 
-void AudioPlayerComponent::OnNewSample(size_t right_sample, size_t left_sample)
+void AudioPlayerComponent::OnNewSamples(APU::SampleBatch &sample_batch)
 {
-	input_sample_accumulators_[0] += left_sample;
-	input_sample_accumulators_[1] += right_sample;
+	for (int output_index = 0; output_index < APU::num_outputs_; ++output_index)
+	{
+		for (int channel_index = 0; channel_index < APU::num_channels_; ++channel_index)
+		{
+			input_sample_accumulators_[output_index][channel_index] += sample_batch[output_index][channel_index];
+		}
+	}
 
-	if (++num_accumulated_apu_samples_ < num_apu_samples_in_next_output_sample_) return;
+	if (++num_accumulated_apu_samples_ < downsampling_ratio_integer_part_) return;
 
-	while (output_buffers_[0].abstract_fifo.getFreeSpace() == 0 || output_buffers_[0].abstract_fifo.getFreeSpace() == 0)
+	while (abstract_fifo_.getFreeSpace() == 0)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
 	}
 
-	for (int i = 0; i < output_buffers_.size(); ++i)
+	int startIndex1{ 0 }, blockSize1{ 0 }, startIndex2{ 0 }, blockSize2{ 0 };
+	abstract_fifo_.prepareToWrite(1, startIndex1, blockSize1, startIndex2, blockSize2);
+
+	const auto sample_interpolation_ratio = static_cast<float>(downsampling_ratio_remainder_) / output_sample_rate_;
+
+	// Calculate the average of accumulated samples and push the values to the output buffers
+	for (int output_index = 0; output_index < APU::num_outputs_; ++output_index)
 	{
-		int startIndex1{ 0 }, blockSize1{ 0 }, startIndex2{ 0 }, blockSize2{ 0 };
-		output_buffers_[i].abstract_fifo.prepareToWrite(1, startIndex1, blockSize1, startIndex2, blockSize2);
-		output_buffers_[i].samples[startIndex1] = input_sample_accumulators_[i] / num_accumulated_apu_samples_;
+		for (int channel_index = 0; channel_index < APU::num_channels_; ++channel_index)
+		{
+			// Interpolate between previous and current accumulated values
+			output_buffers_[output_index][channel_index][startIndex1] = (sample_interpolation_ratio * previous_accumulator_values_[output_index][channel_index]
+				+ (1.0f - sample_interpolation_ratio) * input_sample_accumulators_[output_index][channel_index])
+				/ num_accumulated_apu_samples_;
+
+			previous_accumulator_values_[output_index][channel_index] = input_sample_accumulators_[output_index][channel_index];
+
+			// Clear input samples accumulators
+			input_sample_accumulators_[output_index][channel_index] = 0;
+		}
 	}
 
-	input_sample_accumulators_[0] = 0;
-	input_sample_accumulators_[1] = 0;
 	num_accumulated_apu_samples_ = 0;
 
-	// Calculate how many APU samples will be used for the next output sample
-	num_apu_samples_in_next_output_sample_ = downsampling_ratio_integer_part_;
 	downsampling_ratio_remainder_ += APU::sample_rate_ % output_sample_rate_;
 	if (downsampling_ratio_remainder_ > output_sample_rate_)
 	{
-		num_apu_samples_in_next_output_sample_ += 1;
 		downsampling_ratio_remainder_ -= output_sample_rate_;
 	}
 
-	for (auto &output_buffer : output_buffers_)
-	{
-		output_buffer.abstract_fifo.finishedWrite(1);
-	}
+	abstract_fifo_.finishedWrite(1);
 }

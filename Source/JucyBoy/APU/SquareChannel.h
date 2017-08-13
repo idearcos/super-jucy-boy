@@ -3,14 +3,14 @@
 #include <cstdint>
 #include "ClockDivider.h"
 
-class SquareWaveChannel
+class SquareChannel
 {
 public:
-	SquareWaveChannel() = default;
-	virtual ~SquareWaveChannel() {}
+	SquareChannel() = default;
+	virtual ~SquareChannel() {}
 
 	// Clock divider
-	void OnMachineCycleLapse();
+	void OnClockCyclesLapsed(size_t num_clock_cycles);
 	void OnClockDividerTicked();
 
 	// Interface with frame sequencer
@@ -30,6 +30,7 @@ public:
 	size_t GetSample() const;
 	bool IsChannelOn() const { return enabled_; }
 	void Reset();
+	void Disable() { enabled_ = false; }
 
 	template<class Archive>
 	void serialize(Archive &archive);
@@ -39,7 +40,7 @@ protected:
 	inline void UpdateClockDividerPeriod() { clock_divider_.SetPeriod((2048 - frequency_) * 4); }
 
 private:
-	inline bool IsDacEnabled() const { return (envelope_.initial_volume != 0) || (envelope_.direction == Envelope::Direction::Amplify); }
+	inline bool IsDacOn() const { return (envelope_.initial_volume != 0) || (envelope_.direction == Envelope::Direction::Amplify); }
 
 protected:
 	bool enabled_{ false };
@@ -67,16 +68,16 @@ private:
 		size_t cycles_left{ 0 };
 	} envelope_;
 
-	ClockDivider clock_divider_{ (2048 - frequency_) * 4, std::bind(&SquareWaveChannel::OnClockDividerTicked, this) };
+	ClockDivider clock_divider_{ (2048 - frequency_) * 4, std::bind(&SquareChannel::OnClockDividerTicked, this) };
 
 	static constexpr uint8_t duty_cycles_[4]{ 0x01, 0x81, 0x87, 0x7E };
 };
 
-struct SquareWaveChannelWithSweep final : public SquareWaveChannel
+struct SquareChannelWithSweep final : public SquareChannel
 {
 public:
-	SquareWaveChannelWithSweep();
-	~SquareWaveChannelWithSweep() = default;
+	SquareChannelWithSweep();
+	~SquareChannelWithSweep() = default;
 
 	// Interface with frame sequencer
 	void ClockFrequencySweep();
@@ -106,7 +107,7 @@ private:
 };
 
 template<class Archive>
-void SquareWaveChannel::serialize(Archive &archive)
+void SquareChannel::serialize(Archive &archive)
 {
 	archive(enabled_, frequency_, selected_duty_cycle_, duty_cycle_step_, length_counter_, length_counter_enabled_);
 	archive(envelope_.initial_volume, envelope_.direction, envelope_.period, envelope_.active, envelope_.current_volume, envelope_.cycles_left);
@@ -114,8 +115,8 @@ void SquareWaveChannel::serialize(Archive &archive)
 }
 
 template<class Archive>
-void SquareWaveChannelWithSweep::serialize(Archive &archive)
+void SquareChannelWithSweep::serialize(Archive &archive)
 {
-	archive(static_cast<SquareWaveChannel&>(*this));
+	archive(static_cast<SquareChannel&>(*this));
 	archive(frequency_sweep_.period, frequency_sweep_.direction, frequency_sweep_.shift, frequency_sweep_.active, frequency_sweep_.current_frequency, frequency_sweep_.cycles_left);
 }

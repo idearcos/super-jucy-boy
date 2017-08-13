@@ -38,6 +38,17 @@
               file="Source/DebugComponents/WatchpointsComponent.h"/>
       </GROUP>
       <GROUP id="{F134FA3D-DA88-4DFD-F9D2-E3EF84037505}" name="JucyBoy">
+        <GROUP id="{1C482928-B93A-BB34-957E-EDD90B387139}" name="APU">
+          <FILE id="MBpuLo" name="ClockDivider.h" compile="0" resource="0" file="Source/JucyBoy/APU/ClockDivider.h"/>
+          <FILE id="B2IUsq" name="NoiseChannel.cpp" compile="1" resource="0"
+                file="Source/JucyBoy/APU/NoiseChannel.cpp"/>
+          <FILE id="lyMgHz" name="NoiseChannel.h" compile="0" resource="0" file="Source/JucyBoy/APU/NoiseChannel.h"/>
+          <FILE id="CMUBPw" name="SquareChannel.cpp" compile="1" resource="0"
+                file="Source/JucyBoy/APU/SquareChannel.cpp"/>
+          <FILE id="kEfCYc" name="SquareChannel.h" compile="0" resource="0" file="Source/JucyBoy/APU/SquareChannel.h"/>
+          <FILE id="HwffSA" name="WaveChannel.cpp" compile="1" resource="0" file="Source/JucyBoy/APU/WaveChannel.cpp"/>
+          <FILE id="Lvuzfr" name="WaveChannel.h" compile="0" resource="0" file="Source/JucyBoy/APU/WaveChannel.h"/>
+        </GROUP>
         <GROUP id="{42EBD592-5F3D-594E-5324-472C819B4991}" name="Debug">
           <FILE id="glggLZ" name="DebugCPU.cpp" compile="1" resource="0" file="Source/JucyBoy/Debug/DebugCPU.cpp"/>
           <FILE id="aYJp6b" name="DebugCPU.h" compile="0" resource="0" file="Source/JucyBoy/Debug/DebugCPU.h"/>
@@ -68,10 +79,6 @@
         <FILE id="P09DZp" name="PPU.h" compile="0" resource="0" file="Source/JucyBoy/PPU.h"/>
         <FILE id="OVAOjP" name="Registers.h" compile="0" resource="0" file="Source/JucyBoy/Registers.h"/>
         <FILE id="wKyaMj" name="Sprite.h" compile="0" resource="0" file="Source/JucyBoy/Sprite.h"/>
-        <FILE id="CMUBPw" name="SquareWaveChannel.cpp" compile="1" resource="0"
-              file="Source/JucyBoy/SquareWaveChannel.cpp"/>
-        <FILE id="kEfCYc" name="SquareWaveChannel.h" compile="0" resource="0"
-              file="Source/JucyBoy/SquareWaveChannel.h"/>
         <FILE id="goh0Iq" name="Timer.cpp" compile="1" resource="0" file="Source/JucyBoy/Timer.cpp"/>
         <FILE id="FS65Rs" name="Timer.h" compile="0" resource="0" file="Source/JucyBoy/Timer.h"/>
       </GROUP>
@@ -90,7 +97,7 @@
     <FILE id="IxbJmR" name="README.md" compile="0" resource="1" file="README.md"/>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <VS2015 targetFolder="Builds/VisualStudio2015" extraCompilerFlags=""
+    <VS2015 targetFolder="Builds/VisualStudio2015" extraCompilerFlags="/bigobj"
             externalLibraries="glew32s.lib">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
@@ -116,7 +123,7 @@
         <MODULEPATH id="juce_audio_devices" path="./Dependencies/JUCE/modules"/>
       </MODULEPATHS>
     </VS2015>
-    <VS2017 targetFolder="Builds/VisualStudio2017" extraCompilerFlags=""
+    <VS2017 targetFolder="Builds/VisualStudio2017" extraCompilerFlags="/bigobj"
             externalLibraries="glew32s.lib">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"

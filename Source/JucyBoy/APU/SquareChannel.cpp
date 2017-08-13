@@ -1,30 +1,30 @@
-#include "SquareWaveChannel.h"
+#include "SquareChannel.h"
 #include <stdexcept>
 
-size_t SquareWaveChannel::GetSample() const
+size_t SquareChannel::GetSample() const
 {
 	return enabled_ * ((duty_cycles_[selected_duty_cycle_] >> duty_cycle_step_) & 0x01) * envelope_.current_volume;
 }
 
-void SquareWaveChannel::Reset()
+void SquareChannel::Reset()
 {
 	clock_divider_.Reset();
 	duty_cycle_step_ = 0;
 }
 
-void SquareWaveChannel::OnMachineCycleLapse()
+void SquareChannel::OnClockCyclesLapsed(size_t num_clock_cycles)
 {
 	if (!enabled_) return;
 
-	clock_divider_.OnInputClockCyclesLapsed(4);
+	clock_divider_.OnInputClockCyclesLapsed(num_clock_cycles);
 }
 
-void SquareWaveChannel::OnClockDividerTicked()
+void SquareChannel::OnClockDividerTicked()
 {
 	duty_cycle_step_ = (duty_cycle_step_ + 1) & 0x07;
 }
 
-void SquareWaveChannel::ClockLengthCounter()
+void SquareChannel::ClockLengthCounter()
 {
 	if (length_counter_enabled_ && (length_counter_ > 0))
 	{
@@ -35,7 +35,7 @@ void SquareWaveChannel::ClockLengthCounter()
 	}
 }
 
-void SquareWaveChannel::ClockVolumeEnvelope()
+void SquareChannel::ClockVolumeEnvelope()
 {
 	if (!enabled_) return;
 	if (!envelope_.active) return;
@@ -71,14 +71,14 @@ void SquareWaveChannel::ClockVolumeEnvelope()
 	}
 }
 
-void SquareWaveChannel::OnNRx1Written(uint8_t value)
+void SquareChannel::OnNRx1Written(uint8_t value)
 {
 	length_counter_ = 64 - (value & 0x3F);
 	selected_duty_cycle_ = value >> 6;
 	//TODO: is length counter enabled?
 }
 
-void SquareWaveChannel::OnNRx2Written(uint8_t value)
+void SquareChannel::OnNRx2Written(uint8_t value)
 {
 	envelope_.period = value & 0x07;
 	envelope_.cycles_left = envelope_.period;
@@ -86,16 +86,16 @@ void SquareWaveChannel::OnNRx2Written(uint8_t value)
 	envelope_.initial_volume = value >> 4;
 
 	// Disable channel if DAC disabled?
-	enabled_ = IsDacEnabled();
+	enabled_ = IsDacOn();
 }
 
-void SquareWaveChannel::OnNRx3Written(uint8_t value)
+void SquareChannel::OnNRx3Written(uint8_t value)
 {
 	frequency_ = (frequency_ & 0x700) | value;
 	UpdateClockDividerPeriod();
 }
 
-void SquareWaveChannel::OnNRx4Written(uint8_t value)
+void SquareChannel::OnNRx4Written(uint8_t value)
 {
 	frequency_ = (frequency_ & 0xFF) | ((value & 0x07) << 8);
 	UpdateClockDividerPeriod();
@@ -108,7 +108,7 @@ void SquareWaveChannel::OnNRx4Written(uint8_t value)
 	}
 }
 
-void SquareWaveChannel::Trigger()
+void SquareChannel::Trigger()
 {
 	clock_divider_.Reset();
 
@@ -121,11 +121,11 @@ void SquareWaveChannel::Trigger()
 	envelope_.current_volume = envelope_.initial_volume;
 	envelope_.active = true;
 
-	if (IsDacEnabled()) { enabled_ = true; }
+	if (IsDacOn()) { enabled_ = true; }
 }
 
-SquareWaveChannelWithSweep::SquareWaveChannelWithSweep() :
-	SquareWaveChannel()
+SquareChannelWithSweep::SquareChannelWithSweep() :
+	SquareChannel()
 {
 	OnNR10Written(0x80);
 	OnNRx1Written(0xBF);
@@ -133,7 +133,8 @@ SquareWaveChannelWithSweep::SquareWaveChannelWithSweep() :
 	OnNRx4Written(0xBF);
 }
 
-void SquareWaveChannelWithSweep::ClockFrequencySweep()
+
+void SquareChannelWithSweep::ClockFrequencySweep()
 {
 	if (!enabled_) return;
 	if (!frequency_sweep_.active) return;
@@ -161,16 +162,16 @@ void SquareWaveChannelWithSweep::ClockFrequencySweep()
 	}
 }
 
-void SquareWaveChannelWithSweep::OnNR10Written(uint8_t value)
+void SquareChannelWithSweep::OnNR10Written(uint8_t value)
 {
 	frequency_sweep_.shift = value & 0x07;
 	frequency_sweep_.direction = ((value & 0x08) != 0) ? -1 : 1;
 	frequency_sweep_.period = (value & 0x70) >> 4;
 }
 
-void SquareWaveChannelWithSweep::Trigger()
+void SquareChannelWithSweep::Trigger()
 {
-	SquareWaveChannel::Trigger();
+	SquareChannel::Trigger();
 
 	frequency_sweep_.current_frequency = frequency_;
 	frequency_sweep_.cycles_left = 0;
