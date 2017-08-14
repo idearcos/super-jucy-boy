@@ -3,6 +3,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <functional>
 #include <vector>
+#include <memory>
 #include "JucyBoy/Debug/DebugCPU.h"
 #include "JucyBoy/MMU.h"
 #include "JucyBoy/Debug/DebugPPU.h"
@@ -15,6 +16,7 @@
 #include "DebugComponents/CpuDebugComponent.h"
 #include "DebugComponents/MemoryMapComponent.h"
 #include "DebugComponents/PpuDebugComponent.h"
+#include "OptionsComponents/OptionsWindow.h"
 
 class JucyBoy final : public juce::Component, public CPU::Listener, public DebugCPU::Listener
 {
@@ -64,6 +66,8 @@ private:
 
 	std::string loaded_rom_file_path_;
 
+	juce::LookAndFeel_V4 look_and_feel_{ juce::LookAndFeel_V4::getLightColourScheme() };
+
 	GameScreenComponent game_screen_component_;
 	AudioPlayerComponent audio_player_component_;
 
@@ -72,7 +76,7 @@ private:
 	MemoryMapComponent memory_map_component_;
 	PpuDebugComponent ppu_debug_component_;
 
-	juce::LookAndFeel_V4 look_and_feel_{ juce::LookAndFeel_V4::getLightColourScheme() };
+	OptionsWindow options_window_{ audio_player_component_, look_and_feel_ };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
 };

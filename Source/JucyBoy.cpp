@@ -30,6 +30,12 @@ JucyBoy::JucyBoy()
 	ppu_debug_component_.addMouseListener(this, true);
 	addChildComponent(ppu_debug_component_);
 	EnableDebugging(ppu_debug_component_, false);
+
+	// Options window
+	juce::Rectangle<int> area(0, 0, 300, 100);
+	juce::RectanglePlacement placement(juce::RectanglePlacement::xRight | juce::RectanglePlacement::yTop | juce::RectanglePlacement::doNotResize);
+	juce::Rectangle<int> result(placement.appliedTo(area, juce::Desktop::getInstance().getDisplays().getMainDisplay().userArea.reduced(20)));
+	options_window_.setBounds(result);
 }
 
 JucyBoy::~JucyBoy()
@@ -238,9 +244,11 @@ void JucyBoy::mouseDown(const juce::MouseEvent &event)
 	menu.addItem(++item_index, "Enable CPU debugging", true, cpu_debug_component_.isVisible());
 	menu.addItem(++item_index, "Enable memory map", true, memory_map_component_.isVisible());
 	menu.addItem(++item_index, "Enable graphics debugging", true, ppu_debug_component_.isVisible());
-	const int result = menu.show();
+	menu.addSeparator();
+	menu.addItem(++item_index, "Options...");
+	const int selected_item = menu.show();
 
-	switch (result)
+	switch (selected_item)
 	{
 	case 0:
 		// Did not select anything
@@ -285,6 +293,9 @@ void JucyBoy::mouseDown(const juce::MouseEvent &event)
 		break;
 	case 7:
 		EnableDebugging(ppu_debug_component_, !ppu_debug_component_.isVisible());
+		break;
+	case 8:
+		options_window_.setVisible(true);
 		break;
 	default:
 		break;

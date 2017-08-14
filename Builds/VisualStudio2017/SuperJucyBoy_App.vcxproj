@@ -153,6 +153,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\OptionsComponents\AudioOptionsComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuDebugComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.cpp"/>
@@ -1751,6 +1752,8 @@
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_opengl.cpp"/>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\OptionsComponents\AudioOptionsComponent.h"/>
+    <ClInclude Include="..\..\Source\OptionsComponents\OptionsWindow.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuDebugComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.h"/>
@@ -1766,7 +1769,6 @@
     <ClInclude Include="..\..\Source\JucyBoy\Debug\DebugPPU.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\APU.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\Cartridge.h"/>
-    <ClInclude Include="..\..\Source\JucyBoy\ClockDivider.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\CPU.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\InstructionMnemonics.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\Joypad.h"/>

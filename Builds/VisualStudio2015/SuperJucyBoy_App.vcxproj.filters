@@ -2,6 +2,9 @@
 
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="SuperJucyBoy\Source\OptionsComponents">
+      <UniqueIdentifier>{46C3D288-A243-8A2B-6B2F-CDE0D4DAD9C6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="SuperJucyBoy\Source\DebugComponents">
       <UniqueIdentifier>{7C7CC8A2-B990-C50F-C0D3-544DF403EA7A}</UniqueIdentifier>
     </Filter>
@@ -364,6 +367,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\OptionsComponents\AudioOptionsComponent.cpp">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClCompile>
@@ -2151,6 +2157,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\OptionsComponents\AudioOptionsComponent.h">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\OptionsComponents\OptionsWindow.h">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClInclude>
@@ -2194,9 +2206,6 @@
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\Cartridge.h">
-      <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\JucyBoy\ClockDivider.h">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\CPU.h">

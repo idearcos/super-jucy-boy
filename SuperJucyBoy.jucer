@@ -7,6 +7,13 @@
               cppLanguageStandard="11">
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
+      <GROUP id="{174E98B6-764B-A504-3F51-E1BAFF97243C}" name="OptionsComponents">
+        <FILE id="uyQP1b" name="AudioOptionsComponent.cpp" compile="1" resource="0"
+              file="Source/OptionsComponents/AudioOptionsComponent.cpp"/>
+        <FILE id="qa5fc3" name="AudioOptionsComponent.h" compile="0" resource="0"
+              file="Source/OptionsComponents/AudioOptionsComponent.h"/>
+        <FILE id="OfKHxO" name="OptionsWindow.h" compile="0" resource="0" file="Source/OptionsComponents/OptionsWindow.h"/>
+      </GROUP>
       <GROUP id="{F1A5EA92-351C-9FCF-06FA-0EB39BA6EE8A}" name="DebugComponents">
         <FILE id="RRejek" name="CpuBreakpointsComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/CpuBreakpointsComponent.cpp"/>
@@ -59,7 +66,6 @@
         <FILE id="lQvxJL" name="APU.h" compile="0" resource="0" file="Source/JucyBoy/APU.h"/>
         <FILE id="o8YS5v" name="Cartridge.cpp" compile="1" resource="0" file="Source/JucyBoy/Cartridge.cpp"/>
         <FILE id="KucDFZ" name="Cartridge.h" compile="0" resource="0" file="Source/JucyBoy/Cartridge.h"/>
-        <FILE id="MBpuLo" name="ClockDivider.h" compile="0" resource="0" file="Source/JucyBoy/ClockDivider.h"/>
         <FILE id="kZEcqM" name="CPU.cpp" compile="1" resource="0" file="Source/JucyBoy/CPU.cpp"/>
         <FILE id="YypB1H" name="CPU.h" compile="0" resource="0" file="Source/JucyBoy/CPU.h"/>
         <FILE id="ArciXF" name="CPU_CbInstructions.cpp" compile="1" resource="0"
