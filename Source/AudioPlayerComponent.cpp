@@ -64,16 +64,22 @@ void AudioPlayerComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo 
 		// 2 blocks of data in the circular buffer
 		for (int block_index = 0; block_index < 2; ++block_index)
 		{
-			// Samples per block
-			for (int sample_index = 0; sample_index < blockSizes[block_index]; ++sample_index)
+			// Iterate through all 4 channels
+			for (int channel_index = 0; channel_index < APU::num_channels_; ++channel_index)
 			{
-				// Sum all 4 channels
-				for (int channel_index = 0; channel_index < APU::num_channels_; ++channel_index)
+				// If the channel has been disabled by the GUI, proceed to next
+				if (!channels_enabled_[channel_index]) continue;
+
+				// Contribute to all samples of this block
+				for (int sample_index = 0; sample_index < blockSizes[block_index]; ++sample_index)
 				{
 					buffer[writeOffsets[block_index] + sample_index] += output_buffers_[output_index][channel_index][startIndexes[block_index] + sample_index];
 				}
+			}
 
-				// Then convert the amplitude to the range of [-0.25, +0.25]
+			// Once all channels have contributed, convert the amplitude of samples to the range of [-0.25, +0.25]
+			for (int sample_index = 0; sample_index < blockSizes[block_index]; ++sample_index)
+			{
 				buffer[writeOffsets[block_index] + sample_index] /= amplitude_divisor;
 				buffer[writeOffsets[block_index] + sample_index] -= half_max_amplitude;
 			}

@@ -24,6 +24,12 @@ public:
 	// APU Listener functions
 	void OnNewSamples(APU::SampleBatch &sample_batch);
 
+	// GUI interactions
+	template <size_t channel_index>
+	bool IsChannelEnabled() const;
+	template <size_t channel_index>
+	void EnableChannel(bool enabled);
+
 private:
 	static const size_t output_buffer_size_{ 480 + 1 };
 	using OutputBuffer = std::array<float, output_buffer_size_>;
@@ -40,5 +46,22 @@ private:
 
 	APU::SampleBatch previous_accumulator_values_{};
 
+	// GUI interactions
+	std::array<bool, APU::num_channels_> channels_enabled_{ true, true, true, true };
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPlayerComponent)
 };
+
+template <size_t channel_index>
+bool AudioPlayerComponent::IsChannelEnabled() const
+{
+	static_assert(channel_index < APU::num_channels_);
+	return channels_enabled_[channel_index];
+}
+
+template <size_t channel_index>
+void AudioPlayerComponent::EnableChannel(bool enabled)
+{
+	static_assert(channel_index < APU::num_channels_);
+	channels_enabled_[channel_index] = enabled;
+}
