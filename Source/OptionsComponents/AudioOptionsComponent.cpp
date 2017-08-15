@@ -6,20 +6,23 @@ AudioOptionsComponent::AudioOptionsComponent(AudioPlayerComponent &audio_player_
 	audio_player_component_{ &audio_player_component }
 {
 	addAndMakeVisible(toggle_audio_channel_1_);
-	toggle_audio_channel_1_.setButtonText("Channel 1");
-	toggle_audio_channel_1_.setToggleState(audio_player_component_->IsChannelEnabled<0>(), juce::NotificationType::dontSendNotification);
-	toggle_audio_channel_1_.addListener(this);
 	addAndMakeVisible(toggle_audio_channel_2_);
-	toggle_audio_channel_2_.setButtonText("Channel 2");
-	toggle_audio_channel_2_.setToggleState(audio_player_component_->IsChannelEnabled<1>(), juce::NotificationType::dontSendNotification);
-	toggle_audio_channel_2_.addListener(this);
 	addAndMakeVisible(toggle_audio_channel_3_);
-	toggle_audio_channel_3_.setButtonText("Channel 3");
-	toggle_audio_channel_3_.setToggleState(audio_player_component_->IsChannelEnabled<2>(), juce::NotificationType::dontSendNotification);
-	toggle_audio_channel_3_.addListener(this);
 	addAndMakeVisible(toggle_audio_channel_4_);
+
+	toggle_audio_channel_1_.setButtonText("Channel 1");
+	toggle_audio_channel_2_.setButtonText("Channel 2");
+	toggle_audio_channel_3_.setButtonText("Channel 3");
 	toggle_audio_channel_4_.setButtonText("Channel 4");
+
+	toggle_audio_channel_1_.setToggleState(audio_player_component_->IsChannelEnabled<0>(), juce::NotificationType::dontSendNotification);
+	toggle_audio_channel_2_.setToggleState(audio_player_component_->IsChannelEnabled<1>(), juce::NotificationType::dontSendNotification);
+	toggle_audio_channel_3_.setToggleState(audio_player_component_->IsChannelEnabled<2>(), juce::NotificationType::dontSendNotification);
 	toggle_audio_channel_4_.setToggleState(audio_player_component_->IsChannelEnabled<3>(), juce::NotificationType::dontSendNotification);
+
+	toggle_audio_channel_1_.addListener(this);
+	toggle_audio_channel_2_.addListener(this);
+	toggle_audio_channel_3_.addListener(this);
 	toggle_audio_channel_4_.addListener(this);
 }
 
