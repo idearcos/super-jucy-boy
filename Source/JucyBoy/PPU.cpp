@@ -427,7 +427,7 @@ void PPU::OnVramWritten(const Memory::Address &address, uint8_t value)
 			tile[8 * line_in_tile + i] = static_cast<uint8_t>(pixel_low_bit + (pixel_high_bit << 1));
 		}
 	}
-	else if (address < tile_map_1_offset_)
+	else if (relative_address < tile_map_1_offset_)
 	{
 		tile_maps_[0][relative_address - tile_map_0_offset_] = value;
 	}
