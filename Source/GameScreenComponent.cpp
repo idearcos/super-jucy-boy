@@ -67,7 +67,7 @@ void GameScreenComponent::initialise()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, static_cast<GLsizei>(width_), static_cast<GLsizei>(height_), 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, nullptr);
 	}
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magnification_filter_);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -206,4 +206,14 @@ void GameScreenComponent::render()
 	// Unbind VAO and texture
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void GameScreenComponent::SetMagnificationFilter(GLint magnification_filter)
+{
+	magnification_filter_ = magnification_filter;
+	openGLContext.executeOnGLThread([this](juce::OpenGLContext&) {
+		glBindTexture(GL_TEXTURE_2D, texture_);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magnification_filter_);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}, false);
 }

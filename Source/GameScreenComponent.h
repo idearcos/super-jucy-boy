@@ -20,6 +20,10 @@ public:
 
 	void OnNewFrame(const PPU::Framebuffer &ppu_framebuffer) override;
 
+	// GUI interaction
+	GLint GetMagnificationFilter() const { return magnification_filter_; }
+	void SetMagnificationFilter(GLint magnification_filter);
+
 private:
 	struct Vertex
 	{
@@ -45,6 +49,9 @@ private:
 
 	const std::vector<Vertex> vertices_;
 	const std::vector<GLuint> elements_;
+
+	// GUI interaction
+	GLint magnification_filter_{ GL_NEAREST };
 
 private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GameScreenComponent)

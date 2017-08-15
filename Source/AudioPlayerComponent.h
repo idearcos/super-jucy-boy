@@ -24,7 +24,7 @@ public:
 	// APU Listener functions
 	void OnNewSamples(APU::SampleBatch &sample_batch);
 
-	// GUI interactions
+	// GUI interaction
 	template <size_t channel_index>
 	bool IsChannelEnabled() const;
 	template <size_t channel_index>
@@ -46,7 +46,7 @@ private:
 
 	APU::SampleBatch previous_accumulator_values_{};
 
-	// GUI interactions
+	// GUI interaction
 	std::array<bool, APU::num_channels_> channels_enabled_{ true, true, true, true };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPlayerComponent)
