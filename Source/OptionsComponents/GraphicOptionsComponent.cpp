@@ -36,16 +36,12 @@ void GraphicOptionsComponent::buttonClicked(juce::Button* button)
 
 void GraphicOptionsComponent::paint(juce::Graphics& g)
 {
-	g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-
-	g.setColour(juce::Colours::orange);
-	g.drawRect(getLocalBounds(), 1);
+	g.fillAll(juce::Colours::white);
 }
 
 void GraphicOptionsComponent::resized()
 {
 	auto working_area = getLocalBounds();
-	const auto toggle_height = working_area.getHeight();
-	nearest_mag_filter_toggle_.setBounds(working_area.removeFromTop(toggle_height / 2));
-	linear_mag_filter_toggle_.setBounds(working_area.removeFromTop(toggle_height / 2));
+	nearest_mag_filter_toggle_.setBounds(working_area.removeFromLeft(working_area.getWidth() / 2));
+	linear_mag_filter_toggle_.setBounds(working_area);
 }

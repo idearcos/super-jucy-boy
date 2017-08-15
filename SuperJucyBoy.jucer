@@ -12,6 +12,10 @@
               file="Source/OptionsComponents/AudioOptionsComponent.cpp"/>
         <FILE id="qa5fc3" name="AudioOptionsComponent.h" compile="0" resource="0"
               file="Source/OptionsComponents/AudioOptionsComponent.h"/>
+        <FILE id="judw6x" name="GraphicOptionsComponent.cpp" compile="1" resource="0"
+              file="Source/OptionsComponents/GraphicOptionsComponent.cpp"/>
+        <FILE id="dUlqqr" name="GraphicOptionsComponent.h" compile="0" resource="0"
+              file="Source/OptionsComponents/GraphicOptionsComponent.h"/>
         <FILE id="OfKHxO" name="OptionsWindow.h" compile="0" resource="0" file="Source/OptionsComponents/OptionsWindow.h"/>
       </GROUP>
       <GROUP id="{F1A5EA92-351C-9FCF-06FA-0EB39BA6EE8A}" name="DebugComponents">

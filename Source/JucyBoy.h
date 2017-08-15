@@ -76,7 +76,7 @@ private:
 	MemoryMapComponent memory_map_component_;
 	PpuDebugComponent ppu_debug_component_;
 
-	OptionsWindow options_window_{ audio_player_component_, look_and_feel_ };
+	OptionsWindow options_window_{ game_screen_component_, audio_player_component_, look_and_feel_ };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
 };

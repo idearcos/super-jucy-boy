@@ -154,6 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\OptionsComponents\AudioOptionsComponent.cpp"/>
+    <ClCompile Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuDebugComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.cpp"/>
@@ -1753,6 +1754,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\OptionsComponents\AudioOptionsComponent.h"/>
+    <ClInclude Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.h"/>
     <ClInclude Include="..\..\Source\OptionsComponents\OptionsWindow.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuDebugComponent.h"/>

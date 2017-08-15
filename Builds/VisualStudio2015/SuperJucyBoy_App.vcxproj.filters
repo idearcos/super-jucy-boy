@@ -370,6 +370,9 @@
     <ClCompile Include="..\..\Source\OptionsComponents\AudioOptionsComponent.cpp">
       <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.cpp">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClCompile>
@@ -2158,6 +2161,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\OptionsComponents\AudioOptionsComponent.h">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.h">
       <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\OptionsComponents\OptionsWindow.h">

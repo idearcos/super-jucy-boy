@@ -48,18 +48,15 @@ void AudioOptionsComponent::buttonClicked(juce::Button* button)
 
 void AudioOptionsComponent::paint(juce::Graphics& g)
 {
-	g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-
-	g.setColour(juce::Colours::orange);
-	g.drawRect(getLocalBounds(), 1);
+	g.fillAll(juce::Colours::white);
 }
 
 void AudioOptionsComponent::resized()
 {
 	auto working_area = getLocalBounds();
-	const auto toggle_height = working_area.getHeight();
-	toggle_audio_channel_1_.setBounds(working_area.removeFromTop(toggle_height / 4));
-	toggle_audio_channel_2_.setBounds(working_area.removeFromTop(toggle_height / 4));
-	toggle_audio_channel_3_.setBounds(working_area.removeFromTop(toggle_height / 4));
-	toggle_audio_channel_4_.setBounds(working_area.removeFromTop(toggle_height / 4));
+	auto top_half = working_area.removeFromTop(working_area.getHeight() / 2);
+	toggle_audio_channel_1_.setBounds(top_half.removeFromLeft(top_half.getWidth() / 2));
+	toggle_audio_channel_2_.setBounds(top_half);
+	toggle_audio_channel_3_.setBounds(working_area.removeFromLeft(working_area.getWidth() / 2));
+	toggle_audio_channel_4_.setBounds(working_area);
 }
