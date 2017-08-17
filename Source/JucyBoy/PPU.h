@@ -72,6 +72,8 @@ public:
 	void AddListener(Listener &listener) { listeners_.insert(&listener); }
 	void RemoveListener(Listener &listener) { listeners_.erase(&listener); }
 
+	const Framebuffer& GetFramebuffer() const { return framebuffer_; }
+
 	template<class Archive>
 	void serialize(Archive &archive);
 

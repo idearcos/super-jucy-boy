@@ -20,6 +20,9 @@ public:
 
 	void OnNewFrame(const PPU::Framebuffer &ppu_framebuffer) override;
 
+	void SetPpu(PPU &ppu) { ppu_ = &ppu; }
+	void UpdateFramebuffer();
+
 	// GUI interaction
 	GLint GetMagnificationFilter() const { return magnification_filter_; }
 	void SetMagnificationFilter(GLint magnification_filter);
@@ -52,6 +55,8 @@ private:
 
 	// GUI interaction
 	GLint magnification_filter_{ GL_NEAREST };
+
+	PPU* ppu_;
 
 private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GameScreenComponent)

@@ -99,6 +99,8 @@ void JucyBoy::LoadRom(std::string file_path)
 
 	loaded_rom_file_path_ = std::move(file_path);
 
+	game_screen_component_.SetPpu(*ppu_);
+
 	cpu_debug_component_.SetCpu(*cpu_);
 	memory_map_component_.SetMmu(*mmu_);
 	ppu_debug_component_.SetPpu(*ppu_);
@@ -334,6 +336,7 @@ bool JucyBoy::keyPressed(const juce::KeyPress &key)
 				juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 			}
 			UpdateDebugComponents(true);
+			game_screen_component_.UpdateFramebuffer();
 		}
 	}
 
@@ -390,6 +393,7 @@ void JucyBoy::OnRunningLoopInterrupted()
 	juce::MessageManager::callAsync([this]() {
 		PauseEmulation();
 		UpdateDebugComponents(true);
+		game_screen_component_.UpdateFramebuffer();
 	});
 }
 

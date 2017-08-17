@@ -180,6 +180,20 @@ void GameScreenComponent::OnNewFrame(const PPU::Framebuffer &ppu_framebuffer)
 	openGLContext.triggerRepaint();
 }
 
+void GameScreenComponent::UpdateFramebuffer()
+{
+	std::unique_lock<std::mutex> lock{ framebuffer_mutex_ };
+	const auto& ppu_framebuffer = ppu_->GetFramebuffer();
+
+	for (int i = 0; i < ppu_framebuffer.size(); ++i)
+	{
+		assert(static_cast<size_t>(ppu_framebuffer[i]) < intensity_palette_.size());
+		framebuffer_[i] = intensity_palette_[static_cast<size_t>(ppu_framebuffer[i])];
+	}
+
+	openGLContext.triggerRepaint();
+}
+
 void GameScreenComponent::render()
 {
 	const auto desktopScale = openGLContext.getRenderingScale();
