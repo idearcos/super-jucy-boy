@@ -77,8 +77,8 @@ public:
 
 private:
 	// Rendering
-	void RenderBackground(uint8_t line_number);
-	void RenderWindow(uint8_t line_number);
+	void RenderBackground(uint8_t line_number, uint8_t x);
+	void RenderWindow(uint8_t line_number, uint8_t x);
 	std::vector<size_t> ComputeSpritesToRender(uint8_t line_number) const;
 	size_t ComputeVramModeDuration() const;
 	void RenderSprites(uint8_t line_number);
@@ -90,7 +90,6 @@ private:
 
 	// Helper functions
 	void EnableLcd(bool enabled);
-	void SetLcdState(State state);
 	uint8_t GetPaletteData(const Palette &palette) const;
 	void WriteOam(const Memory::Address &address, uint8_t value);
 	inline bool CompareCurrentLine() const { return (current_line_ == line_compare_) && ((clock_cycles_lapsed_in_line_ >= 4) || (current_line_ == 0)); }
@@ -115,8 +114,10 @@ protected:
 	State next_state_{ State::LcdTurnedOn };
 	size_t clock_cycles_lapsed_in_state_{ 0 };
 	size_t clock_cycles_lapsed_in_line_{ 0 };
-	size_t vram_duration_this_line_{ vram_state_duration_ };
 	size_t hblank_duration_this_line_{ hblank_state_duration_ };
+	size_t vram_duration_this_line_{ vram_state_duration_ };
+	size_t scroll_x_delay_this_line_{ 0 };
+	uint8_t x_to_render_{ 0 };
 
 	// LCD Control register values
 	bool show_bg_{ true };					// bit 0

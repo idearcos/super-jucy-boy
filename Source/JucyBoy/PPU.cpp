@@ -17,137 +17,150 @@ void PPU::OnMachineCycleLapse()
 	if (lcd_on_)
 	{
 		current_state_ = next_state_;
-		clock_cycles_lapsed_in_state_ += 4;
-		clock_cycles_lapsed_in_line_ += 4;
-		switch (current_state_)
+		for (int ii = 0; ii < 4; ++ii)
 		{
-		case State::OAM_Line0:
-			// Line #0 requests the mode 2 STAT interrupt when entered, as opposed to the rest of the lines, which request it at the end of mode 0 instead
-			if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-			next_state_ = State::OAM;
-			break;
-
-		case State::EnteredOAM:
-			// Line comparison is triggered at the beginning of OAM mode, 4 clock cycles after LY is incremented
-			if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-			next_state_ = State::OAM;
-			break;
-
-		case State::OAM:
-			if (clock_cycles_lapsed_in_state_ >= oam_state_duration_)
+			clock_cycles_lapsed_in_state_ += 1;
+			clock_cycles_lapsed_in_line_ += 1;
+			switch (current_state_)
 			{
-				clock_cycles_lapsed_in_state_ -= oam_state_duration_;
-				sprites_to_render_this_line_ = ComputeSpritesToRender(current_line_);
-				vram_duration_this_line_ = ComputeVramModeDuration();
-				next_state_ = State::VRAM;
-			}
-			break;
+			case State::OAM_Line0:
+				// Line #0 requests the mode 2 STAT interrupt when entered, as opposed to the rest of the lines, which request it at the end of mode 0 instead
+				if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+				next_state_ = State::OAM;
+				break;
 
-		case State::VRAM:
-			if (clock_cycles_lapsed_in_state_ >= vram_duration_this_line_)
-			{
-				clock_cycles_lapsed_in_state_ -= vram_duration_this_line_;
-				hblank_duration_this_line_ = line_duration_ - oam_state_duration_ - vram_duration_this_line_;
+			case State::EnteredOAM:
+				// Line comparison is triggered at the beginning of OAM mode, 4 clock cycles after LY is incremented
+				if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+				next_state_ = State::OAM;
+				break;
 
-				if (hblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-				next_state_ = State::HBLANK;
-
-				RenderBackground(current_line_);
-				RenderWindow(current_line_);
-				RenderSprites(current_line_);
-			}
-			break;
-
-		case State::HBLANK:
-			if (clock_cycles_lapsed_in_state_ >= hblank_duration_this_line_)
-			{
-				clock_cycles_lapsed_in_state_ -= hblank_duration_this_line_;
-				clock_cycles_lapsed_in_line_ -= line_duration_;
-				if (++current_line_ == 144)
+			case State::OAM:
+				if (clock_cycles_lapsed_in_state_ >= oam_state_duration_)
 				{
-					next_state_ = State::EnteredVBLANK;
-
-					NotifyNewFrame();
+					clock_cycles_lapsed_in_state_ -= oam_state_duration_;
+					sprites_to_render_this_line_ = ComputeSpritesToRender(current_line_);
+					scroll_x_delay_this_line_ = scroll_x_ & 0x07;
+					x_to_render_ = 0;
+					vram_duration_this_line_ = ComputeVramModeDuration();
+					next_state_ = State::VRAM;
 				}
-				else
+				break;
+
+			case State::VRAM:
+				if (clock_cycles_lapsed_in_state_ <= scroll_x_delay_this_line_) break;
+
+				if (x_to_render_ < 160)
 				{
-					if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-					next_state_ = State::EnteredOAM;
+					RenderBackground(current_line_, x_to_render_);
+					RenderWindow(current_line_, x_to_render_);
+
+					x_to_render_ += 1;
 				}
-			}
-			break;
 
-		case State::EnteredVBLANK:
-			mmu_->SetBit(Memory::IF, 0); // Request VBlank interrupt
-
-			// Mode 2 STAT interrupt is also requested at this point, if enabled
-			if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-
-			next_state_ = State::VBLANK;
-			// Fallthrough
-		case State::VBLANK:
-			// Mode 1 STAT interrupt is requested every cycle
-			if (vblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-
-			if (clock_cycles_lapsed_in_state_ >= line_duration_)
-			{
-				clock_cycles_lapsed_in_state_ -= line_duration_;
-				clock_cycles_lapsed_in_line_ -= line_duration_;
-				if (++current_line_ == 153)
+				if (clock_cycles_lapsed_in_state_ >= vram_duration_this_line_)
 				{
-					next_state_ = State::EnteredVBLANK_Line153;
+					clock_cycles_lapsed_in_state_ -= vram_duration_this_line_;
+					hblank_duration_this_line_ = line_duration_ - oam_state_duration_ - vram_duration_this_line_;
+
+					if (hblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+					next_state_ = State::HBLANK;
+
+					RenderSprites(current_line_);
 				}
-				else
+				break;
+
+			case State::HBLANK:
+				if (clock_cycles_lapsed_in_state_ >= hblank_duration_this_line_)
 				{
-					next_state_ = State::VBLANK;
+					clock_cycles_lapsed_in_state_ -= hblank_duration_this_line_;
+					clock_cycles_lapsed_in_line_ -= line_duration_;
+					if (++current_line_ == 144)
+					{
+						next_state_ = State::EnteredVBLANK;
+
+						NotifyNewFrame();
+					}
+					else
+					{
+						if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+						next_state_ = State::EnteredOAM;
+					}
 				}
+				break;
+
+			case State::EnteredVBLANK:
+				mmu_->SetBit(Memory::IF, 0); // Request VBlank interrupt
+
+											 // Mode 2 STAT interrupt is also requested at this point, if enabled
+				if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+
+				next_state_ = State::VBLANK;
+				// Fallthrough
+			case State::VBLANK:
+				// Mode 1 STAT interrupt is requested every cycle
+				if (vblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+
+				if (clock_cycles_lapsed_in_state_ >= line_duration_)
+				{
+					clock_cycles_lapsed_in_state_ -= line_duration_;
+					clock_cycles_lapsed_in_line_ -= line_duration_;
+					if (++current_line_ == 153)
+					{
+						next_state_ = State::EnteredVBLANK_Line153;
+					}
+					else
+					{
+						next_state_ = State::VBLANK;
+					}
+				}
+				break;
+
+			case State::EnteredVBLANK_Line153:
+				// LY=LYC interrupt is requested if LYC is set to 153...
+				if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+				// ...then line number immediately changes to 0
+				current_line_ = 0;
+
+				next_state_ = State::VBLANK_Line153;
+				break;
+
+			case State::VBLANK_Line153:
+				if (clock_cycles_lapsed_in_state_ >= vblank_line153_duration)
+				{
+					clock_cycles_lapsed_in_state_ -= vblank_line153_duration;
+					next_state_ = State::EnteredVBLANK_Line0;
+				}
+				break;
+
+			case State::EnteredVBLANK_Line0:
+				// LY=LYC interrupt is requested if LYC is set to 0
+				if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+
+				next_state_ = State::VBLANK_Line0;
+				break;
+
+			case State::VBLANK_Line0:
+				if (clock_cycles_lapsed_in_state_ >= vblank_line0_duration)
+				{
+					clock_cycles_lapsed_in_state_ -= vblank_line0_duration;
+					clock_cycles_lapsed_in_line_ -= line_duration_;
+					next_state_ = State::OAM_Line0;
+				}
+				break;
+
+			case State::LcdTurnedOn:
+				if (clock_cycles_lapsed_in_state_ >= oam_state_duration_)
+				{
+					clock_cycles_lapsed_in_state_ -= oam_state_duration_;
+					vram_duration_this_line_ = ComputeVramModeDuration();
+					next_state_ = State::VRAM;
+				}
+				break;
+
+			default:
+				throw std::logic_error("Invalid current mode in OnMachineCycleLapse: " + std::to_string(static_cast<int>(current_state_)));
 			}
-			break;
-
-		case State::EnteredVBLANK_Line153:
-			// LY=LYC interrupt is requested if LYC is set to 153...
-			if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-			// ...then line number immediately changes to 0
-			current_line_ = 0;
-
-			next_state_ = State::VBLANK_Line153;
-			break;
-
-		case State::VBLANK_Line153:
-			if (clock_cycles_lapsed_in_state_ >= vblank_line153_duration)
-			{
-				clock_cycles_lapsed_in_state_ -= vblank_line153_duration;
-				next_state_ = State::EnteredVBLANK_Line0;
-			}
-			break;
-
-		case State::EnteredVBLANK_Line0:
-			// LY=LYC interrupt is requested if LYC is set to 0
-			if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-
-			next_state_ = State::VBLANK_Line0;
-			break;
-
-		case State::VBLANK_Line0:
-			if (clock_cycles_lapsed_in_state_ >= vblank_line0_duration)
-			{
-				clock_cycles_lapsed_in_state_ -= vblank_line0_duration;
-				clock_cycles_lapsed_in_line_ -= line_duration_;
-				next_state_ = State::OAM_Line0;
-			}
-			break;
-
-		case State::LcdTurnedOn:
-			if (clock_cycles_lapsed_in_state_ >= oam_state_duration_)
-			{
-				clock_cycles_lapsed_in_state_ -= oam_state_duration_;
-				vram_duration_this_line_ = ComputeVramModeDuration();
-				next_state_ = State::VRAM;
-			}
-			break;
-
-		default:
-			throw std::logic_error("Invalid current mode in OnMachineCycleLapse: " + std::to_string(static_cast<int>(current_state_)));
 		}
 	}
 
@@ -180,63 +193,51 @@ void PPU::OnMachineCycleLapse()
 	}
 }
 
-void PPU::RenderBackground(uint8_t line_number)
+void PPU::RenderBackground(uint8_t line_number, uint8_t x)
 {
 	if (!show_bg_) return;
 
-	auto scrolled_x = scroll_x_;
+	const auto scrolled_x = static_cast<uint8_t>(x + scroll_x_);
 	const auto scrolled_y = static_cast<uint8_t>(line_number + scroll_y_);
 
-	uint8_t color_number{ 0 };
-	for (int i = 0; i < 160; ++i)
-	{
-		// Retrieve the tile number from the active tile map
-		auto tile_number = tile_maps_[active_bg_tile_map_][32 * (scrolled_y >> 3) + (scrolled_x >> 3)];
+	// Retrieve the tile number from the active tile map
+	const auto tile_number = tile_maps_[active_bg_tile_map_][32 * (scrolled_y >> 3) + (scrolled_x >> 3)];
 
-		// Select tile depending on which tile set is currently active
-		auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
+	// Select tile depending on which tile set is currently active
+	const auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
 
-		// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
-		color_number = tile[8 * (scrolled_y & 0x07) + (scrolled_x & 0x07)];
+	// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
+	const auto color_number = tile[8 * (scrolled_y & 0x07) + (scrolled_x & 0x07)];
 
-		is_bg_transparent_[160 * line_number + i] = (color_number == 0);
+	is_bg_transparent_[160 * line_number + x] = (color_number == 0);
 
-		framebuffer_[160 * line_number + i] = bg_palette_[color_number];
-
-		scrolled_x += 1;
-	}
+	framebuffer_[160 * line_number + x] = bg_palette_[color_number];
 }
 
-void PPU::RenderWindow(uint8_t line_number)
+void PPU::RenderWindow(uint8_t line_number, uint8_t x)
 {
 	if (!show_window_) return;
 
 	if (line_number < window_y_) return;
+	if (x < window_x_) return;
+	if (x >= (window_x_ + 160)) return;
 
 	const auto window_line = static_cast<uint8_t>(line_number - window_y_);
-	const auto end_of_window = (window_x_ + 160);
 
-	uint8_t color_number{ 0 };
-	for (int x = window_x_; x < end_of_window; ++x)
-	{
-		if (x < 0) continue;
-		if (x >= 160) break;
+	const auto window_x = x - window_x_;
 
-		const auto window_x = x - window_x_;
+	// Retrieve the tile number from the active tile map
+	auto tile_number = tile_maps_[active_window_tile_map_][32 * (window_line >> 3) + (window_x >> 3)];
 
-		// Retrieve the tile number from the active tile map
-		auto tile_number = tile_maps_[active_window_tile_map_][32 * (window_line >> 3) + (window_x >> 3)];
+	// Select tile depending on which tile set is currently active
+	auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
 
-		// Select tile depending on which tile set is currently active
-		auto& tile = active_tile_set_ ? tile_set_[tile_number] : tile_set_[256 + static_cast<int8_t>(tile_number)];
+	// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
+	const auto color_number = tile[8 * (window_line & 0x07) + (window_x & 0x07)];
 
-		// The values in the tile have already been computed from successive bytes in VRAM during OnVramWritten, and can directly be used
-		color_number = tile[8 * (window_line & 0x07) + (window_x & 0x07)];
+	is_bg_transparent_[160 * line_number + x] = (color_number == 0);
 
-		is_bg_transparent_[160 * line_number + x] = (color_number == 0);
-
-		framebuffer_[160 * line_number + x] = bg_palette_[color_number];
-	}
+	framebuffer_[160 * line_number + x] = bg_palette_[color_number];
 }
 
 std::vector<size_t> PPU::ComputeSpritesToRender(uint8_t line_number) const
