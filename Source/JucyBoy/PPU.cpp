@@ -220,7 +220,6 @@ void PPU::RenderWindow(uint8_t line_number, uint8_t x)
 
 	if (line_number < window_y_) return;
 	if (x < window_x_) return;
-	if (x >= (window_x_ + 160)) return;
 
 	const auto window_line = static_cast<uint8_t>(line_number - window_y_);
 
