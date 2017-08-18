@@ -10,7 +10,10 @@ PpuDebugComponent::PpuDebugComponent() :
 	openGLContext.setContinuousRepainting(false);
 	openGLContext.setOpenGLVersionRequired(juce::OpenGLContext::OpenGLVersion::openGL3_2);
 
-	UpdateState();
+	for (auto& tile : tile_set_)
+	{
+		tile.fill(255);
+	}
 }
 
 PpuDebugComponent::~PpuDebugComponent()
