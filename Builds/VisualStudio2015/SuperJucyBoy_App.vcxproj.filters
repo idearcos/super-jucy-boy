@@ -430,6 +430,9 @@
     <ClCompile Include="..\..\Source\JucyBoy\Joypad.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\JucyBoy\JucyBoy.cpp">
+      <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\JucyBoy\MMU.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClCompile>
@@ -445,7 +448,7 @@
     <ClCompile Include="..\..\Source\GameScreenComponent.cpp">
       <Filter>SuperJucyBoy\Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\JucyBoy.cpp">
+    <ClCompile Include="..\..\Source\JucyBoyComponent.cpp">
       <Filter>SuperJucyBoy\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Main.cpp">
@@ -2223,6 +2226,9 @@
     <ClInclude Include="..\..\Source\JucyBoy\Joypad.h">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\JucyBoy\JucyBoy.h">
+      <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\Memory.h">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClInclude>
@@ -2247,7 +2253,7 @@
     <ClInclude Include="..\..\Source\GameScreenComponent.h">
       <Filter>SuperJucyBoy\Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\JucyBoy.h">
+    <ClInclude Include="..\..\Source\JucyBoyComponent.h">
       <Filter>SuperJucyBoy\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h">

@@ -82,6 +82,8 @@
               file="Source/JucyBoy/InstructionMnemonics.h"/>
         <FILE id="nlYzBQ" name="Joypad.cpp" compile="1" resource="0" file="Source/JucyBoy/Joypad.cpp"/>
         <FILE id="zo27Nc" name="Joypad.h" compile="0" resource="0" file="Source/JucyBoy/Joypad.h"/>
+        <FILE id="g5iP7t" name="JucyBoy.cpp" compile="1" resource="0" file="Source/JucyBoy/JucyBoy.cpp"/>
+        <FILE id="bvQRrO" name="JucyBoy.h" compile="0" resource="0" file="Source/JucyBoy/JucyBoy.h"/>
         <FILE id="oMwB46" name="Memory.h" compile="0" resource="0" file="Source/JucyBoy/Memory.h"/>
         <FILE id="DfP5e5" name="MMU.cpp" compile="1" resource="0" file="Source/JucyBoy/MMU.cpp"/>
         <FILE id="ZKlLmE" name="MMU.h" compile="0" resource="0" file="Source/JucyBoy/MMU.h"/>
@@ -100,8 +102,10 @@
             file="Source/GameScreenComponent.cpp"/>
       <FILE id="LO3og2" name="GameScreenComponent.h" compile="0" resource="0"
             file="Source/GameScreenComponent.h"/>
-      <FILE id="dhem0M" name="JucyBoy.cpp" compile="1" resource="0" file="Source/JucyBoy.cpp"/>
-      <FILE id="TQFnBn" name="JucyBoy.h" compile="0" resource="0" file="Source/JucyBoy.h"/>
+      <FILE id="dhem0M" name="JucyBoyComponent.cpp" compile="1" resource="0"
+            file="Source/JucyBoyComponent.cpp"/>
+      <FILE id="TQFnBn" name="JucyBoyComponent.h" compile="0" resource="0"
+            file="Source/JucyBoyComponent.h"/>
       <FILE id="uh1Uzk" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
     <FILE id="IxbJmR" name="README.md" compile="0" resource="1" file="README.md"/>

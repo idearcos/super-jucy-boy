@@ -180,6 +180,12 @@ void GameScreenComponent::OnNewFrame(const PPU::Framebuffer &ppu_framebuffer)
 	openGLContext.triggerRepaint();
 }
 
+void GameScreenComponent::SetPpu(PPU &ppu)
+{
+	ppu_ = &ppu;
+	ppu_->AddListener(*this);
+}
+
 void GameScreenComponent::UpdateFramebuffer()
 {
 	std::unique_lock<std::mutex> lock{ framebuffer_mutex_ };

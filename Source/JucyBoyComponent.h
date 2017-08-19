@@ -4,25 +4,21 @@
 #include <functional>
 #include <vector>
 #include <memory>
-#include "JucyBoy/Debug/DebugCPU.h"
-#include "JucyBoy/MMU.h"
-#include "JucyBoy/Debug/DebugPPU.h"
-#include "JucyBoy/APU.h"
-#include "JucyBoy/Timer.h"
-#include "JucyBoy/Joypad.h"
-#include "JucyBoy/Cartridge.h"
 #include "GameScreenComponent.h"
 #include "AudioPlayerComponent.h"
 #include "DebugComponents/CpuDebugComponent.h"
 #include "DebugComponents/MemoryMapComponent.h"
 #include "DebugComponents/PpuDebugComponent.h"
 #include "OptionsComponents/OptionsWindow.h"
+#include "JucyBoy/CPU.h"
 
-class JucyBoy final : public juce::Component, public CPU::Listener, public DebugCPU::Listener
+class JucyBoy;
+
+class JucyBoyComponent final : public juce::Component, public CPU::Listener
 {
 public:
-	JucyBoy();
-	~JucyBoy();
+	JucyBoyComponent();
+	~JucyBoyComponent();
 
 	void paint (juce::Graphics&) override;
 	void resized() override;
@@ -54,13 +50,7 @@ private:
 	static const size_t ppu_tileset_width_{ 128 * 2 };
 
 private:
-	std::unique_ptr<DebugCPU> cpu_;
-	std::unique_ptr<MMU> mmu_;
-	std::unique_ptr<DebugPPU> ppu_;
-	std::unique_ptr<APU> apu_;
-	std::unique_ptr<Timer> timer_;
-	std::unique_ptr<Joypad> joypad_;
-	std::unique_ptr<Cartridge> cartridge_;
+	std::unique_ptr<JucyBoy> jucy_boy_;
 
 	std::vector<std::function<void()>> listener_deregister_functions_;
 
@@ -78,5 +68,5 @@ private:
 
 	OptionsWindow options_window_{ game_screen_component_, audio_player_component_, look_and_feel_ };
 
-	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoy)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoyComponent)
 };

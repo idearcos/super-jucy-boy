@@ -9,7 +9,7 @@
 */
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "JucyBoy.h"
+#include "JucyBoyComponent.h"
 
 //==============================================================================
 class SuperJucyBoyApplication : public juce::JUCEApplication
@@ -63,7 +63,7 @@ public:
 		MainWindow(juce::String name) : DocumentWindow(name, juce::Colours::lightgrey, DocumentWindow::allButtons)
 		{
 			setUsingNativeTitleBar(true);
-			setContentOwned(new JucyBoy(), true);
+			setContentOwned(new JucyBoyComponent(), true);
 
 			centreWithSize(getWidth(), getHeight());
 			setVisible(true);

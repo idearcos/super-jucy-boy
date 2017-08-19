@@ -20,7 +20,7 @@ public:
 
 	void OnNewFrame(const PPU::Framebuffer &ppu_framebuffer) override;
 
-	void SetPpu(PPU &ppu) { ppu_ = &ppu; }
+	void SetPpu(PPU &ppu);
 	void UpdateFramebuffer();
 
 	// GUI interaction

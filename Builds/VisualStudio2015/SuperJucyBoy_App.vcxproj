@@ -174,12 +174,13 @@
     <ClCompile Include="..\..\Source\JucyBoy\CPU_Instructions.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\InstructionMnemonics.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\Joypad.cpp"/>
+    <ClCompile Include="..\..\Source\JucyBoy\JucyBoy.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\MMU.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\PPU.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\Timer.cpp"/>
     <ClCompile Include="..\..\Source\AudioPlayerComponent.cpp"/>
     <ClCompile Include="..\..\Source\GameScreenComponent.cpp"/>
-    <ClCompile Include="..\..\Source\JucyBoy.cpp"/>
+    <ClCompile Include="..\..\Source\JucyBoyComponent.cpp"/>
     <ClCompile Include="..\..\Source\Main.cpp"/>
     <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_audio_basics\buffers\juce_AudioChannelSet.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -1774,6 +1775,7 @@
     <ClInclude Include="..\..\Source\JucyBoy\CPU.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\InstructionMnemonics.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\Joypad.h"/>
+    <ClInclude Include="..\..\Source\JucyBoy\JucyBoy.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\Memory.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\MMU.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\PPU.h"/>
@@ -1782,7 +1784,7 @@
     <ClInclude Include="..\..\Source\JucyBoy\Timer.h"/>
     <ClInclude Include="..\..\Source\AudioPlayerComponent.h"/>
     <ClInclude Include="..\..\Source\GameScreenComponent.h"/>
-    <ClInclude Include="..\..\Source\JucyBoy.h"/>
+    <ClInclude Include="..\..\Source\JucyBoyComponent.h"/>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h"/>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_audio_basics\buffers\juce_AudioChannelSet.h"/>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_audio_basics\buffers\juce_AudioDataConverters.h"/>
