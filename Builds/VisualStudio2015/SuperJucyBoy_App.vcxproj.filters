@@ -385,6 +385,9 @@
     <ClCompile Include="..\..\Source\DebugComponents\CpuRegistersComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\DebugComponents\DebuggerComponent.cpp">
+      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\MemoryMapComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClCompile>
@@ -2163,13 +2166,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\AdditionalWindow.h">
+      <Filter>SuperJucyBoy\Source</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\OptionsComponents\AudioOptionsComponent.h">
       <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.h">
       <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\OptionsComponents\OptionsWindow.h">
+    <ClInclude Include="..\..\Source\OptionsComponents\OptionsComponent.h">
       <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h">
@@ -2182,6 +2188,9 @@
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\CpuRegistersComponent.h">
+      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DebugComponents\DebuggerComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\MemoryMapComponent.h">

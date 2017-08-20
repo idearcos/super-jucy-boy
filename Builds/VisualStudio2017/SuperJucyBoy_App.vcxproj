@@ -159,6 +159,7 @@
     <ClCompile Include="..\..\Source\DebugComponents\CpuDebugComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuRegistersComponent.cpp"/>
+    <ClCompile Include="..\..\Source\DebugComponents\DebuggerComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\MemoryMapComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\PpuDebugComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\WatchpointsComponent.cpp"/>
@@ -1754,13 +1755,15 @@
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_opengl.cpp"/>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\AdditionalWindow.h"/>
     <ClInclude Include="..\..\Source\OptionsComponents\AudioOptionsComponent.h"/>
     <ClInclude Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.h"/>
-    <ClInclude Include="..\..\Source\OptionsComponents\OptionsWindow.h"/>
+    <ClInclude Include="..\..\Source\OptionsComponents\OptionsComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuDebugComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuRegistersComponent.h"/>
+    <ClInclude Include="..\..\Source\DebugComponents\DebuggerComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\MemoryMapComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\PpuDebugComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\WatchpointsComponent.h"/>

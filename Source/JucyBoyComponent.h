@@ -6,11 +6,10 @@
 #include <memory>
 #include "GameScreenComponent.h"
 #include "AudioPlayerComponent.h"
-#include "DebugComponents/CpuDebugComponent.h"
-#include "DebugComponents/MemoryMapComponent.h"
-#include "DebugComponents/PpuDebugComponent.h"
-#include "OptionsComponents/OptionsWindow.h"
 #include "JucyBoy/CPU.h"
+#include "OptionsComponents/OptionsComponent.h"
+#include "DebugComponents/DebuggerComponent.h"
+#include "AdditionalWindow.h"
 
 class JucyBoy;
 
@@ -34,20 +33,10 @@ private:
 	void LoadRom(std::string file_path);
 	void StartEmulation();
 	void PauseEmulation();
-	void UpdateDebugComponents(bool compute_diff);
 
 	// Save/load state
 	void SaveState() const;
 	void LoadState();
-
-	// Toggle GUI features on/off
-	void EnableDebugging(Component &component, bool enable);
-	int ComputeWindowWidth() const;
-
-private:
-	static const size_t cpu_status_width_{ 150 };
-	static const size_t memory_map_width_{ 430 };
-	static const size_t ppu_tileset_width_{ 128 * 2 };
 
 private:
 	std::unique_ptr<JucyBoy> jucy_boy_;
@@ -61,12 +50,10 @@ private:
 	GameScreenComponent game_screen_component_;
 	AudioPlayerComponent audio_player_component_;
 
-	juce::Rectangle<int> usage_instructions_area_;
-	CpuDebugComponent cpu_debug_component_;
-	MemoryMapComponent memory_map_component_;
-	PpuDebugComponent ppu_debug_component_;
-
-	OptionsWindow options_window_{ game_screen_component_, audio_player_component_, look_and_feel_ };
+	OptionsComponent options_component_{ game_screen_component_, audio_player_component_ };
+	AdditionalWindow options_window_{ options_component_, "JucyBoy Options", juce::Colours::white, juce::DocumentWindow::closeButton };
+	DebuggerComponent debugger_component_;
+	AdditionalWindow debugger_window_{ debugger_component_, "JucyBoy Debugger", juce::Colours::white, juce::DocumentWindow::closeButton };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoyComponent)
 };

@@ -7,6 +7,8 @@
               cppLanguageStandard="latest">
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
+      <FILE id="iruZsD" name="AdditionalWindow.h" compile="0" resource="0"
+            file="Source/AdditionalWindow.h"/>
       <GROUP id="{174E98B6-764B-A504-3F51-E1BAFF97243C}" name="OptionsComponents">
         <FILE id="uyQP1b" name="AudioOptionsComponent.cpp" compile="1" resource="0"
               file="Source/OptionsComponents/AudioOptionsComponent.cpp"/>
@@ -16,7 +18,8 @@
               file="Source/OptionsComponents/GraphicOptionsComponent.cpp"/>
         <FILE id="dUlqqr" name="GraphicOptionsComponent.h" compile="0" resource="0"
               file="Source/OptionsComponents/GraphicOptionsComponent.h"/>
-        <FILE id="OfKHxO" name="OptionsWindow.h" compile="0" resource="0" file="Source/OptionsComponents/OptionsWindow.h"/>
+        <FILE id="OfKHxO" name="OptionsComponent.h" compile="0" resource="0"
+              file="Source/OptionsComponents/OptionsComponent.h"/>
       </GROUP>
       <GROUP id="{F1A5EA92-351C-9FCF-06FA-0EB39BA6EE8A}" name="DebugComponents">
         <FILE id="RRejek" name="CpuBreakpointsComponent.cpp" compile="1" resource="0"
@@ -35,6 +38,10 @@
               file="Source/DebugComponents/CpuRegistersComponent.cpp"/>
         <FILE id="PessTL" name="CpuRegistersComponent.h" compile="0" resource="0"
               file="Source/DebugComponents/CpuRegistersComponent.h"/>
+        <FILE id="lonWor" name="DebuggerComponent.cpp" compile="1" resource="0"
+              file="Source/DebugComponents/DebuggerComponent.cpp"/>
+        <FILE id="QxGJLc" name="DebuggerComponent.h" compile="0" resource="0"
+              file="Source/DebugComponents/DebuggerComponent.h"/>
         <FILE id="LtPoBP" name="MemoryMapComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/MemoryMapComponent.cpp"/>
         <FILE id="t8fWH8" name="MemoryMapComponent.h" compile="0" resource="0"

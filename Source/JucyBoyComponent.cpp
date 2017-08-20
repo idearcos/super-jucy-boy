@@ -1,6 +1,5 @@
 #include "JucyBoyComponent.h"
 #include "JucyBoy/JucyBoy.h"
-#include <sstream>
 #include <fstream>
 #include <cassert>
 #include "cereal/archives/binary.hpp"
@@ -10,8 +9,7 @@
 JucyBoyComponent::JucyBoyComponent()
 {
 	setLookAndFeel(&look_and_feel_);
-
-	setSize(ComputeWindowWidth(), 144 * 4);
+	setSize(160 * 4, 144 * 4);
 	setWantsKeyboardFocus(true);
 
 	game_screen_component_.addMouseListener(this, true);
@@ -19,24 +17,11 @@ JucyBoyComponent::JucyBoyComponent()
 
 	addChildComponent(audio_player_component_);
 
-	// Debug components
-	cpu_debug_component_.addMouseListener(this, true);
-	addChildComponent(cpu_debug_component_);
-	EnableDebugging(cpu_debug_component_, false);
-
-	memory_map_component_.addMouseListener(this, true);
-	addChildComponent(memory_map_component_);
-	EnableDebugging(memory_map_component_, false);
-
-	ppu_debug_component_.addMouseListener(this, true);
-	addChildComponent(ppu_debug_component_);
-	EnableDebugging(ppu_debug_component_, false);
-
 	// Options window
-	juce::Rectangle<int> area(0, 0, 300, 100);
-	juce::RectanglePlacement placement(juce::RectanglePlacement::xRight | juce::RectanglePlacement::yTop | juce::RectanglePlacement::doNotResize);
-	juce::Rectangle<int> result(placement.appliedTo(area, juce::Desktop::getInstance().getDisplays().getMainDisplay().userArea.reduced(20)));
-	options_window_.setBounds(result);
+	options_window_.setLookAndFeel(&look_and_feel_);
+
+	// Debugger window
+	debugger_window_.setLookAndFeel(&look_and_feel_);
 }
 
 JucyBoyComponent::~JucyBoyComponent()
@@ -56,9 +41,7 @@ void JucyBoyComponent::LoadRom(std::string file_path)
 		game_screen_component_.SetPpu(jucy_boy_->GetPpu());
 		listener_deregister_functions_.emplace_back(jucy_boy_->GetApu().AddListener([this](APU::SampleBatch &sample_batch) { audio_player_component_.OnNewSamples(sample_batch); }));
 
-		cpu_debug_component_.SetCpu(jucy_boy_->GetCpu());
-		memory_map_component_.SetMmu(jucy_boy_->GetMmu());
-		ppu_debug_component_.SetPpu(jucy_boy_->GetPpu());
+		debugger_component_.SetJucyBoy(*jucy_boy_);
 
 		loaded_rom_file_path_ = std::move(file_path);
 	}
@@ -72,10 +55,7 @@ void JucyBoyComponent::StartEmulation()
 {
 	if (!jucy_boy_ || jucy_boy_->IsRunning()) return;
 
-	jucy_boy_->StartEmulation(cpu_debug_component_.isVisible());
-
-	cpu_debug_component_.OnEmulationStarted();
-	memory_map_component_.OnEmulationStarted();
+	jucy_boy_->StartEmulation(debugger_window_.isVisible());
 }
 
 void JucyBoyComponent::PauseEmulation()
@@ -92,55 +72,17 @@ void JucyBoyComponent::PauseEmulation()
 		juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 	}
 
-	cpu_debug_component_.OnEmulationPaused();
-	memory_map_component_.OnEmulationPaused();
-}
-
-void JucyBoyComponent::UpdateDebugComponents(bool compute_diff)
-{
-	cpu_debug_component_.UpdateState(compute_diff);
-	memory_map_component_.UpdateState(compute_diff);
-	ppu_debug_component_.UpdateState();
+	debugger_component_.OnEmulationPaused();
 }
 
 void JucyBoyComponent::paint(juce::Graphics& g)
 {
-	g.fillAll(juce::Colours::white);
-
-	g.setColour(juce::Colours::orange);
-	g.setFont(14.0f);
-
-	std::stringstream usage_instructions;
-	usage_instructions << "Space: run / stop" << std::endl;
-	usage_instructions << "Right: step over" << std::endl;
-	g.drawFittedText(usage_instructions.str(), usage_instructions_area_, juce::Justification::centred, 2);
-
-	g.drawRect(usage_instructions_area_, 1);
 }
 
 void JucyBoyComponent::resized()
 {
 	auto working_area = getLocalBounds();
 	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
-
-	if (cpu_debug_component_.isVisible())
-	{
-		auto cpu_debug_area = working_area.removeFromLeft(cpu_status_width_);
-		usage_instructions_area_ = cpu_debug_area.removeFromTop(40);
-		cpu_debug_component_.setBounds(cpu_debug_area);
-	}
-
-	if (memory_map_component_.isVisible())
-	{
-		auto memory_debug_area = working_area.removeFromLeft(memory_map_width_);
-		memory_map_component_.setBounds(memory_debug_area);
-	}
-
-	if (ppu_debug_component_.isVisible())
-	{
-		auto ppu_tileset_area = working_area.removeFromLeft(ppu_tileset_width_);
-		ppu_debug_component_.setBounds(ppu_tileset_area);
-	}
 }
 
 void JucyBoyComponent::SaveState() const
@@ -193,7 +135,7 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 	if (was_cpu_running)
 	{
 		PauseEmulation();
-		UpdateDebugComponents(false);
+		debugger_component_.UpdateState(false);
 	}
 
 	juce::PopupMenu menu;
@@ -205,9 +147,7 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 	menu.addItem(++item_index, "Save state", jucy_boy_ != nullptr);
 	menu.addItem(++item_index, "Load state", jucy_boy_ != nullptr);
 	menu.addSeparator();
-	menu.addItem(++item_index, "Enable CPU debugging", true, cpu_debug_component_.isVisible());
-	menu.addItem(++item_index, "Enable memory map", true, memory_map_component_.isVisible());
-	menu.addItem(++item_index, "Enable graphics debugging", true, ppu_debug_component_.isVisible());
+	menu.addItem(++item_index, "Enable debugging", true, debugger_window_.isVisible());
 	menu.addSeparator();
 	menu.addItem(++item_index, "Options...");
 	const int selected_item = menu.show();
@@ -224,7 +164,7 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 			try
 			{
 				LoadRom(rom_file.getFullPathName().toStdString());
-				if (!cpu_debug_component_.isVisible()) StartEmulation();
+				if (!debugger_window_.isVisible()) StartEmulation();
 			}
 			catch (std::exception &e)
 			{
@@ -236,7 +176,7 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 		try
 		{
 			LoadRom(loaded_rom_file_path_);
-			if (!cpu_debug_component_.isVisible()) StartEmulation();
+			if (!debugger_window_.isVisible()) StartEmulation();
 		}
 		catch (std::exception &e)
 		{
@@ -250,15 +190,9 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 		LoadState();
 		break;
 	case 5:
-		EnableDebugging(cpu_debug_component_, !cpu_debug_component_.isVisible());
+		debugger_window_.setVisible(true);
 		break;
 	case 6:
-		EnableDebugging(memory_map_component_, !memory_map_component_.isVisible());
-		break;
-	case 7:
-		EnableDebugging(ppu_debug_component_, !ppu_debug_component_.isVisible());
-		break;
-	case 8:
 		options_window_.setVisible(true);
 		break;
 	default:
@@ -277,7 +211,7 @@ bool JucyBoyComponent::keyPressed(const juce::KeyPress &key)
 		if (jucy_boy_->IsRunning())
 		{
 			PauseEmulation();
-			UpdateDebugComponents(true);
+			debugger_component_.UpdateState(true);
 			game_screen_component_.UpdateFramebuffer();
 		}
 		else
@@ -291,13 +225,13 @@ bool JucyBoyComponent::keyPressed(const juce::KeyPress &key)
 
 		try
 		{
-			jucy_boy_->StepOver(cpu_debug_component_.isVisible());
+			jucy_boy_->StepOver(debugger_window_.isVisible());
 		}
 		catch (std::exception &e)
 		{
 			juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 		}
-		UpdateDebugComponents(true);
+		debugger_component_.UpdateState(true);
 		game_screen_component_.UpdateFramebuffer();
 	}
 
@@ -353,22 +287,7 @@ void JucyBoyComponent::OnRunningLoopInterrupted()
 {
 	juce::MessageManager::callAsync([this]() {
 		PauseEmulation();
-		UpdateDebugComponents(true);
+		debugger_component_.UpdateState(true);
 		game_screen_component_.UpdateFramebuffer();
 	});
-}
-
-void JucyBoyComponent::EnableDebugging(Component &component, bool enable)
-{
-	component.setVisible(enable);
-	setSize(ComputeWindowWidth(), 144 * 4);
-}
-
-int JucyBoyComponent::ComputeWindowWidth() const
-{
-	int total_width{ 160 * 4 };
-	if (cpu_debug_component_.isVisible()) total_width += cpu_status_width_;
-	if (memory_map_component_.isVisible()) total_width += memory_map_width_;
-	if (ppu_debug_component_.isVisible()) total_width += ppu_tileset_width_;
-	return total_width;
 }

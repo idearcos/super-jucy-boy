@@ -1,5 +1,4 @@
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "OptionsWindow.h"
+#include "AudioOptionsComponent.h"
 #include "../AudioPlayerComponent.h"
 
 AudioOptionsComponent::AudioOptionsComponent(AudioPlayerComponent &audio_player_component) :
