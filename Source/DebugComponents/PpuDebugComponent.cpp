@@ -21,7 +21,13 @@ PpuDebugComponent::~PpuDebugComponent()
 	shutdownOpenGL();
 }
 
-void PpuDebugComponent::UpdateState()
+void PpuDebugComponent::SetPpu(DebugPPU &debug_ppu)
+{
+	debug_ppu_ = &debug_ppu;
+	debug_ppu_->AddListener([this]() { UpdateTileset(); });
+}
+
+void PpuDebugComponent::UpdateTileset()
 {
 	if (!debug_ppu_) return;
 

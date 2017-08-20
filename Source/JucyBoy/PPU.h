@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <list>
 #include "Sprite.h"
 #include "CPU.h"
 
@@ -46,13 +47,6 @@ public:
 	using Tile = std::array<uint8_t, 8 * 8>;
 	using Framebuffer = std::array<Color, 160 * 144>;
 
-	class Listener
-	{
-	public:
-		virtual ~Listener() {}
-		virtual void OnNewFrame(const Framebuffer &/*framebuffer*/) {}
-	};
-
 public:
 	PPU(MMU &mmu);
 	virtual ~PPU() = default;
@@ -69,8 +63,8 @@ public:
 	void OnIoMemoryWritten(const Memory::Address &address, uint8_t value);
 
 	// Listeners management
-	void AddListener(Listener &listener) { listeners_.insert(&listener); }
-	void RemoveListener(Listener &listener) { listeners_.erase(&listener); }
+	using Listener = std::function<void()>;
+	std::function<void()> AddListener(Listener listener);
 
 	const Framebuffer& GetFramebuffer() const { return framebuffer_; }
 
@@ -176,7 +170,7 @@ protected:
 	} oam_dma_;
 
 	MMU* mmu_{ nullptr };
-	std::set<Listener*> listeners_;
+	std::list<Listener> listeners_;
 
 private:
 	PPU(const PPU&) = delete;

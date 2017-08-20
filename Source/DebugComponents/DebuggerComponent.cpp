@@ -29,7 +29,7 @@ void DebuggerComponent::UpdateState(bool compute_diff)
 {
 	cpu_debug_component_.UpdateState(compute_diff);
 	memory_map_component_.UpdateState(compute_diff);
-	ppu_debug_component_.UpdateState();
+	ppu_debug_component_.UpdateTileset();
 }
 
 void DebuggerComponent::OnEmulationStarted()

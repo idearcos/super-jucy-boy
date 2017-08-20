@@ -588,12 +588,18 @@ void PPU::WriteOam(const Memory::Address &address, uint8_t value)
 }
 #pragma endregion
 
-#pragma region Listener notification
+#pragma region Listeners
+std::function<void()> PPU::AddListener(Listener listener)
+{
+	auto it = listeners_.emplace(listeners_.begin(), listener);
+	return [it, this]() { listeners_.erase(it); };
+}
+
 void PPU::NotifyNewFrame() const
 {
 	for (auto& listener : listeners_)
 	{
-		listener->OnNewFrame(framebuffer_);
+		listener();
 	}
 }
 #pragma endregion

@@ -18,7 +18,7 @@ public:
 	void paint(juce::Graphics&) override {}
 	void resized() override {}
 
-	void OnNewFrame(const PPU::Framebuffer &ppu_framebuffer) override;
+	void OnNewFrame();
 
 	void SetPpu(PPU &ppu);
 	void UpdateFramebuffer();

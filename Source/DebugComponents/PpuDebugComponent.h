@@ -3,15 +3,15 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../JucyBoy/Debug/DebugPPU.h"
 
-class PpuDebugComponent final : public juce::OpenGLAppComponent
+class PpuDebugComponent final : public juce::OpenGLAppComponent, public PPU::Listener
 {
 public:
 	PpuDebugComponent();
 	~PpuDebugComponent();
 
-	void SetPpu(DebugPPU &debug_ppu) { debug_ppu_ = &debug_ppu; }
+	void SetPpu(DebugPPU &debug_ppu);
 
-	void UpdateState();
+	void UpdateTileset();
 
 	// OpenGl2DComponent overrides
 	void render() override;

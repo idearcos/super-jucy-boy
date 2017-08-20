@@ -167,9 +167,11 @@ void GameScreenComponent::shutdown()
 	glDeleteProgram(shader_program_);
 }
 
-void GameScreenComponent::OnNewFrame(const PPU::Framebuffer &ppu_framebuffer)
+void GameScreenComponent::OnNewFrame()
 {
 	std::unique_lock<std::mutex> lock{ framebuffer_mutex_ };
+
+	const auto ppu_framebuffer = ppu_->GetFramebuffer();
 
 	for (int i = 0; i < ppu_framebuffer.size(); ++i)
 	{
@@ -183,7 +185,7 @@ void GameScreenComponent::OnNewFrame(const PPU::Framebuffer &ppu_framebuffer)
 void GameScreenComponent::SetPpu(PPU &ppu)
 {
 	ppu_ = &ppu;
-	ppu_->AddListener(*this);
+	ppu_->AddListener([this]() { OnNewFrame(); });
 }
 
 void GameScreenComponent::UpdateFramebuffer()
