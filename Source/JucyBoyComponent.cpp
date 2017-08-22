@@ -88,14 +88,16 @@ void JucyBoyComponent::resized()
 void JucyBoyComponent::SaveState() const
 {
 	auto save_state_file_path{ loaded_rom_file_path_ };
+	const auto extension = ".jb" + std::to_string(selected_save_slot_);
+
 	const auto last_dot_position = save_state_file_path.find_last_of('.');
 	if (std::string::npos != last_dot_position)
 	{
-		save_state_file_path.replace(last_dot_position, std::string::npos, ".sav");
+		save_state_file_path.replace(last_dot_position, std::string::npos, extension);
 	}
 	else
 	{
-		save_state_file_path.append(".sav");
+		save_state_file_path.append(extension);
 	}
 
 	std::ofstream save_state_file{ save_state_file_path, std::ios::binary };
@@ -109,14 +111,16 @@ void JucyBoyComponent::SaveState() const
 void JucyBoyComponent::LoadState()
 {
 	auto save_state_file_path{ loaded_rom_file_path_ };
+	const auto extension = ".jb" + std::to_string(selected_save_slot_);
+
 	const auto last_dot_position = save_state_file_path.find_last_of('.');
 	if (std::string::npos != last_dot_position)
 	{
-		save_state_file_path.replace(last_dot_position, std::string::npos, ".sav");
+		save_state_file_path.replace(last_dot_position, std::string::npos, extension);
 	}
 	else
 	{
-		save_state_file_path.append(".sav");
+		save_state_file_path.append(extension);
 	}
 
 	std::ifstream save_state_file{ save_state_file_path, std::ios::binary };

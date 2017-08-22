@@ -55,5 +55,7 @@ private:
 	DebuggerComponent debugger_component_;
 	AdditionalWindow debugger_window_{ debugger_component_, "JucyBoy Debugger", juce::Colours::white, juce::DocumentWindow::closeButton };
 
+	size_t selected_save_slot_{ 0 };
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoyComponent)
 };
