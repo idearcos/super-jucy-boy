@@ -19,16 +19,17 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 	rom_read_stream.seekg(0, std::ios::beg);
 
 	// Get number of ROM banks according to header
-	const auto rom_size = GetRomSize(file_header[0x148]);
-	if (file_size != rom_size) throw std::invalid_argument{ "ROM file size (" + std::to_string(file_size) + " bytes) is not the same as the ROM size according to header (" + std::to_string(rom_size) + " bytes)" };
+	const auto num_rom_banks = GetNumRomBanks(file_header[0x148]);
+	if (file_size != (num_rom_banks * Memory::rom_bank_size_)) throw std::invalid_argument{ "ROM file size (" + std::to_string(file_size) + " bytes) is not the same as the ROM size according to header (" + std::to_string(num_rom_banks) + " banks of 16384 bytes)" };
 
 	// Create ROM banks
-	for (auto i = 0; i < file_size / Memory::rom_bank_size_; ++i)
+	for (auto ii = 0; ii < num_rom_banks; ++ii)
 	{
 		rom_banks_.emplace_back();
 		rom_banks_.back().resize(Memory::rom_bank_size_);
 		rom_read_stream.read(reinterpret_cast<char*>(rom_banks_.back().data()), rom_banks_.back().size());
 	}
+	rom_bank_selection_mask = num_rom_banks - 1;
 
 	rom_read_stream.close();
 
@@ -78,6 +79,7 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 	{
 		external_ram_banks_.emplace_back(Memory::external_ram_bank_size_, uint8_t{ 0 });
 	}
+	external_ram_bank_selection_mask = !external_ram_banks_.empty() ? (external_ram_banks_.size() - 1) : 0;
 }
 
 #pragma region MMU mapped memory read/write functions
@@ -124,35 +126,36 @@ void Cartridge::OnExternalRamWritten(const Memory::Address &address, uint8_t val
 
 void Cartridge::LoadRomBank(size_t rom_bank_number)
 {
-	assert(rom_bank_number != 0);
-	if (rom_bank_number >= rom_banks_.size()) throw std::invalid_argument("Requested invalid ROM bank: " + std::to_string(rom_bank_number));
+	if ((rom_bank_number & rom_bank_selection_mask) >= rom_banks_.size()) throw std::invalid_argument("Requested invalid ROM bank: " + std::to_string(rom_bank_number));
 
-	loaded_rom_bank_ = rom_bank_number;
+	loaded_rom_bank_ = rom_bank_number & rom_bank_selection_mask;
 }
 
 void Cartridge::LoadRamBank(size_t external_ram_bank_number)
 {
-	if (external_ram_bank_number >= external_ram_banks_.size()) throw std::invalid_argument("Requested invalid external RAM bank: " + std::to_string(external_ram_bank_number));
+	if (external_ram_banks_.empty()) return;
+	if ((external_ram_bank_number & external_ram_bank_selection_mask) >= external_ram_banks_.size())  throw std::invalid_argument("Requested invalid external RAM bank: " + std::to_string(external_ram_bank_number));
 
-	loaded_external_ram_bank_ = external_ram_bank_number;
+	loaded_external_ram_bank_ = external_ram_bank_number & external_ram_bank_selection_mask;
 }
 
-size_t Cartridge::GetRomSize(uint8_t rom_size_code)
+size_t Cartridge::GetNumRomBanks(uint8_t rom_size_code)
 {
 	switch (rom_size_code)
 	{
-	case 0x00: return 2 * Memory::rom_bank_size_; // 0x8000
-	case 0x01: return 4 * Memory::rom_bank_size_; // 0x10000
-	case 0x02: return 8 * Memory::rom_bank_size_; // 0x20000
-	case 0x03: return 16 * Memory::rom_bank_size_; // 0x40000
-	case 0x04: return 32 * Memory::rom_bank_size_; // 0x80000
-	case 0x05: return 64 * Memory::rom_bank_size_; // 0x100000
-	case 0x06: return 128 * Memory::rom_bank_size_; // 0x200000
-	case 0x07: return 256 * Memory::rom_bank_size_; // 0x400000
-	case 0x08: return 512 * Memory::rom_bank_size_; // 0x800000
-	case 0x52: return 72 * Memory::rom_bank_size_; // 0x120000
-	case 0x53: return 80 * Memory::rom_bank_size_; // 0x140000
-	case 0x54: return 96 * Memory::rom_bank_size_; // 0x180000
+	case 0x00:
+	case 0x01:
+	case 0x02:
+	case 0x03:
+	case 0x04:
+	case 0x05:
+	case 0x06:
+	case 0x07:
+	case 0x08:
+		return 2 << rom_size_code;
+	//case 0x52: return 72; // 0x120000 bytes
+	//case 0x53: return 80; // 0x140000 bytes
+	//case 0x54: return 96; // 0x180000 bytes
 
 	default: throw std::invalid_argument{ "Unsupported ROM size code: " + std::to_string(static_cast<int>(rom_size_code)) };
 	}
@@ -169,12 +172,12 @@ void Cartridge::OnMbc1Written(const Memory::Address &address, uint8_t value)
 		break;
 	case 0x2000:
 	case 0x3000:
-	{auto rom_bank_to_load = (loaded_rom_bank_ & 0x60) | (value & 0x1F);
+		{auto rom_bank_to_load = (loaded_rom_bank_ & 0x60) | (value & 0x1F);
 
-	// Banks 0x00, 0x20, 0x40 and 0x60 are unavailable and point to the next bank instead
-	if ((rom_bank_to_load & 0x1F) == 0) rom_bank_to_load += 1;
-	LoadRomBank(rom_bank_to_load); }
-	break;
+		// Banks 0x00, 0x20, 0x40 and 0x60 are unavailable and point to the next bank instead
+		if ((rom_bank_to_load & 0x1F) == 0) rom_bank_to_load += 1;
+		LoadRomBank(rom_bank_to_load); }
+		break;
 	case 0x4000:
 	case 0x5000:
 		if (mbc1_ram_banking_mode_enabled_)
@@ -196,13 +199,13 @@ void Cartridge::OnMbc1Written(const Memory::Address &address, uint8_t value)
 		// Correct the ROM/RAM memory banks for the new mode
 		if (mbc1_ram_banking_mode_enabled_)
 		{
-			loaded_external_ram_bank_ = loaded_rom_bank_ >> 5;
-			loaded_rom_bank_ &= 0x1F;
+			LoadRamBank(loaded_rom_bank_ >> 5);
+			LoadRomBank(loaded_rom_bank_ & 0x1F);
 		}
 		else
 		{
-			loaded_rom_bank_ = (loaded_rom_bank_ & 0x1F) | (loaded_external_ram_bank_ << 5);
-			loaded_external_ram_bank_ = 0;
+			LoadRomBank((loaded_rom_bank_ & 0x1F) | (loaded_external_ram_bank_ << 5));
+			LoadRamBank(0);
 		}
 
 		break;

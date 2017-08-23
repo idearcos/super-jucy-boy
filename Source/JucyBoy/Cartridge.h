@@ -27,7 +27,7 @@ public:
 	void serialize(Archive &archive);
 
 private:
-	static size_t GetRomSize(uint8_t rom_size_code);
+	static size_t GetNumRomBanks(uint8_t rom_size_code);
 
 	inline void OnNoMbcWritten(const Memory::Address&, uint8_t) { return; }
 	void OnMbc1Written(const Memory::Address &address, uint8_t value);
@@ -39,7 +39,9 @@ private:
 	std::function<void(const Memory::Address&, uint8_t)> mbc_write_function_;
 
 	size_t loaded_rom_bank_{ 1 };
+	size_t rom_bank_selection_mask{ 0 };
 	size_t loaded_external_ram_bank_{ 0 };
+	size_t external_ram_bank_selection_mask{ 0 };
 	bool external_ram_enabled_{ false };
 
 	// MBC implementation members
