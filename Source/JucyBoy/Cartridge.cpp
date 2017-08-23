@@ -45,7 +45,7 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 		mbc_write_function_ = std::bind(&Cartridge::OnMbc1Written, this, std::placeholders::_1, std::placeholders::_2);
 		break;
 	default:
-		throw std::logic_error{ "Unsupported MBC: " + std::to_string(static_cast<int>(file_header[0x147])) };
+		throw std::logic_error{ "Unsupported cartridge type: " + GetMbcType(file_header[0x147]) };
 	}
 
 	// Create the necessary number of external RAM banks
@@ -212,3 +212,39 @@ void Cartridge::OnMbc1Written(const Memory::Address &address, uint8_t value)
 	}
 }
 #pragma endregion
+
+std::string Cartridge::GetMbcType(uint8_t cartridge_type_code)
+{
+	switch (cartridge_type_code)
+	{
+	case 0x00: return "ROM only";
+	case 0x01: return "MBC1";
+	case 0x02: return "MBC1 + RAM";
+	case 0x03: return "MBC1 + RAM + Battery";
+	case 0x05: return "MBC2";
+	case 0x06: return "MBC2 + Battery";
+	case 0x08: return "ROM + RAM";
+	case 0x09: return "ROM + RAM + Battery";
+	case 0x0B: return "MMM01";
+	case 0x0C: return "MMM01 + RAM";
+	case 0x0D: return "MMM01 + RAM + Battery";
+	case 0x0F: return "MBC3 + Timer + Battery";
+	case 0x10: return "MBC3 + Timer + RAM + Battery";
+	case 0x11: return "MBC3";
+	case 0x12: return "MBC3 + RAM";
+	case 0x13: return "MBC3 + RAM + Battery";
+	case 0x19: return "MBC5";
+	case 0x1A: return "MBC5 + RAM";
+	case 0x1B: return "MBC5 + RAM + Battery";
+	case 0x1C: return "MBC5 + Rumble";
+	case 0x1D: return "MBC5 + Rumble + RAM";
+	case 0x1E: return "MBC5 + Rumble + RAM + Battery";
+	case 0x20: return "MBC6";
+	case 0x22: return "MBC7 + Sensor + Rumble + RAM + Battery";
+	case 0xFC: return "Pocket Camera";
+	case 0xFD: return "Bandai Tama5";
+	case 0xFE: return "HuC3";
+	case 0xFF: return "HuC1 + RAM + Battery";
+	default: throw std::logic_error{ "Unknown cartridge type code: " + std::to_string(cartridge_type_code) };
+	}
+}
