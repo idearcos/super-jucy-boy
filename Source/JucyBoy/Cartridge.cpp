@@ -29,7 +29,6 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 		rom_banks_.back().resize(Memory::rom_bank_size_);
 		rom_read_stream.read(reinterpret_cast<char*>(rom_banks_.back().data()), rom_banks_.back().size());
 	}
-	rom_bank_selection_mask = num_rom_banks - 1;
 
 	rom_read_stream.close();
 
@@ -79,13 +78,12 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 	{
 		external_ram_banks_.emplace_back(Memory::external_ram_bank_size_, uint8_t{ 0 });
 	}
-	external_ram_bank_selection_mask = !external_ram_banks_.empty() ? (external_ram_banks_.size() - 1) : 0;
 }
 
 #pragma region MMU mapped memory read/write functions
 uint8_t Cartridge::OnRomBank0Read(const Memory::Address &address) const
 {
-	return rom_banks_[0][address.GetRelative()];
+	return rom_banks_[selected_rom_bank_0_][address.GetRelative()];
 }
 
 void Cartridge::OnRomBank0Written(const Memory::Address &address, uint8_t value)
@@ -95,7 +93,7 @@ void Cartridge::OnRomBank0Written(const Memory::Address &address, uint8_t value)
 
 uint8_t Cartridge::OnRomBankNRead(const Memory::Address &address) const
 {
-	return rom_banks_[loaded_rom_bank_][address.GetRelative()];
+	return rom_banks_[selected_rom_bank_N_][address.GetRelative()];
 }
 
 void Cartridge::OnRomBankNWritten(const Memory::Address &address, uint8_t value)
@@ -108,9 +106,9 @@ uint8_t Cartridge::OnExternalRamRead(const Memory::Address &address) const
 	if (!external_ram_enabled_) return 0xFF;
 	if (external_ram_banks_.empty()) return 0xFF;
 
-	if (address.GetRelative() >= external_ram_banks_[loaded_external_ram_bank_].size()) throw std::out_of_range{ "Trying to read from out of external RAM range" };
+	if (address.GetRelative() >= external_ram_banks_[selected_external_ram_bank_].size()) throw std::out_of_range{ "Trying to read from out of external RAM range" };
 
-	return external_ram_banks_[loaded_external_ram_bank_][address.GetRelative()];
+	return external_ram_banks_[selected_external_ram_bank_][address.GetRelative()];
 }
 
 void Cartridge::OnExternalRamWritten(const Memory::Address &address, uint8_t value)
@@ -118,26 +116,60 @@ void Cartridge::OnExternalRamWritten(const Memory::Address &address, uint8_t val
 	if (!external_ram_enabled_) return;
 	if (external_ram_banks_.empty()) return;
 
-	if (address.GetRelative() >= external_ram_banks_[loaded_external_ram_bank_].size()) return;
+	if (address.GetRelative() >= external_ram_banks_[selected_external_ram_bank_].size()) return;
 
-	external_ram_banks_[loaded_external_ram_bank_][address.GetRelative()] = value;
+	external_ram_banks_[selected_external_ram_bank_][address.GetRelative()] = value;
 }
 #pragma endregion
 
-void Cartridge::LoadRomBank(size_t rom_bank_number)
+void Cartridge::UpdateSelectedBanks()
 {
-	if ((rom_bank_number & rom_bank_selection_mask) >= rom_banks_.size()) throw std::invalid_argument("Requested invalid ROM bank: " + std::to_string(rom_bank_number));
+	// In RAM banking mode, the lower region can also point to banks 0x20, 0x40 and 0x60
+	selected_rom_bank_0_ = mbc1_ram_banking_mode_enabled_ ? ((bank_selection_value_ & 0x60) & GetRomBankSelectionMask()) : 0;
 
-	loaded_rom_bank_ = rom_bank_number & rom_bank_selection_mask;
+	selected_rom_bank_N_ = bank_selection_value_ & GetRomBankSelectionMask();
+
+	// For banks 0x00, 0x20, 0x40 and 0x60 the high region points to the next bank instead
+	if ((bank_selection_value_ & 0x1F) == 0)
+	{
+		selected_rom_bank_N_ += 1;
+	}
+
+	selected_external_ram_bank_ = mbc1_ram_banking_mode_enabled_ ? (((bank_selection_value_ >> 5) & GetRamBankSelectionMask())) : 0;
 }
 
-void Cartridge::LoadRamBank(size_t external_ram_bank_number)
+#pragma region MBC implementations
+void Cartridge::OnMbc1Written(const Memory::Address &address, uint8_t value)
 {
-	if (external_ram_banks_.empty()) return;
-	if ((external_ram_bank_number & external_ram_bank_selection_mask) >= external_ram_banks_.size())  throw std::invalid_argument("Requested invalid external RAM bank: " + std::to_string(external_ram_bank_number));
+	switch (static_cast<uint16_t>(address & 0xF000))
+	{
+	case 0x0000:
+	case 0x1000:
+		external_ram_enabled_ = ((value & 0x0F) == 0x0A);
+		break;
+	case 0x2000:
+	case 0x3000:
+		// Writes the lower 5 bits
+		bank_selection_value_ = (bank_selection_value_ & 0x60) | (value & 0x1F);
+		UpdateSelectedBanks();
+		break;
+	case 0x4000:
+	case 0x5000:
+		// Writes the upper 2 bits
+		bank_selection_value_ = (bank_selection_value_ & 0x1F) | ((value & 0x03) << 5);
+		UpdateSelectedBanks();
+		break;
+	case 0x6000:
+	case 0x7000:
+		mbc1_ram_banking_mode_enabled_ = ((value & 0x01) != 0);
 
-	loaded_external_ram_bank_ = external_ram_bank_number & external_ram_bank_selection_mask;
+		// Correct the ROM/RAM memory banks for the new mode
+		UpdateSelectedBanks();
+
+		break;
+	}
 }
+#pragma endregion
 
 size_t Cartridge::GetNumRomBanks(uint8_t rom_size_code)
 {
@@ -153,65 +185,13 @@ size_t Cartridge::GetNumRomBanks(uint8_t rom_size_code)
 	case 0x07:
 	case 0x08:
 		return 2 << rom_size_code;
-	//case 0x52: return 72; // 0x120000 bytes
-	//case 0x53: return 80; // 0x140000 bytes
-	//case 0x54: return 96; // 0x180000 bytes
+		//case 0x52: return 72; // 0x120000 bytes
+		//case 0x53: return 80; // 0x140000 bytes
+		//case 0x54: return 96; // 0x180000 bytes
 
 	default: throw std::invalid_argument{ "Unsupported ROM size code: " + std::to_string(static_cast<int>(rom_size_code)) };
 	}
 }
-
-#pragma region MBC implementations
-void Cartridge::OnMbc1Written(const Memory::Address &address, uint8_t value)
-{
-	switch (static_cast<uint16_t>(address & 0xF000))
-	{
-	case 0x0000:
-	case 0x1000:
-		external_ram_enabled_ = ((value & 0x0F) == 0x0A);
-		break;
-	case 0x2000:
-	case 0x3000:
-		{auto rom_bank_to_load = (loaded_rom_bank_ & 0x60) | (value & 0x1F);
-
-		// Banks 0x00, 0x20, 0x40 and 0x60 are unavailable and point to the next bank instead
-		if ((rom_bank_to_load & 0x1F) == 0) rom_bank_to_load += 1;
-		LoadRomBank(rom_bank_to_load); }
-		break;
-	case 0x4000:
-	case 0x5000:
-		if (mbc1_ram_banking_mode_enabled_)
-		{
-			LoadRamBank(value & 0x03);
-		}
-		else
-		{
-			LoadRomBank((loaded_rom_bank_ & 0x1F) | ((value & 0x03) << 5));
-		}
-		break;
-	case 0x6000:
-	case 0x7000:
-		const auto was_ram_banking_mode = mbc1_ram_banking_mode_enabled_;
-		mbc1_ram_banking_mode_enabled_ = ((value & 0x01) != 0);
-
-		if (mbc1_ram_banking_mode_enabled_ == was_ram_banking_mode) break;
-
-		// Correct the ROM/RAM memory banks for the new mode
-		if (mbc1_ram_banking_mode_enabled_)
-		{
-			LoadRamBank(loaded_rom_bank_ >> 5);
-			LoadRomBank(loaded_rom_bank_ & 0x1F);
-		}
-		else
-		{
-			LoadRomBank((loaded_rom_bank_ & 0x1F) | (loaded_external_ram_bank_ << 5));
-			LoadRamBank(0);
-		}
-
-		break;
-	}
-}
-#pragma endregion
 
 std::string Cartridge::GetMbcType(uint8_t cartridge_type_code)
 {
