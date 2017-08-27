@@ -78,6 +78,22 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 	{
 		external_ram_banks_.emplace_back(Memory::external_ram_bank_size_, uint8_t{ 0 });
 	}
+
+	// Verify whether the cartridge has an external battery to save RAM state
+	const auto has_external_battery = HasExternalBattery(file_header[0x147]);
+	if (has_external_battery)
+	{
+		eram_save_file_path_ = rom_file_path;
+		const auto last_dot_position = eram_save_file_path_.find_last_of('.');
+		if (std::string::npos != last_dot_position)
+		{
+			eram_save_file_path_.replace(last_dot_position, std::string::npos, ".sav");
+		}
+		else
+		{
+			eram_save_file_path_.append(".sav");
+		}
+	}
 }
 
 #pragma region MMU mapped memory read/write functions
@@ -226,5 +242,26 @@ std::string Cartridge::GetMbcType(uint8_t cartridge_type_code)
 	case 0xFE: return "HuC3";
 	case 0xFF: return "HuC1 + RAM + Battery";
 	default: throw std::logic_error{ "Unknown cartridge type code: " + std::to_string(cartridge_type_code) };
+	}
+}
+
+bool Cartridge::HasExternalBattery(uint8_t cartridge_type_code)
+{
+	switch (cartridge_type_code)
+	{
+	case 0x03:
+	case 0x06:
+	case 0x09:
+	case 0x0D:
+	case 0x0F:
+	case 0x10:
+	case 0x13:
+	case 0x1B:
+	case 0x1E:
+	case 0x22:
+	case 0xFF:
+		return true;
+	default:
+		return false;
 	}
 }

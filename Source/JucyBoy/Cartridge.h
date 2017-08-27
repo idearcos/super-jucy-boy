@@ -25,6 +25,7 @@ public:
 private:
 	static size_t GetNumRomBanks(uint8_t rom_size_code);
 	static std::string GetMbcType(uint8_t cartridge_type_code);
+	static bool HasExternalBattery(uint8_t cartridge_type_code);
 
 	inline void OnNoMbcWritten(const Memory::Address&, uint8_t) { return; }
 	void OnMbc1Written(const Memory::Address &address, uint8_t value);
@@ -47,6 +48,8 @@ private:
 
 	// MBC implementation members
 	bool mbc1_ram_banking_mode_enabled_{ false };
+
+	std::string eram_save_file_path_;
 };
 
 template<class Archive>
