@@ -9,7 +9,7 @@ class Cartridge final
 {
 public:
 	Cartridge(const std::string &rom_file_path);
-	~Cartridge() = default;
+	~Cartridge();
 
 	// MMU mapped memory read/write functions
 	uint8_t OnRomBank0Read(const Memory::Address &address) const;

@@ -79,7 +79,7 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 		external_ram_banks_.emplace_back(Memory::external_ram_bank_size_, uint8_t{ 0 });
 	}
 
-	// Verify whether the cartridge has an external battery to save RAM state
+	// Verify whether the cartridge has an external battery to load RAM state file
 	const auto has_external_battery = HasExternalBattery(file_header[0x147]);
 	if (has_external_battery)
 	{
@@ -92,6 +92,38 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 		else
 		{
 			eram_save_file_path_.append(".sav");
+		}
+
+		std::ifstream eram_sav_file{ eram_save_file_path_, std::ios::binary | std::ios::ate };
+		if (!eram_sav_file.is_open()) return;
+		
+		const auto file_size = static_cast<size_t>(eram_sav_file.tellg());
+		size_t total_eram_size{ 0 };
+		for (const auto &eram_bank : external_ram_banks_)
+		{
+			total_eram_size += eram_bank.size();
+		}
+		if (file_size != total_eram_size) return;
+
+		eram_sav_file.seekg(0, std::ios::beg);
+		for (auto &eram_bank : external_ram_banks_)
+		{
+			eram_sav_file.read(reinterpret_cast<char*>(eram_bank.data()), eram_bank.size());
+		}
+	}
+}
+
+Cartridge::~Cartridge()
+{
+	// Verify whether the cartridge has an external battery to save RAM state file
+	if (!eram_save_file_path_.empty())
+	{
+		std::ofstream eram_sav_file{ eram_save_file_path_, std::ios::binary | std::ios::trunc };
+		if (!eram_sav_file.is_open()) return;
+
+		for (auto &eram_bank : external_ram_banks_)
+		{
+			eram_sav_file.write(reinterpret_cast<char*>(eram_bank.data()), eram_bank.size());
 		}
 	}
 }
