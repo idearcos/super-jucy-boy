@@ -22,6 +22,8 @@ JucyBoyComponent::JucyBoyComponent()
 
 	// Debugger window
 	debugger_window_.setLookAndFeel(&look_and_feel_);
+
+	application_command_manager_.registerAllCommandsForTarget(this);
 }
 
 JucyBoyComponent::~JucyBoyComponent()
@@ -87,6 +89,8 @@ void JucyBoyComponent::resized()
 
 void JucyBoyComponent::SaveState() const
 {
+	if (loaded_rom_file_path_.empty()) return;
+
 	auto save_state_file_path{ loaded_rom_file_path_ };
 	const auto extension = ".jb" + std::to_string(selected_save_slot_);
 
@@ -110,6 +114,8 @@ void JucyBoyComponent::SaveState() const
 
 void JucyBoyComponent::LoadState()
 {
+	if (loaded_rom_file_path_.empty()) return;
+
 	auto save_state_file_path{ loaded_rom_file_path_ };
 	const auto extension = ".jb" + std::to_string(selected_save_slot_);
 
@@ -148,8 +154,8 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 	menu.addItem(++item_index, "Load ROM");
 	menu.addItem(++item_index, "Reset", jucy_boy_ != nullptr);
 	menu.addSeparator();
-	menu.addItem(++item_index, "Save state", jucy_boy_ != nullptr);
-	menu.addItem(++item_index, "Load state", jucy_boy_ != nullptr);
+	menu.addCommandItem(&application_command_manager_, CommandIDs::SaveStateCmd);
+	menu.addCommandItem(&application_command_manager_, CommandIDs::LoadStateCmd);
 	menu.addSeparator();
 	menu.addItem(++item_index, "Enable debugging", true, debugger_window_.isVisible());
 	menu.addSeparator();
@@ -294,4 +300,51 @@ void JucyBoyComponent::OnRunningLoopInterrupted()
 		debugger_component_.UpdateState(true);
 		game_screen_component_.UpdateFramebuffer();
 	});
+}
+
+juce::ApplicationCommandTarget* JucyBoyComponent::getNextCommandTarget()
+{
+	return findFirstTargetParentComponent();
+}
+
+void JucyBoyComponent::getAllCommands(juce::Array<juce::CommandID>& commands)
+{
+	const juce::CommandID ids[] = { CommandIDs::SaveStateCmd, CommandIDs::LoadStateCmd };
+	commands.addArray(ids, juce::numElementsInArray(ids));
+}
+
+void JucyBoyComponent::getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result)
+{
+	switch (commandID)
+	{
+	case CommandIDs::SaveStateCmd:
+		result.setInfo("Save state", "Save state in selected slot", "Save states", 0);
+		result.setActive(static_cast<bool>(jucy_boy_));
+		result.addDefaultKeypress('s', juce::ModifierKeys::commandModifier);
+		break;
+	case CommandIDs::LoadStateCmd:
+		result.setInfo("Load state", "Load state from selected slot", "Save states", 0);
+		result.setActive(static_cast<bool>(jucy_boy_));
+		result.addDefaultKeypress('l', juce::ModifierKeys::commandModifier);
+		break;
+	default:
+		break;
+	}
+}
+
+bool JucyBoyComponent::perform(const InvocationInfo& info)
+{
+	switch (info.commandID)
+	{
+	case CommandIDs::SaveStateCmd:
+		SaveState();
+		break;
+	case CommandIDs::LoadStateCmd:
+		LoadState();
+		break;
+	default:
+		return false;
+	}
+
+	return true;
 }

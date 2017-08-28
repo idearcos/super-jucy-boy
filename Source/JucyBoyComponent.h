@@ -13,7 +13,7 @@
 
 class JucyBoy;
 
-class JucyBoyComponent final : public juce::Component, public CPU::Listener
+class JucyBoyComponent final : public juce::Component, public juce::ApplicationCommandTarget, public CPU::Listener
 {
 public:
 	JucyBoyComponent();
@@ -38,6 +38,12 @@ private:
 	void SaveState() const;
 	void LoadState();
 
+	// juce::ApplicationCommandTarget overrides
+	ApplicationCommandTarget* getNextCommandTarget() override;
+	void getAllCommands(juce::Array<juce::CommandID>& commands) override;
+	void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result) override;
+	bool perform(const InvocationInfo& info) override;
+
 private:
 	std::unique_ptr<JucyBoy> jucy_boy_;
 
@@ -56,6 +62,13 @@ private:
 	AdditionalWindow debugger_window_{ debugger_component_, "JucyBoy Debugger", juce::Colours::white, juce::DocumentWindow::closeButton };
 
 	size_t selected_save_slot_{ 0 };
+
+	juce::ApplicationCommandManager application_command_manager_;
+	enum CommandIDs
+	{
+		SaveStateCmd = 0x2000,
+		LoadStateCmd = 0x2001
+	};
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoyComponent)
 };
