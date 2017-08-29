@@ -24,6 +24,7 @@ JucyBoyComponent::JucyBoyComponent()
 	debugger_window_.setLookAndFeel(&look_and_feel_);
 
 	application_command_manager_.registerAllCommandsForTarget(this);
+	addKeyListener(application_command_manager_.getKeyMappings());
 }
 
 JucyBoyComponent::~JucyBoyComponent()
