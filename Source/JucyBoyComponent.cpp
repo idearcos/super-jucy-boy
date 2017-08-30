@@ -130,10 +130,16 @@ void JucyBoyComponent::LoadState()
 		save_state_file_path.append(extension);
 	}
 
-	std::ifstream save_state_file{ save_state_file_path, std::ios::binary };
+	std::ifstream save_state_file{ save_state_file_path, std::ios::binary | std::ios::ate };
+	if (!save_state_file.is_open()) return;
 
-	{cereal::BinaryInputArchive  input_archive{ save_state_file };
-	input_archive(*jucy_boy_); }
+	const auto file_size = static_cast<size_t>(save_state_file.tellg());
+	if (file_size > 0)
+	{
+		save_state_file.seekg(0, std::ios::beg);
+		cereal::BinaryInputArchive  input_archive{ save_state_file };
+		input_archive(*jucy_boy_);
+	}
 
 	save_state_file.close();
 }
@@ -195,15 +201,9 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 		}
 		break;
 	case 3:
-		SaveState();
-		break;
-	case 4:
-		LoadState();
-		break;
-	case 5:
 		debugger_window_.setVisible(true);
 		break;
-	case 6:
+	case 4:
 		options_window_.setVisible(true);
 		break;
 	default:
@@ -335,6 +335,13 @@ void JucyBoyComponent::getCommandInfo(juce::CommandID commandID, juce::Applicati
 
 bool JucyBoyComponent::perform(const InvocationInfo& info)
 {
+	bool was_cpu_running{ jucy_boy_ ? jucy_boy_->IsRunning() : false };
+	if (was_cpu_running)
+	{
+		PauseEmulation();
+		debugger_component_.UpdateState(false);
+	}
+
 	switch (info.commandID)
 	{
 	case CommandIDs::SaveStateCmd:
@@ -346,6 +353,8 @@ bool JucyBoyComponent::perform(const InvocationInfo& info)
 	default:
 		return false;
 	}
+
+	if (was_cpu_running && jucy_boy_) StartEmulation();
 
 	return true;
 }
