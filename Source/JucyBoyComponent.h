@@ -37,6 +37,7 @@ private:
 	// Save/load state
 	void SaveState() const;
 	void LoadState();
+	void SelectSaveSlot(size_t selected_save_slot) { selected_save_slot_ = selected_save_slot; }
 
 	// juce::ApplicationCommandTarget overrides
 	ApplicationCommandTarget* getNextCommandTarget() override;
@@ -61,13 +62,22 @@ private:
 	DebuggerComponent debugger_component_;
 	AdditionalWindow debugger_window_{ debugger_component_, "JucyBoy Debugger", juce::Colours::white, juce::DocumentWindow::closeButton };
 
-	size_t selected_save_slot_{ 0 };
+	size_t selected_save_slot_{ 1 }; // Slot 0 is not used
 
 	juce::ApplicationCommandManager application_command_manager_;
+	// The command IDs have to be consecutive, due to the method used to feed them to the manager in getAllCommands
 	enum CommandIDs
 	{
 		SaveStateCmd = 0x2000,
-		LoadStateCmd = 0x2001
+		LoadStateCmd,
+		SelectSaveSlot1Cmd,
+		SelectSaveSlot2Cmd,
+		SelectSaveSlot3Cmd,
+		SelectSaveSlot4Cmd,
+		SelectSaveSlot5Cmd,
+		SelectSaveSlot6Cmd,
+		SelectSaveSlot7Cmd,
+		SelectSaveSlot8Cmd
 	};
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoyComponent)

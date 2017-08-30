@@ -155,6 +155,13 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 		debugger_component_.UpdateState(false);
 	}
 
+	juce::PopupMenu save_slot_submenu;
+	save_slot_submenu.setLookAndFeel(&look_and_feel_);
+	for (int select_slot_command_id = CommandIDs::SelectSaveSlot1Cmd; select_slot_command_id <= CommandIDs::SelectSaveSlot8Cmd; ++select_slot_command_id)
+	{
+		save_slot_submenu.addCommandItem(&application_command_manager_, select_slot_command_id);
+	}
+
 	juce::PopupMenu menu;
 	menu.setLookAndFeel(&look_and_feel_);
 	int item_index{ 0 };
@@ -163,6 +170,7 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 	menu.addSeparator();
 	menu.addCommandItem(&application_command_manager_, CommandIDs::SaveStateCmd);
 	menu.addCommandItem(&application_command_manager_, CommandIDs::LoadStateCmd);
+	menu.addSubMenu("Select save slot", save_slot_submenu);
 	menu.addSeparator();
 	menu.addItem(++item_index, "Enable debugging", true, debugger_window_.isVisible());
 	menu.addSeparator();
@@ -310,8 +318,10 @@ juce::ApplicationCommandTarget* JucyBoyComponent::getNextCommandTarget()
 
 void JucyBoyComponent::getAllCommands(juce::Array<juce::CommandID>& commands)
 {
-	const juce::CommandID ids[] = { CommandIDs::SaveStateCmd, CommandIDs::LoadStateCmd };
-	commands.addArray(ids, juce::numElementsInArray(ids));
+	for (int command_id = CommandIDs::SaveStateCmd; command_id <= CommandIDs::SelectSaveSlot8Cmd; ++command_id)
+	{
+		commands.add(command_id);
+	}
 }
 
 void JucyBoyComponent::getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result)
@@ -327,6 +337,18 @@ void JucyBoyComponent::getCommandInfo(juce::CommandID commandID, juce::Applicati
 		result.setInfo("Load state", "Load state from selected slot", "Save states", 0);
 		result.setActive(static_cast<bool>(jucy_boy_));
 		result.addDefaultKeypress('l', juce::ModifierKeys::commandModifier);
+		break;
+	case CommandIDs::SelectSaveSlot1Cmd:
+	case CommandIDs::SelectSaveSlot2Cmd:
+	case CommandIDs::SelectSaveSlot3Cmd:
+	case CommandIDs::SelectSaveSlot4Cmd:
+	case CommandIDs::SelectSaveSlot5Cmd:
+	case CommandIDs::SelectSaveSlot6Cmd:
+	case CommandIDs::SelectSaveSlot7Cmd:
+	case CommandIDs::SelectSaveSlot8Cmd:
+		result.setInfo("Save slot #" + std::to_string(1 + (commandID - CommandIDs::SelectSaveSlot1Cmd)), "Select slot to save/load state", "Save states", 0);
+		result.setActive(static_cast<bool>(jucy_boy_));
+		result.addDefaultKeypress('1' + (commandID - CommandIDs::SelectSaveSlot1Cmd), juce::ModifierKeys::commandModifier);
 		break;
 	default:
 		break;
@@ -349,6 +371,16 @@ bool JucyBoyComponent::perform(const InvocationInfo& info)
 		break;
 	case CommandIDs::LoadStateCmd:
 		LoadState();
+		break;
+	case CommandIDs::SelectSaveSlot1Cmd:
+	case CommandIDs::SelectSaveSlot2Cmd:
+	case CommandIDs::SelectSaveSlot3Cmd:
+	case CommandIDs::SelectSaveSlot4Cmd:
+	case CommandIDs::SelectSaveSlot5Cmd:
+	case CommandIDs::SelectSaveSlot6Cmd:
+	case CommandIDs::SelectSaveSlot7Cmd:
+	case CommandIDs::SelectSaveSlot8Cmd:
+		SelectSaveSlot(1 + (info.commandID - CommandIDs::SelectSaveSlot1Cmd));
 		break;
 	default:
 		return false;
