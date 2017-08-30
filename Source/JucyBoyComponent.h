@@ -68,7 +68,9 @@ private:
 	// The command IDs have to be consecutive, due to the method used to feed them to the manager in getAllCommands
 	enum CommandIDs
 	{
-		SaveStateCmd = 0x2000,
+		LoadRomFileCmd = 0x2000,
+		ResetCmd,
+		SaveStateCmd,
 		LoadStateCmd,
 		SelectSaveSlot1Cmd,
 		SelectSaveSlot2Cmd,
@@ -77,7 +79,10 @@ private:
 		SelectSaveSlot5Cmd,
 		SelectSaveSlot6Cmd,
 		SelectSaveSlot7Cmd,
-		SelectSaveSlot8Cmd
+		SelectSaveSlot8Cmd,
+		EnableDebuggingCmd,
+		ViewOptionsCmd,
+		CommandCount // Always leave this last
 	};
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JucyBoyComponent)

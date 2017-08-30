@@ -50,7 +50,7 @@ void JucyBoyComponent::LoadRom(std::string file_path)
 	}
 	catch (std::exception &e)
 	{
-		juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, "Failed to load ROM: ", e.what());
+		juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to load ROM file", juce::String{ "Error: " } + e.what());
 	}
 }
 
@@ -164,59 +164,18 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 
 	juce::PopupMenu menu;
 	menu.setLookAndFeel(&look_and_feel_);
-	int item_index{ 0 };
-	menu.addItem(++item_index, "Load ROM");
-	menu.addItem(++item_index, "Reset", jucy_boy_ != nullptr);
+	menu.addCommandItem(&application_command_manager_, CommandIDs::LoadRomFileCmd);
+	menu.addCommandItem(&application_command_manager_, CommandIDs::ResetCmd);
 	menu.addSeparator();
 	menu.addCommandItem(&application_command_manager_, CommandIDs::SaveStateCmd);
 	menu.addCommandItem(&application_command_manager_, CommandIDs::LoadStateCmd);
 	menu.addSubMenu("Select save slot", save_slot_submenu);
 	menu.addSeparator();
-	menu.addItem(++item_index, "Enable debugging", true, debugger_window_.isVisible());
+	menu.addCommandItem(&application_command_manager_, CommandIDs::EnableDebuggingCmd);
 	menu.addSeparator();
-	menu.addItem(++item_index, "Options...");
-	const int selected_item = menu.show();
-
-	switch (selected_item)
-	{
-	case 0:
-		// Did not select anything
-		break;
-	case 1:
-		{juce::FileChooser rom_chooser{ "Select a ROM file to load...", juce::File::getSpecialLocation(juce::File::currentExecutableFile), "*.gb" };
-		if (rom_chooser.browseForFileToOpen()) {
-			auto rom_file = rom_chooser.getResult();
-			try
-			{
-				LoadRom(rom_file.getFullPathName().toStdString());
-				if (!debugger_window_.isVisible()) StartEmulation();
-			}
-			catch (std::exception &e)
-			{
-				juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to open ROM file", juce::String{ "Error: " } + e.what());
-			}
-		}}
-		break;
-	case 2:
-		try
-		{
-			LoadRom(loaded_rom_file_path_);
-			if (!debugger_window_.isVisible()) StartEmulation();
-		}
-		catch (std::exception &e)
-		{
-			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to open ROM file", juce::String{ "Error: " } + e.what());
-		}
-		break;
-	case 3:
-		debugger_window_.setVisible(true);
-		break;
-	case 4:
-		options_window_.setVisible(true);
-		break;
-	default:
-		break;
-	}
+	menu.addCommandItem(&application_command_manager_, CommandIDs::ViewOptionsCmd);
+	
+	menu.show();
 
 	if (was_cpu_running && jucy_boy_) { StartEmulation(); }
 }
@@ -318,7 +277,7 @@ juce::ApplicationCommandTarget* JucyBoyComponent::getNextCommandTarget()
 
 void JucyBoyComponent::getAllCommands(juce::Array<juce::CommandID>& commands)
 {
-	for (int command_id = CommandIDs::SaveStateCmd; command_id <= CommandIDs::SelectSaveSlot8Cmd; ++command_id)
+	for (int command_id = CommandIDs::LoadRomFileCmd; command_id < CommandIDs::CommandCount; ++command_id)
 	{
 		commands.add(command_id);
 	}
@@ -328,15 +287,24 @@ void JucyBoyComponent::getCommandInfo(juce::CommandID commandID, juce::Applicati
 {
 	switch (commandID)
 	{
+	case CommandIDs::LoadRomFileCmd:
+		result.setInfo("Load ROM...", "Load ROM file", "General", 0);
+		result.addDefaultKeypress('l', juce::ModifierKeys::commandModifier);
+		break;
+	case CommandIDs::ResetCmd:
+		result.setInfo("Reset", "Reset current ROM", "General", 0);
+		result.setActive(static_cast<bool>(jucy_boy_));
+		result.addDefaultKeypress('r', juce::ModifierKeys::commandModifier);
+		break;
 	case CommandIDs::SaveStateCmd:
 		result.setInfo("Save state", "Save state in selected slot", "Save states", 0);
 		result.setActive(static_cast<bool>(jucy_boy_));
-		result.addDefaultKeypress('s', juce::ModifierKeys::commandModifier);
+		result.addDefaultKeypress(juce::KeyPress::F5Key, juce::ModifierKeys::noModifiers);
 		break;
 	case CommandIDs::LoadStateCmd:
 		result.setInfo("Load state", "Load state from selected slot", "Save states", 0);
 		result.setActive(static_cast<bool>(jucy_boy_));
-		result.addDefaultKeypress('l', juce::ModifierKeys::commandModifier);
+		result.addDefaultKeypress(juce::KeyPress::F8Key, juce::ModifierKeys::noModifiers);
 		break;
 	case CommandIDs::SelectSaveSlot1Cmd:
 	case CommandIDs::SelectSaveSlot2Cmd:
@@ -350,6 +318,15 @@ void JucyBoyComponent::getCommandInfo(juce::CommandID commandID, juce::Applicati
 		result.setActive(static_cast<bool>(jucy_boy_));
 		result.setTicked(selected_save_slot_ == (1 + (commandID - CommandIDs::SelectSaveSlot1Cmd)));
 		result.addDefaultKeypress('1' + (commandID - CommandIDs::SelectSaveSlot1Cmd), juce::ModifierKeys::commandModifier);
+		break;
+	case CommandIDs::EnableDebuggingCmd:
+		result.setInfo("Debug...", "Show debugging window", "General", 0);
+		result.setTicked(debugger_window_.isVisible());
+		result.addDefaultKeypress('d', juce::ModifierKeys::commandModifier);
+		break;
+	case CommandIDs::ViewOptionsCmd:
+		result.setInfo("Options...", "Show options window", "General", 0);
+		result.addDefaultKeypress('o', juce::ModifierKeys::commandModifier);
 		break;
 	default:
 		break;
@@ -367,6 +344,18 @@ bool JucyBoyComponent::perform(const InvocationInfo& info)
 
 	switch (info.commandID)
 	{
+	case CommandIDs::LoadRomFileCmd:
+		{juce::FileChooser rom_chooser{ "Select a ROM file to load...", juce::File::getSpecialLocation(juce::File::currentExecutableFile), "*.gb" };
+		if (rom_chooser.browseForFileToOpen()) {
+			auto rom_file = rom_chooser.getResult();
+			LoadRom(rom_file.getFullPathName().toStdString());
+			if (!debugger_window_.isVisible()) StartEmulation();
+		}}
+		break;
+	case CommandIDs::ResetCmd:
+		LoadRom(loaded_rom_file_path_);
+		if (!debugger_window_.isVisible()) StartEmulation();
+		break;
 	case CommandIDs::SaveStateCmd:
 		SaveState();
 		break;
@@ -382,6 +371,12 @@ bool JucyBoyComponent::perform(const InvocationInfo& info)
 	case CommandIDs::SelectSaveSlot7Cmd:
 	case CommandIDs::SelectSaveSlot8Cmd:
 		SelectSaveSlot(1 + (info.commandID - CommandIDs::SelectSaveSlot1Cmd));
+		break;
+	case CommandIDs::EnableDebuggingCmd:
+		debugger_window_.setVisible(true);
+		break;
+	case CommandIDs::ViewOptionsCmd:
+		options_window_.setVisible(true);
 		break;
 	default:
 		return false;
