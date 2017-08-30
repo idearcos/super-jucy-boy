@@ -348,6 +348,7 @@ void JucyBoyComponent::getCommandInfo(juce::CommandID commandID, juce::Applicati
 	case CommandIDs::SelectSaveSlot8Cmd:
 		result.setInfo("Save slot #" + std::to_string(1 + (commandID - CommandIDs::SelectSaveSlot1Cmd)), "Select slot to save/load state", "Save states", 0);
 		result.setActive(static_cast<bool>(jucy_boy_));
+		result.setTicked(selected_save_slot_ == (1 + (commandID - CommandIDs::SelectSaveSlot1Cmd)));
 		result.addDefaultKeypress('1' + (commandID - CommandIDs::SelectSaveSlot1Cmd), juce::ModifierKeys::commandModifier);
 		break;
 	default:
