@@ -1,3 +1,4 @@
 [submodule "JUCE"]
 	path = Dependencies/JUCE
 	url = https://github.com/idearcos/JUCE.git
+	branch = master
