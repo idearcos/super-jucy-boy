@@ -129,44 +129,44 @@ Cartridge::~Cartridge()
 }
 
 #pragma region MMU mapped memory read/write functions
-uint8_t Cartridge::OnRomBank0Read(const Memory::Address &address) const
+uint8_t Cartridge::OnRomBank0Read(Memory::Address address) const
 {
-	return rom_banks_[selected_rom_bank_0_][address.GetRelative()];
+	return rom_banks_[selected_rom_bank_0_][address];
 }
 
-void Cartridge::OnRomBank0Written(const Memory::Address &address, uint8_t value)
-{
-	mbc_write_function_(address, value);
-}
-
-uint8_t Cartridge::OnRomBankNRead(const Memory::Address &address) const
-{
-	return rom_banks_[selected_rom_bank_N_][address.GetRelative()];
-}
-
-void Cartridge::OnRomBankNWritten(const Memory::Address &address, uint8_t value)
+void Cartridge::OnRomBank0Written(Memory::Address address, uint8_t value)
 {
 	mbc_write_function_(address, value);
 }
 
-uint8_t Cartridge::OnExternalRamRead(const Memory::Address &address) const
+uint8_t Cartridge::OnRomBankNRead(Memory::Address address) const
+{
+	return rom_banks_[selected_rom_bank_N_][address - Memory::rom_bank_n_offset_];
+}
+
+void Cartridge::OnRomBankNWritten(Memory::Address address, uint8_t value)
+{
+	mbc_write_function_(address, value);
+}
+
+uint8_t Cartridge::OnExternalRamRead(Memory::Address address) const
 {
 	if (!external_ram_enabled_) return 0xFF;
 	if (external_ram_banks_.empty()) return 0xFF;
 
-	if (address.GetRelative() >= external_ram_banks_[selected_external_ram_bank_].size()) throw std::out_of_range{ "Trying to read from out of external RAM range" };
+	if ((address - Memory::eram_offset_) >= external_ram_banks_[selected_external_ram_bank_].size()) throw std::out_of_range{ "Trying to read from out of external RAM range" };
 
-	return external_ram_banks_[selected_external_ram_bank_][address.GetRelative()];
+	return external_ram_banks_[selected_external_ram_bank_][address - Memory::eram_offset_];
 }
 
-void Cartridge::OnExternalRamWritten(const Memory::Address &address, uint8_t value)
+void Cartridge::OnExternalRamWritten(Memory::Address address, uint8_t value)
 {
 	if (!external_ram_enabled_) return;
 	if (external_ram_banks_.empty()) return;
 
-	if (address.GetRelative() >= external_ram_banks_[selected_external_ram_bank_].size()) return;
+	if ((address - Memory::eram_offset_) >= external_ram_banks_[selected_external_ram_bank_].size()) return;
 
-	external_ram_banks_[selected_external_ram_bank_][address.GetRelative()] = value;
+	external_ram_banks_[selected_external_ram_bank_][address - Memory::eram_offset_] = value;
 }
 #pragma endregion
 
@@ -187,9 +187,9 @@ void Cartridge::UpdateSelectedBanks()
 }
 
 #pragma region MBC implementations
-void Cartridge::OnMbc1Written(const Memory::Address &address, uint8_t value)
+void Cartridge::OnMbc1Written(Memory::Address address, uint8_t value)
 {
-	switch (static_cast<uint16_t>(address & 0xF000))
+	switch (address & 0xF000)
 	{
 	case 0x0000:
 	case 0x1000:

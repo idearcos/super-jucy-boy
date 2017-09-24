@@ -176,6 +176,7 @@
     <ClCompile Include="..\..\Source\JucyBoy\InstructionMnemonics.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\Joypad.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\JucyBoy.cpp"/>
+    <ClCompile Include="..\..\Source\JucyBoy\Memory.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\MMU.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\PPU.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\Timer.cpp"/>
@@ -1410,6 +1411,15 @@
     <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_FlexBox.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_Grid.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GridItem.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GridUnitTests.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GroupComponent.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -2256,6 +2266,8 @@
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_ConcertinaPanel.h"/>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_FlexBox.h"/>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_FlexItem.h"/>
+    <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_Grid.h"/>
+    <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GridItem.h"/>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GroupComponent.h"/>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_MultiDocumentPanel.h"/>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_ResizableBorderComponent.h"/>

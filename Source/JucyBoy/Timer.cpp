@@ -33,9 +33,9 @@ void Timer::OnMachineCycleLapse()
 }
 
 // MMU mapped memory read/write functions
-uint8_t Timer::OnIoMemoryRead(const Memory::Address &address) const
+uint8_t Timer::OnIoMemoryRead(Memory::Address address) const
 {
-	switch (static_cast<uint16_t>(address))
+	switch (address)
 	{
 	case Memory::DIV:
 		return (internal_counter_ >> 8);
@@ -64,13 +64,13 @@ uint8_t Timer::OnIoMemoryRead(const Memory::Address &address) const
 		}
 		return 0xF8 | (timer_enabled_ << 2) | timer_period_code; }
 	default:
-		throw std::invalid_argument{ "Reading from invalid memory address in Timer: " + static_cast<uint16_t>(address) };
+		throw std::invalid_argument{ "Reading from invalid memory address in Timer: " + address };
 	}
 }
 
-void Timer::OnIoMemoryWritten(const Memory::Address &address, uint8_t value)
+void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
-	switch (static_cast<uint16_t>(address))
+	switch (address)
 	{
 	case Memory::DIV:
 		{const auto previous_internal_counter = internal_counter_;
@@ -121,7 +121,7 @@ void Timer::OnIoMemoryWritten(const Memory::Address &address, uint8_t value)
 		}}
 		break;
 	default:
-		throw std::invalid_argument{ "Writing to invalid memory address in Timer: " + static_cast<uint16_t>(address) };
+		throw std::invalid_argument{ "Writing to invalid memory address in Timer: " + address };
 	}
 }
 

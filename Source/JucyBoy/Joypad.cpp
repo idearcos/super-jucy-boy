@@ -1,7 +1,7 @@
 #include "Joypad.h"
 #include <cassert>
 
-uint8_t Joypad::OnIoMemoryRead(const Memory::Address&) const
+uint8_t Joypad::OnIoMemoryRead(Memory::Address address) const
 {
 	uint8_t pressed_keys{ 0xFF };
 	if (direction_keys_requested_)
@@ -18,7 +18,7 @@ uint8_t Joypad::OnIoMemoryRead(const Memory::Address&) const
 	return pressed_keys;
 }
 
-void Joypad::OnIoMemoryWritten(const Memory::Address&, uint8_t value)
+void Joypad::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
 	direction_keys_requested_ = (value & 0x10) == 0;
 	button_keys_requested_ = (value & 0x20) == 0;

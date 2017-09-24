@@ -55,12 +55,12 @@ public:
 	void OnMachineCycleLapse() override;
 
 	// MMU mapped memory read/write functions
-	uint8_t OnVramRead(const Memory::Address &address) const;
-	void OnVramWritten(const Memory::Address &address, uint8_t value);
-	uint8_t OnOamRead(const Memory::Address &address) const;
-	void OnOamWritten(const Memory::Address &address, uint8_t value);
-	uint8_t OnIoMemoryRead(const Memory::Address &address);
-	void OnIoMemoryWritten(const Memory::Address &address, uint8_t value);
+	uint8_t OnVramRead(Memory::Address address) const;
+	void OnVramWritten(Memory::Address address, uint8_t value);
+	uint8_t OnOamRead(Memory::Address address) const;
+	void OnOamWritten(Memory::Address address, uint8_t value);
+	uint8_t OnIoMemoryRead(Memory::Address address);
+	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
 
 	// Listeners management
 	using Listener = std::function<void()>;
@@ -87,7 +87,7 @@ private:
 	// Helper functions
 	void EnableLcd(bool enabled);
 	uint8_t GetPaletteData(const Palette &palette) const;
-	void WriteOam(const Memory::Address &address, uint8_t value);
+	void WriteOam(size_t index, uint8_t value);
 	inline bool CompareCurrentLine() const { return (current_line_ == line_compare_) && ((clock_cycles_lapsed_in_line_ >= 4) || (current_line_ == 0)); }
 
 	// Listener notification

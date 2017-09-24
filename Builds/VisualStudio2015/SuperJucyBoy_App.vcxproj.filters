@@ -436,6 +436,9 @@
     <ClCompile Include="..\..\Source\JucyBoy\JucyBoy.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\JucyBoy\Memory.cpp">
+      <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\JucyBoy\MMU.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClCompile>
@@ -1751,6 +1754,15 @@
       <Filter>Juce Modules\juce_gui_basics\layout</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_FlexBox.cpp">
+      <Filter>Juce Modules\juce_gui_basics\layout</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_Grid.cpp">
+      <Filter>Juce Modules\juce_gui_basics\layout</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GridItem.cpp">
+      <Filter>Juce Modules\juce_gui_basics\layout</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GridUnitTests.cpp">
       <Filter>Juce Modules\juce_gui_basics\layout</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GroupComponent.cpp">
@@ -3667,6 +3679,12 @@
       <Filter>Juce Modules\juce_gui_basics\layout</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_FlexItem.h">
+      <Filter>Juce Modules\juce_gui_basics\layout</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_Grid.h">
+      <Filter>Juce Modules\juce_gui_basics\layout</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GridItem.h">
       <Filter>Juce Modules\juce_gui_basics\layout</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Dependencies\JUCE\modules\juce_gui_basics\layout\juce_GroupComponent.h">

@@ -71,11 +71,11 @@ void APU::OnFrameSequencerClocked()
 }
 
 // MMU mapped memory read/write functions
-uint8_t APU::OnIoMemoryRead(const Memory::Address &address) const
+uint8_t APU::OnIoMemoryRead(Memory::Address address) const
 {
 	if (!apu_enabled_ && (address < Memory::NR52)) return 0x00;
 
-	switch (static_cast<uint16_t>(address))
+	switch (address)
 	{
 	case Memory::NR10:
 		return channel_1_.ReadNR10();
@@ -152,15 +152,15 @@ uint8_t APU::OnIoMemoryRead(const Memory::Address &address) const
 	case Memory::WaveEnd:
 		return (channel_3_.GetWaveTableSample(2 * (address - Memory::WaveStart)) << 4) | (channel_3_.GetWaveTableSample(2 * (address - Memory::WaveStart) + 1) & 0x0F);
 	default:
-		throw std::invalid_argument{ "Reading from invalid memory address in APU: " + static_cast<uint16_t>(address) };
+		throw std::invalid_argument{ "Reading from invalid memory address in APU: " + address };
 	}
 }
 
-void APU::OnIoMemoryWritten(const Memory::Address &address, uint8_t value)
+void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
 	if (!apu_enabled_ && (address < Memory::NR52)) return;
 
-	switch (static_cast<uint16_t>(address))
+	switch (address)
 	{
 	case Memory::NR10:
 		channel_1_.OnNR10Written(value);
@@ -283,7 +283,7 @@ void APU::OnIoMemoryWritten(const Memory::Address &address, uint8_t value)
 		channel_3_.SetWaveTableSample(2 * (address - Memory::WaveStart) + 1, value & 0x0F);
 		break;
 	default:
-		throw std::invalid_argument{ "Writing to invalid memory address in APU: " + static_cast<uint16_t>(address) };
+		throw std::invalid_argument{ "Writing to invalid memory address in APU: " + address };
 	}
 }
 

@@ -395,35 +395,35 @@ uint8_t PPU::GetPaletteData(const Palette &palette) const
 }
 
 #pragma region MMU mapped memory read/write functions
-uint8_t PPU::OnVramRead(const Memory::Address &address) const
+uint8_t PPU::OnVramRead(Memory::Address address) const
 {
 	// VRAM cannot be read during mode 3 or right in the transition from mode 2 to mode 3
 	if ((current_state_ == State::VRAM) || ((next_state_ == State::VRAM) && ((static_cast<size_t>(current_state_) & 0x03) == 2))) return 0xFF;
 
-	return vram_[address.GetRelative()];
+	return vram_[address - Memory::vram_offset_];
 }
 
-void PPU::OnVramWritten(const Memory::Address &address, uint8_t value)
+void PPU::OnVramWritten(Memory::Address address, uint8_t value)
 {
 	// VRAM cannot be written during mode 3
 	if (current_state_ == State::VRAM) return;
 
-	const auto relative_address = address.GetRelative();
+	const auto relative_address = address - Memory::vram_offset_;
 	vram_[relative_address] = value;
 
 	if (relative_address < tile_map_0_offset_)
 	{
 		// Select tile from set, taking into account each tile is 16 bytes in size
-		auto& tile = tile_set_[address.GetRelative() >> 4];
+		auto& tile = tile_set_[relative_address >> 4];
 
 		// Pixel values in the tile are computed by combining the pertinent bit of two consecutive bytes in VRAM
 		// Therefore updating one byte in VRAM will change the value of all 8 pixels in one line of the tile
-		const auto line_in_tile = (address.GetRelative() & 0x0F) >> 1;
+		const auto line_in_tile = (relative_address & 0x0F) >> 1;
 		for (int i = 0; i < 8; ++i)
 		{
 			const auto pixel_mask = (0x80 >> i);
-			const auto pixel_low_bit = (vram_[address.GetRelative() & 0xFFFE] & pixel_mask) != 0 ? 1 : 0;
-			const auto pixel_high_bit = (vram_[(address.GetRelative() & 0xFFFE) + 1] & pixel_mask) != 0 ? 1 : 0;
+			const auto pixel_low_bit = (vram_[relative_address & 0xFFFE] & pixel_mask) != 0 ? 1 : 0;
+			const auto pixel_high_bit = (vram_[(relative_address & 0xFFFE) + 1] & pixel_mask) != 0 ? 1 : 0;
 			tile[8 * line_in_tile + i] = static_cast<uint8_t>(pixel_low_bit + (pixel_high_bit << 1));
 		}
 	}
@@ -437,29 +437,29 @@ void PPU::OnVramWritten(const Memory::Address &address, uint8_t value)
 	}
 }
 
-uint8_t PPU::OnOamRead(const Memory::Address &address) const
+uint8_t PPU::OnOamRead(Memory::Address address) const
 {
 	// OAM cannot be read during modes 2 and 3, or right before mode 2
 	if (((static_cast<size_t>(current_state_) & 0x02) != 0) || ((static_cast<size_t>(next_state_) & 0x03) == 2)) return 0xFF;
 
 	if (oam_dma_.current_state_ == OamDma::State::Active) return 0xFF;
 
-	return oam_[address.GetRelative()];
+	return oam_[address - Memory::oam_offset_];
 }
 
-void PPU::OnOamWritten(const Memory::Address &address, uint8_t value)
+void PPU::OnOamWritten(Memory::Address address, uint8_t value)
 {
 	// OAM cannot be written during mode 2 and 3, EXCEPT the CPU cycle right before mode 3
 	if ((((static_cast<size_t>(current_state_) & 0x03) == 2) && (next_state_ != State::VRAM)) || (((static_cast<size_t>(current_state_) & 0x03) == 3)))return;
 
 	if (oam_dma_.current_state_ == OamDma::State::Active) return;
 
-	WriteOam(address.GetRelative(), value);
+	WriteOam(address - Memory::oam_offset_, value);
 }
 
-uint8_t PPU::OnIoMemoryRead(const Memory::Address &address)
+uint8_t PPU::OnIoMemoryRead(Memory::Address address)
 {
-	switch (static_cast<uint16_t>(address))
+	switch (address)
 	{
 	case Memory::LCDC:
 		{uint8_t value{ 0 };
@@ -490,7 +490,7 @@ uint8_t PPU::OnIoMemoryRead(const Memory::Address &address)
 	case Memory::LYC:
 		return line_compare_;
 	case Memory::DMA:
-		return static_cast<uint8_t>(oam_dma_.source_.GetAbsolute() >> 8);
+		return static_cast<uint8_t>(oam_dma_.source_ >> 8);
 	case Memory::BGP:
 		return GetPaletteData(bg_palette_);
 		break;
@@ -505,13 +505,13 @@ uint8_t PPU::OnIoMemoryRead(const Memory::Address &address)
 	case Memory::WX:
 		return static_cast<uint8_t>(window_x_ + 7);
 	default:
-		throw std::invalid_argument{ "Reading from invalid memory address in PPU: " + address.GetAbsolute() };
+		throw std::invalid_argument{ "Reading from invalid memory address in PPU: " + address };
 	}
 }
 
-void PPU::OnIoMemoryWritten(const Memory::Address &address, uint8_t value)
+void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 {
-	switch (static_cast<uint16_t>(address))
+	switch (address)
 	{
 	case Memory::LCDC:
 		SetLcdControl(value);
@@ -558,19 +558,19 @@ void PPU::OnIoMemoryWritten(const Memory::Address &address, uint8_t value)
 		window_x_ = value - 7;
 		break;
 	default:
-		throw std::invalid_argument{ "Writing to invalid memory address in PPU: " + address.GetAbsolute() };
+		throw std::invalid_argument{ "Writing to invalid memory address in PPU: " + address };
 	}
 }
 
-void PPU::WriteOam(const Memory::Address &address, uint8_t value)
+void PPU::WriteOam(size_t index, uint8_t value)
 {
-	oam_[address.GetRelative()] = value;
+	oam_[index] = value;
 
 	// There are 40 sprites, 4 bytes each, held in OAM [0xFE00 - 0xFE9F]
-	const auto sprite_num = address.GetRelative() >> 2;
+	const auto sprite_num = index >> 2;
 	assert((sprite_num >= 0) && (sprite_num < 40));
 
-	switch (address.GetRelative() & 0x03)
+	switch (index & 0x03)
 	{
 	case 0:
 		sprites_[sprite_num].SetY(value);

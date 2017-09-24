@@ -114,7 +114,7 @@ void WatchpointsComponent::paintListBoxItem(int rowNumber, juce::Graphics& g, in
 	std::advance(it, rowNumber);
 
 	std::stringstream row_text;
-	row_text << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << it->address.GetAbsolute() << " | ";
+	row_text << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << it->address << " | ";
 	switch (it->type)
 	{
 	case Memory::Watchpoint::Type::Read:

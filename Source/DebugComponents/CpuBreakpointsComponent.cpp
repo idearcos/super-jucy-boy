@@ -49,7 +49,7 @@ void CpuBreakpointsComponent::OnEmulationPaused()
 	breakpoint_add_editor_.setMouseClickGrabsKeyboardFocus(true);
 }
 
-void CpuBreakpointsComponent::OnBreakpointHit(const Memory::Address &breakpoint)
+void CpuBreakpointsComponent::OnBreakpointHit(Memory::Address breakpoint)
 {
 	juce::MessageManager::callAsync([this, breakpoint]() {
 		const auto it = breakpoints_.find(breakpoint);
@@ -76,7 +76,7 @@ void CpuBreakpointsComponent::paintListBoxItem(int rowNumber, juce::Graphics& g,
 	std::advance(it, rowNumber);
 
 	std::stringstream breakpoint_string;
-	breakpoint_string << "PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << static_cast<uint16_t>(*it);
+	breakpoint_string << "PC: 0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << *it;
 
 	g.drawText(breakpoint_string.str(), 0, 0, width, height, juce::Justification::centred);
 }

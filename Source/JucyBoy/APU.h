@@ -38,8 +38,8 @@ public:
 	void OnFrameSequencerClocked();
 
 	// MMU mapped memory read/write functions
-	uint8_t OnIoMemoryRead(const Memory::Address &address) const;
-	void OnIoMemoryWritten(const Memory::Address &address, uint8_t value);
+	uint8_t OnIoMemoryRead(Memory::Address address) const;
+	void OnIoMemoryWritten(Memory::Address address, uint8_t value);
 
 	// AddListener returns a deregister function that can be called with no arguments
 	using SampleBatch = std::array<std::array<size_t, num_channels_>, num_outputs_>;

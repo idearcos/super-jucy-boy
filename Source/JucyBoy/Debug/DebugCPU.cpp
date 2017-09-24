@@ -79,8 +79,7 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0x02:
 		return IsWriteWatchpointHit(registers_.bc);
 	case 0x08:
-		address = mmu_->ReadByte(registers_.pc + 1);
-		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
+		address = mmu_->ReadByte(registers_.pc + 1) + (mmu_->ReadByte(registers_.pc + 2) << 8);
 		return IsWriteWatchpointHit(address) || IsWriteWatchpointHit(address + 1);
 	case 0x0A:
 		return IsReadWatchpointHit(registers_.bc);
@@ -148,23 +147,21 @@ bool DebugCPU::IsWatchpointHit(OpCode next_opcode) const
 	case 0xE2:
 		return IsWriteWatchpointHit(Memory::IO + registers_.bc.Low());
 	case 0xEA:
-		address = mmu_->ReadByte(registers_.pc + 1);
-		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
+		address = mmu_->ReadByte(registers_.pc + 1) + (mmu_->ReadByte(registers_.pc + 2) << 8);
 		return IsWriteWatchpointHit(address);
 	case 0xF0:
 		return IsReadWatchpointHit(Memory::IO + mmu_->ReadByte(registers_.pc + 1));
 	case 0xF2:
 		return IsReadWatchpointHit(Memory::IO + registers_.bc.Low());
 	case 0xFA:
-		address = mmu_->ReadByte(registers_.pc + 1);
-		address += (mmu_->ReadByte(registers_.pc + 2) << 8);
+		address = mmu_->ReadByte(registers_.pc + 1) + (mmu_->ReadByte(registers_.pc + 2) << 8);
 		return IsReadWatchpointHit(address);
 	default:
 		return false;
 	}
 }
 
-bool DebugCPU::IsReadWatchpointHit(const Memory::Address &address) const
+bool DebugCPU::IsReadWatchpointHit(Memory::Address address) const
 {
 	const auto watchpoint_hit = (read_watchpoints_.count(address) != 0);
 	if (watchpoint_hit) NotifyWatchpointHit({ address, Memory::Watchpoint::Type::Read });
@@ -172,7 +169,7 @@ bool DebugCPU::IsReadWatchpointHit(const Memory::Address &address) const
 	return watchpoint_hit;
 }
 
-bool DebugCPU::IsWriteWatchpointHit(const Memory::Address &address) const
+bool DebugCPU::IsWriteWatchpointHit(Memory::Address address) const
 {
 	const auto watchpoint_hit = (write_watchpoints_.count(address) != 0);
 	if (watchpoint_hit) NotifyWatchpointHit({ address, Memory::Watchpoint::Type::Write });
@@ -211,7 +208,7 @@ void DebugCPU::RemoveWatchpoint(Memory::Watchpoint watchpoint)
 }
 
 #pragma region Listener notification
-void DebugCPU::NotifyBreakpointHit(const Memory::Address &breakpoint) const
+void DebugCPU::NotifyBreakpointHit(Memory::Address breakpoint) const
 {
 	for (const auto &listener : listeners_)
 	{

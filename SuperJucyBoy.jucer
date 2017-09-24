@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="TfnRnX" name="SuperJucyBoy" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.idearcos.SuperJucyBoy" includeBinaryInAppConfig="1"
-              jucerVersion="5.1.1" defines="GLEW_STATIC&#10;DONT_SET_USING_JUCE_NAMESPACE"
+              jucerVersion="5.1.2" defines="GLEW_STATIC&#10;DONT_SET_USING_JUCE_NAMESPACE"
               displaySplashScreen="0" reportAppUsage="0" splashScreenColour="Light"
               cppLanguageStandard="latest">
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
@@ -91,6 +91,7 @@
         <FILE id="zo27Nc" name="Joypad.h" compile="0" resource="0" file="Source/JucyBoy/Joypad.h"/>
         <FILE id="g5iP7t" name="JucyBoy.cpp" compile="1" resource="0" file="Source/JucyBoy/JucyBoy.cpp"/>
         <FILE id="bvQRrO" name="JucyBoy.h" compile="0" resource="0" file="Source/JucyBoy/JucyBoy.h"/>
+        <FILE id="KbfMjI" name="Memory.cpp" compile="1" resource="0" file="Source/JucyBoy/Memory.cpp"/>
         <FILE id="oMwB46" name="Memory.h" compile="0" resource="0" file="Source/JucyBoy/Memory.h"/>
         <FILE id="DfP5e5" name="MMU.cpp" compile="1" resource="0" file="Source/JucyBoy/MMU.cpp"/>
         <FILE id="ZKlLmE" name="MMU.h" compile="0" resource="0" file="Source/JucyBoy/MMU.h"/>

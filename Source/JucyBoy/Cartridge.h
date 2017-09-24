@@ -12,12 +12,12 @@ public:
 	~Cartridge();
 
 	// MMU mapped memory read/write functions
-	uint8_t OnRomBank0Read(const Memory::Address &address) const;
-	void OnRomBank0Written(const Memory::Address &address, uint8_t value);
-	uint8_t OnRomBankNRead(const Memory::Address &address) const;
-	void OnRomBankNWritten(const Memory::Address &address, uint8_t value);
-	uint8_t OnExternalRamRead(const Memory::Address &address) const;
-	void OnExternalRamWritten(const Memory::Address &address, uint8_t value);
+	uint8_t OnRomBank0Read(Memory::Address address) const;
+	void OnRomBank0Written(Memory::Address address, uint8_t value);
+	uint8_t OnRomBankNRead(Memory::Address address) const;
+	void OnRomBankNWritten(Memory::Address address, uint8_t value);
+	uint8_t OnExternalRamRead(Memory::Address address) const;
+	void OnExternalRamWritten(Memory::Address address, uint8_t value);
 
 	template<class Archive>
 	void serialize(Archive &archive);
@@ -28,7 +28,7 @@ private:
 	static bool HasExternalBattery(uint8_t cartridge_type_code);
 
 	inline void OnNoMbcWritten(const Memory::Address&, uint8_t) { return; }
-	void OnMbc1Written(const Memory::Address &address, uint8_t value);
+	void OnMbc1Written(Memory::Address address, uint8_t value);
 
 	void UpdateSelectedBanks();
 	inline size_t GetRomBankSelectionMask() const { return rom_banks_.size() - 1; } // ToDo: change mask logic when supporting 72, 80 and 96 bank ROMs

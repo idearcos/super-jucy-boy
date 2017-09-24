@@ -24,101 +24,10 @@ namespace Memory
 		Count
 	};
 
-	class Address
-	{
-	public:
-		constexpr Address(uint16_t absolute) : Address(absolute, AbsoluteToRegionAndRelative(absolute)) {}
-		constexpr Address() : Address(0) {}
-
-		inline uint16_t GetAbsolute() const { return absolute_; }
-		inline Region GetRegion() const { return region_; }
-		inline uint16_t GetRelative() const { return relative_; }
-
-		constexpr explicit operator uint16_t() const { return absolute_; }
-
-		Address& operator+=(const uint16_t rhs)
-		{
-			absolute_ += rhs;
-			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
-			return *this;
-		}
-		friend Address operator+(Address lhs, uint16_t rhs) { lhs += rhs; return lhs; }
-		
-		Address& operator-=(const uint16_t rhs)
-		{
-			absolute_ -= rhs;
-			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
-			return *this;
-		}
-		friend Address operator-(Address lhs, uint16_t rhs) { lhs -= rhs; return lhs; }
-
-		Address& operator++()
-		{
-			++absolute_;
-			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
-			return *this;
-		}
-		Address operator++(int)
-		{
-			Address tmp(*this);
-			operator++();
-			return tmp;
-		}
-
-		Address& operator&=(uint16_t rhs)
-		{
-			absolute_ &= rhs;
-			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
-			return *this;
-		}
-		friend Address operator&(Address lhs, uint16_t rhs) { lhs &= rhs; return lhs; }
-
-		friend bool operator==(const Address& lhs, const Address& rhs) { return lhs.absolute_ == rhs.absolute_; }
-		friend bool operator!=(const Address& lhs, const Address& rhs) { return !(lhs == rhs); }
-
-		friend bool operator< (const Address& lhs, const Address& rhs) { return lhs.absolute_ < rhs.absolute_; }
-		friend bool operator> (const Address& lhs, const Address& rhs) { return rhs < lhs; }
-		friend bool operator<=(const Address& lhs, const Address& rhs) { return !(lhs > rhs); }
-		friend bool operator>=(const Address& lhs, const Address& rhs) { return !(lhs < rhs); }
-
-		friend uint16_t operator-(const Address &lhs, const Address &rhs) { return lhs.GetAbsolute() - rhs.GetAbsolute(); }
-
-		template<class Archive>
-		void serialize(Archive &archive)
-		{
-			archive(absolute_);
-			std::tie(region_, relative_) = AbsoluteToRegionAndRelative(absolute_);
-		}
-
-	private:
-		constexpr Address(uint16_t absolute, std::tuple<Region, uint16_t> region_and_relative) :
-			absolute_{ absolute },
-			region_{ std::get<0>(region_and_relative) },
-			relative_{ std::get<1>(region_and_relative) }
-		{}
-
-		constexpr static std::tuple<Region, uint16_t> AbsoluteToRegionAndRelative(uint16_t absolute)
-		{
-			if (absolute < 0x4000)		return std::make_tuple(Region::ROM_Bank0, absolute);
-			else if (absolute < 0x8000) return std::make_tuple(Region::ROM_OtherBanks, static_cast<uint16_t>(absolute - 0x4000));
-			else if (absolute < 0xA000) return std::make_tuple(Region::VRAM, static_cast<uint16_t>(absolute - 0x8000));
-			else if (absolute < 0xC000) return std::make_tuple(Region::ERAM, static_cast<uint16_t>(absolute - 0xA000));
-			else if (absolute < 0xE000) return std::make_tuple(Region::WRAM, static_cast<uint16_t>(absolute - 0xC000));
-			else if (absolute < 0xFE00) return std::make_tuple(Region::WRAM_Echo, static_cast<uint16_t>(absolute - 0xE000));
-			else if (absolute < 0xFEA0) return std::make_tuple(Region::OAM, static_cast<uint16_t>(absolute - 0xFE00));
-			else if (absolute < 0xFF00) return std::make_tuple(Region::Unused, static_cast<uint16_t>(absolute - 0xFEA0));
-			else if (absolute < 0xFF80) return std::make_tuple(Region::IO, static_cast<uint16_t>(absolute - 0xFF00));
-			else if (absolute < 0xFFFF) return std::make_tuple(Region::HRAM, static_cast<uint16_t>(absolute - 0xFF80));
-			else						return std::make_tuple(Region::Interrupts, static_cast<uint16_t>(absolute - 0xFFFF));
-		}
-
-	private:
-		uint16_t absolute_;
-		Region region_;
-		uint16_t relative_;
-	};
-
+	using Address = uint16_t;
 	using Map = std::array<uint8_t, std::numeric_limits<uint16_t>::max() + 1>;
+
+	Region GetRegion(Address address);
 
 	struct Watchpoint
 	{
@@ -154,6 +63,17 @@ namespace Memory
 
 	static constexpr Address ISR	{ 0x0040 };
 	static constexpr Address IO		{ 0xFF00 };
+
+	static constexpr Address rom_bank_n_offset_{ 0x4000 };
+	static constexpr Address vram_offset_{ 0x8000 };
+	static constexpr Address eram_offset_{ 0xA000 };
+	static constexpr Address wram_offset_{ 0xC000 };
+	static constexpr Address wram_echo_offset_{ 0xE000 };
+	static constexpr Address oam_offset_{ 0xFE00 };
+	static constexpr Address unused_memory_offset_{ 0xFEA0 };
+	static constexpr Address io_offset_{ 0xFF00 };
+	static constexpr Address hram_offset_{ 0xFF80 };
+	static constexpr Address interrupts_offset_{ 0xFFFF };
 
 	// Joypad
 	static constexpr Address JOYP	{ 0xFF00 };
