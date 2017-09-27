@@ -1,13 +1,10 @@
 #include "CPU.h"
-#include "MMU.h"
 #include <cassert>
 #include <string>
 
 CPU::CPU(MMU &mmu) :
 	mmu_{ &mmu }
 {
-	PopulateInstructions();
-	PopulateCbInstructions();
 }
 
 CPU::~CPU()
@@ -140,18 +137,6 @@ void CPU::PushWordToStack(uint16_t value)
 	NotifyMachineCycleLapse();
 	WriteByte(--registers_.sp, (value >> 8) & 0xFF);
 	WriteByte(--registers_.sp, value & 0xFF);
-}
-
-uint8_t CPU::ReadByte(Memory::Address address) const
-{
-	NotifyMachineCycleLapse();
-	return mmu_->ReadByte(address);
-}
-
-void CPU::WriteByte(Memory::Address address, uint8_t value) const
-{
-	NotifyMachineCycleLapse();
-	mmu_->WriteByte(address, value);
 }
 #pragma endregion
 

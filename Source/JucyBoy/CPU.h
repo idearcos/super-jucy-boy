@@ -7,8 +7,7 @@
 #include <set>
 #include "Registers.h"
 #include "Memory.h"
-
-class MMU;
+#include "MMU.h"
 
 class CPU
 {
@@ -78,25 +77,22 @@ protected:
 	Flags ReadFlags() const;
 
 private:
-	// Initialization of instructions_ array
-	void PopulateInstructions();
-	void PopulateCbInstructions();
-
 	// Execution flow
 	inline OpCode FetchOpcode() { return FetchByte(); }
-	inline void ExecuteInstruction(OpCode opcode) { instructions_[opcode](); }
+	void ExecuteInstruction(OpCode opcode);
+	void ExecuteCbInstruction(OpCode opcode);
 	void RunningLoopFunction();
 
 	// Interrupts
 	void CheckInterrupts();
 
 	// Memory R/W
+	inline uint8_t ReadByte(Memory::Address address) const { NotifyMachineCycleLapse(); return mmu_->ReadByte(address); }
+	inline void WriteByte(Memory::Address address, uint8_t value) const { NotifyMachineCycleLapse(); mmu_->WriteByte(address, value); }
 	inline uint8_t FetchByte() { return ReadByte(registers_.pc++); }
 	uint16_t FetchWord();
 	uint16_t PopWordFromStack();
 	void PushWordToStack(uint16_t value);
-	uint8_t ReadByte(Memory::Address address) const;
-	void WriteByte(Memory::Address address, uint8_t value) const;
 
 	// Instruction helper functions
 	uint8_t IncrementRegister(uint8_t value);
@@ -142,8 +138,6 @@ protected:
 	MMU *mmu_{ nullptr };
 
 private:
-	using Instruction = std::function<void()>;
-
 	enum class Interrupt
 	{
 		VBlank = 0,
@@ -164,9 +158,6 @@ private:
 	uint16_t previous_pc_{ 0 };
 
 	State current_state_{ State::Running };
-
-	std::array<Instruction, 256> instructions_;
-	std::array<Instruction, 256> cb_instructions_;
 
 	bool interrupt_master_enable_{ true };
 	bool ime_requested_{ false }; // Used to delay IME one instruction, since EI enables the interrupts for the instruction AFTER itself
