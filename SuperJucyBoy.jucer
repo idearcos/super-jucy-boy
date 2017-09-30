@@ -177,7 +177,7 @@
                        libraryPath="../../Dependencies/glew-2.0.0/lib/Release/Mac"/>
         <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="SuperJucyBoy"
                        headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
-                       libraryPath="/Users/jmatthews/Documents/6.Personal/TEST/super-jucy-boy/Dependencies/glew-2.0.0/lib/Release/Mac"/>
+                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/Mac"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_opengl" path="./Dependencies/JUCE/modules"/>
