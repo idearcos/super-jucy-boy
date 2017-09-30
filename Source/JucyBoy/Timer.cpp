@@ -122,7 +122,7 @@ void Timer::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		}}
 		break;
 	default:
-		throw std::invalid_argument{ "Writing to invalid memory address in Timer: " + address };
+		throw std::invalid_argument{ "Writing to invalid memory address in Timer: " + std::to_string(address) };
 	}
 }
 

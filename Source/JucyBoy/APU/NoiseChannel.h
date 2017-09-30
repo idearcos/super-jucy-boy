@@ -66,5 +66,5 @@ private:
 		uint8_t cycles_left{ 0 };
 	} envelope_;
 
-	ClockDivider clock_divider_{ frequency_divisor_ << divisor_left_shift_, std::bind(&NoiseChannel::OnClockDividerTicked, this) };
+	ClockDivider clock_divider_{ static_cast<size_t>(frequency_divisor_ << divisor_left_shift_), std::bind(&NoiseChannel::OnClockDividerTicked, this) };
 };
