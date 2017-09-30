@@ -170,6 +170,30 @@
         <MODULEPATH id="juce_audio_basics" path="./Dependencies/JUCE/modules"/>
       </MODULEPATHS>
     </VS2017>
+    <XCODE_MAC targetFolder="Builds/MacOSX" externalLibraries="GLEW">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="SuperJucyBoy"
+                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/Mac"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="SuperJucyBoy"
+                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       libraryPath="/Users/jmatthews/Documents/6.Personal/TEST/super-jucy-boy/Dependencies/glew-2.0.0/lib/Release/Mac"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_opengl" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="./Dependencies/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="./Dependencies/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
   </EXPORTFORMATS>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0"/>
