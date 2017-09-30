@@ -49,8 +49,8 @@ void AudioPlayerComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo 
 	int writeOffsets[2]{ 0, blockSizes[0] };
 
 	// Convert APU amplitude from [0, APU::max_amplitude_] to [0, +0.50], then to [-0.25, +0.25]
-	constexpr auto max_amplitude{ 0.50f };
-	constexpr auto half_max_amplitude{ max_amplitude / 2.0f };
+	constexpr auto max_amplitude = 0.50f;
+	constexpr auto half_max_amplitude = max_amplitude / 2.0f;
 	constexpr auto amplitude_divisor = APU::max_amplitude_ / max_amplitude;
 
 	//TODO: handle case of mono by mixing both outputs
