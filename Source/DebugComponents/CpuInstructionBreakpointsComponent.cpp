@@ -126,8 +126,8 @@ void CpuInstructionBreakpointsComponent::resized()
 {
 	auto working_area = getLocalBounds();
 
-	instruction_breakpoint_list_header_.setBounds(working_area.removeFromTop(instruction_breakpoint_list_header_.getFont().getHeight() * 1.5));
-	auto addition_controls_area = working_area.removeFromBottom(instruction_breakpoint_list_header_.getFont().getHeight() * 1.5);
+	instruction_breakpoint_list_header_.setBounds(working_area.removeFromTop(static_cast<int>(instruction_breakpoint_list_header_.getFont().getHeight() * 1.5)));
+	auto addition_controls_area = working_area.removeFromBottom(static_cast<int>(instruction_breakpoint_list_header_.getFont().getHeight() * 1.5));
 	instruction_breakpoint_list_box_.setBounds(working_area.reduced(1, 0));
 
 	instruction_breakpoint_add_combo_box_.setBounds(addition_controls_area.removeFromLeft(3 * addition_controls_area.getWidth() / 4));

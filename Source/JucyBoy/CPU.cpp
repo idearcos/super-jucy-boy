@@ -393,22 +393,22 @@ void CPU::Test(uint8_t reg, int bit_mask)
 #pragma endregion
 
 #pragma region MMU mapped memory read/write functions
-uint8_t CPU::OnIoMemoryRead(Memory::Address address) const
+uint8_t CPU::OnIoMemoryRead(Memory::Address /*address*/) const
 {
 	return (0xE0 | requested_interrupts_);
 }
 
-void CPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
+void CPU::OnIoMemoryWritten(Memory::Address /*address*/, uint8_t value)
 {
 	requested_interrupts_ = value & 0x1F;
 }
 
-uint8_t CPU::OnInterruptsRead(Memory::Address address) const
+uint8_t CPU::OnInterruptsRead(Memory::Address /*address*/) const
 {
 	return (0xE0 | enabled_interrupts_);
 }
 
-void CPU::OnInterruptsWritten(Memory::Address address, uint8_t value)
+void CPU::OnInterruptsWritten(Memory::Address /*address*/, uint8_t value)
 {
 	enabled_interrupts_ = value & 0x1F;
 }

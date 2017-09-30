@@ -29,8 +29,8 @@ public:
 	void OnNR33Written(uint8_t value);
 	void OnNR34Written(uint8_t value);
 
-	inline size_t GetWaveTableSample(size_t wave_table_index) const { return wave_table_[wave_table_index]; }
-	inline void SetWaveTableSample(size_t wave_table_index, size_t value) { wave_table_[wave_table_index] = value; }
+	inline uint8_t GetWaveTableSample(size_t wave_table_index) const { return wave_table_[wave_table_index]; }
+	inline void SetWaveTableSample(size_t wave_table_index, uint8_t value) { wave_table_[wave_table_index] = value; }
 	size_t GetSample() const;
 	bool IsChannelOn() const { return enabled_; }
 	void Reset();
@@ -48,12 +48,12 @@ private:
 	bool enabled_{ false };
 	bool is_dac_on_{ false };
 
-	std::array<size_t, wave_table_size_> wave_table_{};
+	std::array<uint8_t, wave_table_size_> wave_table_{};
 	size_t current_sample_index_{ 0 };
 	size_t sample_buffer_{ 0 };
 
 	size_t frequency_{ 0x7FF };
-	size_t volume_right_shift_{ 0 };
+	uint8_t volume_right_shift_{ 0 };
 
 	size_t length_counter_{ 0 };
 	bool length_counter_enabled_{ false };

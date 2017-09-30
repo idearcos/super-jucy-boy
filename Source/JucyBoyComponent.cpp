@@ -78,7 +78,7 @@ void JucyBoyComponent::PauseEmulation()
 	debugger_component_.OnEmulationPaused();
 }
 
-void JucyBoyComponent::paint(juce::Graphics& g)
+void JucyBoyComponent::paint(juce::Graphics&)
 {
 }
 

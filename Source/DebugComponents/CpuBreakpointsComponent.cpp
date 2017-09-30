@@ -120,8 +120,8 @@ void CpuBreakpointsComponent::resized()
 {
 	auto working_area = getLocalBounds();
 
-	breakpoint_list_header_.setBounds(working_area.removeFromTop(breakpoint_list_header_.getFont().getHeight() * 1.5));
-	breakpoint_add_editor_.setBounds(working_area.removeFromBottom(breakpoint_add_editor_.getFont().getHeight() * 1.5));
+	breakpoint_list_header_.setBounds(working_area.removeFromTop(static_cast<int>(breakpoint_list_header_.getFont().getHeight() * 1.5)));
+	breakpoint_add_editor_.setBounds(working_area.removeFromBottom(static_cast<int>(breakpoint_add_editor_.getFont().getHeight() * 1.5)));
 	breakpoint_list_box_.setBounds(working_area.reduced(1, 0));
 
 	const auto vertical_indent = (breakpoint_add_editor_.getHeight() - breakpoint_add_editor_.getFont().getHeight()) / 2.0;

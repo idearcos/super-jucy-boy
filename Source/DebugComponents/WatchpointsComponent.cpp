@@ -84,8 +84,8 @@ void WatchpointsComponent::resized()
 {
 	auto working_area = getLocalBounds();
 
-	watchpoint_list_header_.setBounds(working_area.removeFromTop(watchpoint_list_header_.getFont().getHeight() * 1.5));
-	watchpoint_add_area_ = working_area.removeFromBottom(watchpoint_list_header_.getFont().getHeight() * 1.5);
+	watchpoint_list_header_.setBounds(working_area.removeFromTop(static_cast<int>(watchpoint_list_header_.getFont().getHeight() * 1.5)));
+	watchpoint_add_area_ = working_area.removeFromBottom(static_cast<int>(watchpoint_list_header_.getFont().getHeight() * 1.5));
 	watchpoint_list_box_.setBounds(working_area.reduced(1, 1));
 
 	working_area = watchpoint_add_area_;

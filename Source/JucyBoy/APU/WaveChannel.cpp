@@ -50,7 +50,7 @@ void WaveChannel::OnNR31Written(uint8_t value)
 
 void WaveChannel::OnNR32Written(uint8_t value)
 {
-	const auto volume_code = static_cast<size_t>(value >> 5) & 0x03;
+	const auto volume_code = static_cast<uint8_t>((value >> 5) & 0x03);
 	volume_right_shift_ = (volume_code != 0) ? (volume_code - 1) : 4;
 }
 

@@ -8,19 +8,19 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 	std::ifstream rom_read_stream{ rom_file_path, std::ios::binary | std::ios::ate };
 	if (!rom_read_stream.is_open()) { throw std::runtime_error{ "ROM file could not be opened" }; }
 
-	const auto file_size = static_cast<size_t>(rom_read_stream.tellg());
+	const auto rom_file_size = static_cast<size_t>(rom_read_stream.tellg());
 	rom_read_stream.seekg(0, std::ios::beg);
 
 	// Read ROM file header
 	std::array<char, 0x150> file_header;
-	if (file_size < file_header.size()) throw std::invalid_argument{ "ROM file (" + std::to_string(file_size) + " bytes) is smaller than header size (336 bytes)" };
+	if (rom_file_size < file_header.size()) throw std::invalid_argument{ "ROM file (" + std::to_string(rom_file_size) + " bytes) is smaller than header size (336 bytes)" };
 	
 	rom_read_stream.read(file_header.data(), file_header.size());
 	rom_read_stream.seekg(0, std::ios::beg);
 
 	// Get number of ROM banks according to header
 	const auto num_rom_banks = GetNumRomBanks(file_header[0x148]);
-	if (file_size != (num_rom_banks * Memory::rom_bank_size_)) throw std::invalid_argument{ "ROM file size (" + std::to_string(file_size) + " bytes) is not the same as the ROM size according to header (" + std::to_string(num_rom_banks) + " banks of 16384 bytes)" };
+	if (rom_file_size != (num_rom_banks * Memory::rom_bank_size_)) throw std::invalid_argument{ "ROM file size (" + std::to_string(rom_file_size) + " bytes) is not the same as the ROM size according to header (" + std::to_string(num_rom_banks) + " banks of 16384 bytes)" };
 
 	// Create ROM banks
 	for (auto ii = 0; ii < num_rom_banks; ++ii)
@@ -97,13 +97,13 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 		std::ifstream eram_sav_file{ eram_save_file_path_, std::ios::binary | std::ios::ate };
 		if (!eram_sav_file.is_open()) return;
 		
-		const auto file_size = static_cast<size_t>(eram_sav_file.tellg());
+		const auto eram_file_size = static_cast<size_t>(eram_sav_file.tellg());
 		size_t total_eram_size{ 0 };
 		for (const auto &eram_bank : external_ram_banks_)
 		{
 			total_eram_size += eram_bank.size();
 		}
-		if (file_size != total_eram_size) return;
+		if (eram_file_size != total_eram_size) return;
 
 		eram_sav_file.seekg(0, std::ios::beg);
 		for (auto &eram_bank : external_ram_banks_)
