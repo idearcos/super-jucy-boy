@@ -90,7 +90,10 @@ void PpuDebugComponent::initialise()
 	const auto glew_init_result = glewInit();
 	if (glew_init_result != GLEW_OK)
 	{
-		//TODO: do something
+		juce::MessageManager::callAsync([glew_init_result]() {
+			const std::string error_message{ reinterpret_cast<const char*>(glewGetErrorString(glew_init_result)) };
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to initialize GLEW", juce::String{ "Error: " } + error_message);
+		});
 	}
 
 	shader_program_ = CompileShaderProgram();
@@ -120,9 +123,15 @@ void PpuDebugComponent::initialise()
 		glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB8, tile_width_, tile_height_, num_tiles_);
 		//glTexSubImage3D(texture_, 1, 0, 0, 0, tile_width_, tile_height_, num_tiles_, GL_LUMINANCE, GL_UNSIGNED_BYTE, nullptr);
 	}
-	else
+	else if (GLEW_VERSION_4_0)
 	{
 		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, tile_width_, tile_height_, num_tiles_, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, nullptr);
+	}
+	else
+	{
+		juce::MessageManager::callAsync([]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to initialize OpenGL components", "Minimum required OpenGL version: 4.0");
+		});
 	}
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -171,7 +180,18 @@ GLuint PpuDebugComponent::CompileShaderProgram()
 	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 	if (GL_FALSE == success)
 	{
-		bool b = true;
+		GLint maxLength = 0;
+		glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+		//The maxLength includes the NULL character
+		std::vector<char> infoLog(maxLength);
+		glGetShaderInfoLog(vertex_shader, maxLength, &maxLength, &infoLog[0]);
+
+		std::string error_message(infoLog.data(), maxLength);
+
+		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to compile vertex shader", juce::String{ "Error: " } + error_message);
+		});
 	}
 
 	// Create and compile fragment shader
@@ -188,6 +208,12 @@ GLuint PpuDebugComponent::CompileShaderProgram()
 		//The maxLength includes the NULL character
 		std::vector<char> infoLog(maxLength);
 		glGetShaderInfoLog(fragment_shader, maxLength, &maxLength, &infoLog[0]);
+
+		std::string error_message(infoLog.data(), maxLength);
+
+		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to compile fragment shader", juce::String{ "Error: " } + error_message);
+		});
 	}
 
 	// Create program, attach shaders to it, and link it
@@ -200,7 +226,18 @@ GLuint PpuDebugComponent::CompileShaderProgram()
 	glGetProgramiv(shader_program, GL_LINK_STATUS, (int *)&isLinked);
 	if (isLinked == GL_FALSE)
 	{
-		bool b = true;
+		GLint maxLength = 0;
+		glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &maxLength);
+
+		//The maxLength includes the NULL character
+		std::vector<char> infoLog(maxLength);
+		glGetProgramInfoLog(shader_program, maxLength, &maxLength, &infoLog[0]);
+
+		std::string error_message(infoLog.data(), maxLength);
+
+		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to link shader program", juce::String{ "Error: " } + error_message);
+		});
 	}
 
 	// Delete the shaders as the program has them now

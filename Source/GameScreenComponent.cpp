@@ -3,12 +3,12 @@
 #include <cassert>
 
 GameScreenComponent::GameScreenComponent() :
+	intensity_palette_{ 255, 192, 96, 0 },
 	vertices_{ Vertex{ { -1.0f, 1.0f },{ 0.0f, 0.0f } },
 		Vertex{ { 1.0f, 1.0f },{ 1.0f, 0.0f } },
 		Vertex{ { 1.0f, -1.0f },{ 1.0f, 1.0f } },
 		Vertex{ { -1.0f, -1.0f },{ 0.0f, 1.0f } } },
-	elements_{ 0, 1, 2, 2, 3, 0 },
-	intensity_palette_{ 255, 192, 96, 0 }
+	elements_{ 0, 1, 2, 2, 3, 0 }
 {
 	// It's important to set the OpenGL component painting to false, otherwise the OpenGL thread will need to lock Juce's MessageManager, which leads to all sorts of deadlocks
 	openGLContext.setComponentPaintingEnabled(false);
@@ -32,7 +32,10 @@ void GameScreenComponent::initialise()
 	const auto glew_init_result = glewInit();
 	if (glew_init_result != GLEW_OK)
 	{
-		//TODO: do something
+		juce::MessageManager::callAsync([glew_init_result]() {
+			const std::string error_message{ reinterpret_cast<const char*>(glewGetErrorString(glew_init_result)) };
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to initialize GLEW", juce::String{ "Error: " } +error_message);
+		});
 	}
 
 	shader_program_ = CompileShaderProgram();
@@ -62,9 +65,15 @@ void GameScreenComponent::initialise()
 		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, static_cast<GLsizei>(width_), static_cast<GLsizei>(height_));
 		//glTexSubImage2D(texture_, 0, 0, 0,  static_cast<GLsizei>(width_), static_cast<GLsizei>(height_), GL_LUMINANCE, GL_UNSIGNED_BYTE, nullptr);
 	}
-	else
+	else if (GLEW_VERSION_4_0)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, static_cast<GLsizei>(width_), static_cast<GLsizei>(height_), 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, nullptr);
+	}
+	else
+	{
+		juce::MessageManager::callAsync([]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to initialize OpenGL components", "Minimum required OpenGL version: 4.0");
+		});
 	}
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magnification_filter_);
@@ -117,7 +126,18 @@ GLuint GameScreenComponent::CompileShaderProgram()
 	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 	if (GL_FALSE == success)
 	{
-		bool b = true;
+		GLint maxLength = 0;
+		glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+		//The maxLength includes the NULL character
+		std::vector<char> infoLog(maxLength);
+		glGetShaderInfoLog(vertex_shader, maxLength, &maxLength, &infoLog[0]);
+
+		std::string error_message(infoLog.data(), maxLength);
+
+		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to compile vertex shader", juce::String{ "Error: " } +error_message);
+		});
 	}
 
 	// Create and compile fragment shader
@@ -134,6 +154,12 @@ GLuint GameScreenComponent::CompileShaderProgram()
 		//The maxLength includes the NULL character
 		std::vector<char> infoLog(maxLength);
 		glGetShaderInfoLog(fragment_shader, maxLength, &maxLength, &infoLog[0]);
+
+		std::string error_message(infoLog.data(), maxLength);
+
+		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to compile fragment shader", juce::String{ "Error: " } +error_message);
+		});
 	}
 
 	// Create program, attach shaders to it, and link it
@@ -146,7 +172,18 @@ GLuint GameScreenComponent::CompileShaderProgram()
 	glGetProgramiv(shader_program, GL_LINK_STATUS, (int *)&isLinked);
 	if (isLinked == GL_FALSE)
 	{
-		bool b = true;
+		GLint maxLength = 0;
+		glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &maxLength);
+
+		//The maxLength includes the NULL character
+		std::vector<char> infoLog(maxLength);
+		glGetProgramInfoLog(shader_program, maxLength, &maxLength, &infoLog[0]);
+
+		std::string error_message(infoLog.data(), maxLength);
+
+		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to link shader program", juce::String{ "Error: " } +error_message);
+		});
 	}
 
 	// Delete the shaders as the program has them now
