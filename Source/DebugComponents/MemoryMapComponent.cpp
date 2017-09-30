@@ -64,7 +64,6 @@ void MemoryMapComponent::paint(juce::Graphics& g)
 void MemoryMapComponent::resized()
 {
 	auto working_area = getLocalBounds();
-	const auto total_height = working_area.getHeight();
 	memory_map_list_header_.setBounds(working_area.removeFromTop(30));
 	memory_map_list_box_.setBounds(working_area.reduced(1, 1));
 }

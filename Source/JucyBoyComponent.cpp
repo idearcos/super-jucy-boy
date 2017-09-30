@@ -92,7 +92,7 @@ void JucyBoyComponent::SaveState() const
 {
 	if (loaded_rom_file_path_.empty()) return;
 
-	auto save_state_file_path{ loaded_rom_file_path_ };
+	auto save_state_file_path = loaded_rom_file_path_;
 	const auto extension = ".jb" + std::to_string(selected_save_slot_);
 
 	const auto last_dot_position = save_state_file_path.find_last_of('.');
@@ -117,7 +117,7 @@ void JucyBoyComponent::LoadState()
 {
 	if (loaded_rom_file_path_.empty()) return;
 
-	auto save_state_file_path{ loaded_rom_file_path_ };
+	auto save_state_file_path = loaded_rom_file_path_;
 	const auto extension = ".jb" + std::to_string(selected_save_slot_);
 
 	const auto last_dot_position = save_state_file_path.find_last_of('.');

@@ -1,5 +1,6 @@
 #include "NoiseChannel.h"
 #include <stdexcept>
+#include <string>
 
 size_t NoiseChannel::GetSample() const
 {
@@ -23,11 +24,11 @@ void NoiseChannel::OnClockDividerTicked()
 	if (!enabled_) return;
 	if (divisor_left_shift_ >= 14) return;
 
-	const auto xored_low_bits_value{ (lfsr_ ^ (lfsr_ >> 1)) & 0x01 };
-	lfsr_ = (lfsr_ >> 1) & ~0x4000 | (xored_low_bits_value << 14);
+	const auto xored_low_bits_value = (lfsr_ ^ (lfsr_ >> 1)) & 0x01;
+	lfsr_ = ((lfsr_ >> 1) & ~0x4000) | (xored_low_bits_value << 14);
 	if (seven_bits_lfsr_)
 	{
-		lfsr_ = lfsr_ & ~0x0040 | (xored_low_bits_value << 6);
+		lfsr_ = (lfsr_ & ~0x0040) | (xored_low_bits_value << 6);
 	}
 }
 
@@ -71,7 +72,7 @@ void NoiseChannel::ClockVolumeEnvelope()
 			}
 			break;
 		default:
-			throw std::logic_error{ "Invalid envelope direction: " + static_cast<size_t>(envelope_.direction) };
+			throw std::logic_error{ "Invalid envelope direction: " + std::to_string(static_cast<size_t>(envelope_.direction)) };
 		}
 
 		envelope_.cycles_left = envelope_.period;

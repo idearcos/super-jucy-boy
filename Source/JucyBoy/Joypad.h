@@ -42,8 +42,8 @@ private:
 template<class Archive>
 void Joypad::serialize(Archive &archive)
 {
-	auto pressed_directions{ pressed_directions_.load() };
-	auto pressed_buttons{ pressed_buttons_.load() };
+	auto pressed_directions = pressed_directions_.load();
+	auto pressed_buttons = pressed_buttons_.load();
 	archive(pressed_directions, pressed_buttons, direction_keys_requested_, button_keys_requested_);
 	pressed_directions_.store(pressed_directions);
 	pressed_buttons_.store(pressed_buttons);

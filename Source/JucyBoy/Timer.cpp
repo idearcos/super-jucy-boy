@@ -1,5 +1,6 @@
 #include "Timer.h"
 #include "MMU.h"
+#include <string>
 
 Timer::Timer(MMU &mmu) :
 	mmu_{ &mmu }
@@ -60,11 +61,11 @@ uint8_t Timer::OnIoMemoryRead(Memory::Address address) const
 			timer_period_code = 3;
 			break;
 		default:
-			throw std::logic_error{ "Invalid timer period value: " + timer_period_ };
+			throw std::logic_error{ "Invalid timer period value: " + std::to_string(timer_period_) };
 		}
 		return 0xF8 | (timer_enabled_ << 2) | timer_period_code; }
 	default:
-		throw std::invalid_argument{ "Reading from invalid memory address in Timer: " + address };
+		throw std::invalid_argument{ "Reading from invalid memory address in Timer: " + std::to_string(address) };
 	}
 }
 

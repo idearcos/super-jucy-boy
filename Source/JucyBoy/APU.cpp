@@ -152,7 +152,7 @@ uint8_t APU::OnIoMemoryRead(Memory::Address address) const
 	case Memory::WaveEnd:
 		return (channel_3_.GetWaveTableSample(2 * (address - Memory::WaveStart)) << 4) | (channel_3_.GetWaveTableSample(2 * (address - Memory::WaveStart) + 1) & 0x0F);
 	default:
-		throw std::invalid_argument{ "Reading from invalid memory address in APU: " + address };
+		throw std::invalid_argument{ "Reading from invalid memory address in APU: " + std::to_string(address) };
 	}
 }
 
@@ -283,7 +283,7 @@ void APU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		channel_3_.SetWaveTableSample(2 * (address - Memory::WaveStart) + 1, value & 0x0F);
 		break;
 	default:
-		throw std::invalid_argument{ "Writing to invalid memory address in APU: " + address };
+		throw std::invalid_argument{ "Writing to invalid memory address in APU: " + std::to_string(address) };
 	}
 }
 

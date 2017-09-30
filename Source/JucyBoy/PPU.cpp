@@ -4,10 +4,10 @@
 #include "MMU.h"
 
 PPU::PPU(MMU &mmu) :
-	mmu_(&mmu),
 	bg_palette_{ Color::Black, Color::Black, Color::Black, Color::White },
 	obj_palettes_{ { { Color::Black, Color::Black, Color::Black, Color::Black },
-		{ Color::Black, Color::Black, Color::Black, Color::Black } } }
+		{ Color::Black, Color::Black, Color::Black, Color::Black } } },
+	mmu_(&mmu)
 {
 
 }
@@ -276,7 +276,7 @@ std::vector<size_t> PPU::ComputeSpritesToRender(uint8_t line_number) const
 	// This way, in the final image the sprites with lower X and lower address will appear above the rest
 	std::sort(sprites_to_render.begin(), sprites_to_render.end(), [this](size_t lhs_index, size_t rhs_index) {
 		return sprites_[lhs_index].GetX() > sprites_[rhs_index].GetX()
-			|| (sprites_[lhs_index].GetX() == sprites_[rhs_index].GetX()) && (lhs_index > rhs_index);
+			|| ((sprites_[lhs_index].GetX() == sprites_[rhs_index].GetX()) && (lhs_index > rhs_index));
 	});
 
 	return sprites_to_render;
@@ -505,7 +505,7 @@ uint8_t PPU::OnIoMemoryRead(Memory::Address address)
 	case Memory::WX:
 		return static_cast<uint8_t>(window_x_ + 7);
 	default:
-		throw std::invalid_argument{ "Reading from invalid memory address in PPU: " + address };
+		throw std::invalid_argument{ "Reading from invalid memory address in PPU: " + std::to_string(address) };
 	}
 }
 
@@ -558,7 +558,7 @@ void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		window_x_ = value - 7;
 		break;
 	default:
-		throw std::invalid_argument{ "Writing to invalid memory address in PPU: " + address };
+		throw std::invalid_argument{ "Writing to invalid memory address in PPU: " + std::to_string(address) };
 	}
 }
 

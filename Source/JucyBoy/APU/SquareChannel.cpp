@@ -1,5 +1,6 @@
 #include "SquareChannel.h"
 #include <stdexcept>
+#include <string>
 
 size_t SquareChannel::GetSample() const
 {
@@ -64,7 +65,7 @@ void SquareChannel::ClockVolumeEnvelope()
 			}
 			break;
 		default:
-			throw std::logic_error{ "Invalid envelope direction: " + static_cast<size_t>(envelope_.direction) };
+			throw std::logic_error{ "Invalid envelope direction: " + std::to_string(static_cast<size_t>(envelope_.direction)) };
 		}
 
 		envelope_.cycles_left = envelope_.period;
