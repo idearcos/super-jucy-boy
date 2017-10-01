@@ -21,7 +21,7 @@ JucyBoy::JucyBoy(const std::string &rom_file_path) :
 	// Map IO register read/write functions to MMU
 	mmu_.MapIoRegisterRead([this](Memory::Address relative_address) { return cpu_.OnIoMemoryRead(relative_address); }, Memory::IF, Memory::IF);
 	mmu_.MapIoRegisterRead([this](Memory::Address relative_address) { return ppu_.OnIoMemoryRead(relative_address); }, Memory::LCDC, Memory::WX);
-	mmu_.MapIoRegisterRead([this](Memory::Address relative_address) { return apu_.OnIoMemoryRead(relative_address); }, Memory::NR10, Memory::NR52);
+	mmu_.MapIoRegisterRead([this](Memory::Address relative_address) { return apu_.OnIoMemoryRead(relative_address); }, Memory::NR10, Memory::WaveEnd);
 	mmu_.MapIoRegisterRead([this](Memory::Address relative_address) { return timer_.OnIoMemoryRead(relative_address); }, Memory::DIV, Memory::TAC);
 	mmu_.MapIoRegisterRead([this](Memory::Address relative_address) { return joypad_.OnIoMemoryRead(relative_address); }, Memory::JOYP, Memory::JOYP);
 	mmu_.MapMemoryRead([this](Memory::Address relative_address) { return cartridge_.OnRomBank0Read(relative_address); }, Memory::Region::ROM_Bank0);
@@ -30,7 +30,7 @@ JucyBoy::JucyBoy(const std::string &rom_file_path) :
 
 	mmu_.MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { cpu_.OnIoMemoryWritten(relative_address, value); }, Memory::IF, Memory::IF);
 	mmu_.MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { ppu_.OnIoMemoryWritten(relative_address, value); }, Memory::LCDC, Memory::WX);
-	mmu_.MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { apu_.OnIoMemoryWritten(relative_address, value); }, Memory::NR10, Memory::NR52);
+	mmu_.MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { apu_.OnIoMemoryWritten(relative_address, value); }, Memory::NR10, Memory::WaveEnd);
 	mmu_.MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { timer_.OnIoMemoryWritten(relative_address, value); }, Memory::DIV, Memory::TAC);
 	mmu_.MapIoRegisterWrite([this](Memory::Address relative_address, uint8_t value) { joypad_.OnIoMemoryWritten(relative_address, value); }, Memory::JOYP, Memory::JOYP);
 	mmu_.MapMemoryWrite([this](Memory::Address relative_address, uint8_t value) { cartridge_.OnRomBank0Written(relative_address, value); }, Memory::Region::ROM_Bank0);
