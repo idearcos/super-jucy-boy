@@ -277,8 +277,6 @@ void PpuDebugComponent::shutdown()
 
 void PpuDebugComponent::render()
 {
-	const auto desktopScale = openGLContext.getRenderingScale();
-
 	const GLfloat bg_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glClearBufferfv(GL_COLOR, 0, bg_color);
 

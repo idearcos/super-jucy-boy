@@ -137,11 +137,11 @@ void WatchpointsComponent::textEditorReturnKeyPressed(juce::TextEditor &)
 	std::unique_ptr<Memory::Watchpoint> watchpoint;
 	if (watchpoint_type_read_.getToggleState())
 	{
-		watchpoint = std::make_unique<Memory::Watchpoint>(watchpoint_address, Memory::Watchpoint::Type::Read);
+		watchpoint = std::make_unique<Memory::Watchpoint>(static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Read);
 	}
 	else if (watchpoint_type_write_.getToggleState())
 	{
-		watchpoint = std::make_unique<Memory::Watchpoint>(watchpoint_address, Memory::Watchpoint::Type::Write);
+		watchpoint = std::make_unique<Memory::Watchpoint>(static_cast<Memory::Address>(watchpoint_address), Memory::Watchpoint::Type::Write);
 	}
 	if (!watchpoint) return;
 
