@@ -29,10 +29,8 @@ private:
 		float texCoord[3];
 	};
 
-	static GLuint CompileShaderProgram();
 	static std::vector<Vertex> InitializeVertices();
 	static std::vector<GLuint> InitializeElements();
-	static uint8_t PpuColorNumberToIntensity(uint8_t color_number);
 
 private:
 	static constexpr size_t num_tiles_{ 384 };
@@ -54,6 +52,8 @@ private:
 
 	const std::vector<Vertex> vertices_;
 	const std::vector<GLuint> elements_;
+
+	std::array<uint8_t, static_cast<size_t>(PPU::Color::Count)> intensity_palette_;
 
 	DebugPPU* debug_ppu_{ nullptr };
 

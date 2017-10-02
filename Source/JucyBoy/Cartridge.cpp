@@ -20,7 +20,8 @@ Cartridge::Cartridge(const std::string &rom_file_path)
 
 	// Get number of ROM banks according to header
 	const auto num_rom_banks = GetNumRomBanks(file_header[0x148]);
-	if (rom_file_size != (num_rom_banks * Memory::rom_bank_size_)) throw std::invalid_argument{ "ROM file size (" + std::to_string(rom_file_size) + " bytes) is not the same as the ROM size according to header (" + std::to_string(num_rom_banks) + " banks of 16384 bytes)" };
+	if (rom_file_size != (num_rom_banks * Memory::rom_bank_size_)) throw std::invalid_argument{ "ROM file size (" + std::to_string(rom_file_size)
+		+ " bytes) is not the same as the ROM size according to header (" + std::to_string(num_rom_banks) + " banks of 16384 bytes)" };
 
 	// Create ROM banks
 	for (auto ii = 0; ii < num_rom_banks; ++ii)

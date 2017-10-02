@@ -34,9 +34,6 @@ private:
 		float texCoord[2];
 	};
 
-	static GLuint CompileShaderProgram();
-	std::array<uint8_t, static_cast<size_t>(PPU::Color::Count)> intensity_palette_;
-
 private:
 	static const size_t width_{ 160 };
 	static const size_t height_{ 144 };
@@ -52,6 +49,8 @@ private:
 
 	const std::vector<Vertex> vertices_;
 	const std::vector<GLuint> elements_;
+
+	std::array<uint8_t, static_cast<size_t>(PPU::Color::Count)> intensity_palette_;
 
 	// GUI interaction
 	GLint magnification_filter_{ GL_NEAREST };
