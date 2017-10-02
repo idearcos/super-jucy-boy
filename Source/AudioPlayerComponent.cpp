@@ -17,13 +17,18 @@ void AudioPlayerComponent::ClearBuffer()
 	abstract_fifo_.reset();
 }
 
-void AudioPlayerComponent::prepareToPlay(int /*samplesPerBlockExpected*/, double sampleRate)
+void AudioPlayerComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-	juce::AudioDeviceManager::AudioDeviceSetup audio_device_setup;
-	deviceManager.getAudioDeviceSetup(audio_device_setup);
-	audio_device_setup.bufferSize = 240;
-	deviceManager.setAudioDeviceSetup(audio_device_setup, false);
-	deviceManager.getAudioDeviceSetup(audio_device_setup);
+	// Due to how Juce's AbstractFifo works internally, the size needs to be set to 1 element bigger than intended
+	abstract_fifo_.setTotalSize(samplesPerBlockExpected + 1);
+	for (auto &output_channels : output_buffers_)
+	{
+		for (auto &channel_buffer : output_channels)
+		{
+			// The buffers themselves need to be 1 element bigger as well
+			channel_buffer.resize(samplesPerBlockExpected + 1);
+		}
+	}
 
 	output_sample_rate_ = static_cast<size_t>(sampleRate);
 	downsampling_ratio_integer_part_ = APU::sample_rate_ / output_sample_rate_;

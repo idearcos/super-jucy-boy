@@ -31,10 +31,9 @@ public:
 	void EnableChannel(bool enabled);
 
 private:
-	static const size_t output_buffer_size_{ 480 + 1 };
-	using OutputBuffer = std::array<float, output_buffer_size_>;
+	using OutputBuffer = std::vector<float>;
 	std::array<std::array<OutputBuffer, APU::num_channels_>, APU::num_outputs_> output_buffers_{};
-	juce::AbstractFifo abstract_fifo_{ output_buffer_size_ };
+	juce::AbstractFifo abstract_fifo_{ 1024 };
 
 	// Downsampling
 	size_t output_sample_rate_{ 0 };
