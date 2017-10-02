@@ -80,20 +80,19 @@ void MemoryMapComponent::paintListBoxItem(int rowNumber, juce::Graphics& g, int 
 	if (rowIsSelected)	g.fillAll(juce::Colours::lightblue);
 	else				g.fillAll(juce::Colours::white);
 
-	juce::AttributedString row_text;
-	row_text.setJustification(juce::Justification::centred);
-
 	std::stringstream address;
 	address << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << 16 * rowNumber << " ";
-	row_text.append(address.str(), juce::Font{ juce::Font::getDefaultMonospacedFontName(), 12.0f, juce::Font::plain }, juce::Colours::grey);
+	juce::AttributedString row_text;
+	row_text.append(address.str(), juce::Colours::grey);
 
 	for (int i = 0; i < 16; ++i)
 	{
 		std::stringstream value;
 		value << " " << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << static_cast<int>(memory_map_[16 * rowNumber + i]);
-		row_text.append(value.str(), juce::Font{ juce::Font::getDefaultMonospacedFontName(), 12.0f, juce::Font::plain },
-			is_emulation_running_ ? juce::Colours::grey : memory_map_colours_[16 * rowNumber + i]);
+		row_text.append(value.str(), is_emulation_running_ ? juce::Colours::grey : memory_map_colours_[16 * rowNumber + i]);
 	}
 
+	row_text.setJustification(juce::Justification::centred);
+	row_text.setFont(juce::Font{ juce::Font::getDefaultMonospacedFontName(), 12.0f, juce::Font::plain });
 	row_text.draw(g, juce::Rectangle<int>{ width, height }.toFloat());
 }

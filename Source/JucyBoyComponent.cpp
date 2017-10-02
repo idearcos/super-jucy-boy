@@ -59,6 +59,8 @@ void JucyBoyComponent::StartEmulation()
 	if (!jucy_boy_ || jucy_boy_->IsRunning()) return;
 
 	jucy_boy_->StartEmulation(debugger_window_.isVisible());
+
+	debugger_component_.OnEmulationStarted();
 }
 
 void JucyBoyComponent::PauseEmulation()

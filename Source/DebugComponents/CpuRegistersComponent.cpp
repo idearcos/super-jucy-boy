@@ -57,8 +57,7 @@ juce::AttributedString CpuRegistersComponent::FormatRegisterPairString(std::stri
 	const RegisterPair &register_pair_previous_value,bool compute_diff, bool is_emulation_running)
 {
 	juce::AttributedString formatted_string;
-	formatted_string.append(register_name);
-	formatted_string.append(": ");
+	formatted_string.append(register_name + ": ", juce::Colours::grey);
 
 	{std::stringstream high;
 	high << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(register_pair_value.High());
@@ -83,8 +82,7 @@ juce::AttributedString CpuRegistersComponent::FormatRegisterPairString(std::stri
 juce::AttributedString CpuRegistersComponent::Format16bitRegisterString(std::string register_name, uint16_t register_value, uint16_t register_previous_value, bool compute_diff, bool is_emulation_running)
 {
 	juce::AttributedString formatted_string;
-	formatted_string.append(register_name);
-	formatted_string.append(": ");
+	formatted_string.append(register_name + ": ", juce::Colours::grey);
 
 	std::stringstream value;
 	value << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << register_value;
