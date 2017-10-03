@@ -90,18 +90,21 @@ void PpuDebugComponent::initialise()
 	const auto glew_init_result = glewInit();
 	if (glew_init_result != GLEW_OK)
 	{
-		juce::MessageManager::callAsync([glew_init_result]() {
-			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "OpenGL error: failed to initialize GLEW",
-				reinterpret_cast<const char*>(glewGetErrorString(glew_init_result)));
+		std::string glew_error{ reinterpret_cast<const char*>(glewGetErrorString(glew_init_result)) };
+		juce::MessageManager::callAsync([glew_error = std::move(glew_error)]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "OpenGL error: failed to initialize GLEW", glew_error);
+			juce::JUCEApplicationBase::quit();
 		});
 		return;
 	}
 
 	if (!GLEW_VERSION_3_3)
 	{
-		juce::MessageManager::callAsync([]() {
+		std::string opengl_version{ reinterpret_cast<const char*>(glGetString(GL_VERSION)) };
+		juce::MessageManager::callAsync([opengl_version = std::move(opengl_version)]() {
 			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to initialize PPU debug component",
-				"Minimum required OpenGL version: 3.3.\nVersion found: " + std::string{ reinterpret_cast<const char*>(glGetString(GL_VERSION)) });
+				"Minimum required OpenGL version: 3.3.\nVersion found: " + opengl_version);
+			juce::JUCEApplicationBase::quit();
 		});
 		return;
 	}
@@ -155,7 +158,7 @@ void PpuDebugComponent::initialise()
 		std::string error_message(infoLog.data(), maxLength);
 
 		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
-			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to compile vertex shader", juce::String{ "Error: " } +error_message);
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to compile vertex shader", "Error: " + error_message);
 		});
 	}
 
@@ -177,7 +180,7 @@ void PpuDebugComponent::initialise()
 		std::string error_message(infoLog.data(), maxLength);
 
 		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
-			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to compile fragment shader", juce::String{ "Error: " } +error_message);
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to compile fragment shader", "Error: " + error_message);
 		});
 	}
 
@@ -201,7 +204,7 @@ void PpuDebugComponent::initialise()
 		std::string error_message(infoLog.data(), maxLength);
 
 		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
-			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to link shader program", juce::String{ "Error: " } +error_message);
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to link shader program", "Error: " + error_message);
 		});
 	}
 
@@ -262,6 +265,8 @@ void PpuDebugComponent::initialise()
 
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	opengl_initialization_complete_ = true;
 }
 
 void PpuDebugComponent::shutdown()
@@ -277,6 +282,8 @@ void PpuDebugComponent::shutdown()
 
 void PpuDebugComponent::render()
 {
+	if (!opengl_initialization_complete_) return;
+
 	const GLfloat bg_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glClearBufferfv(GL_COLOR, 0, bg_color);
 
