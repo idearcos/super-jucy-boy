@@ -1,6 +1,7 @@
 #include "GL/glew.h"
 #include "PpuDebugComponent.h"
 #include <string>
+#include <sstream>
 
 PpuDebugComponent::PpuDebugComponent() :
 	vertices_{ InitializeVertices() },
@@ -110,38 +111,22 @@ void PpuDebugComponent::initialise()
 	}
 
 #pragma region Shaders setup
-	const GLchar* vertex_shader_source[]{
-		"#version 330\n"
-		"layout(location = 0) in vec2 vertex_position;\n"
-		"layout(location = 1) in vec3 vertex_texcoord;\n"
-		"out vec3 texcoord;\n"
-		"void main() {\n"
-		"  gl_Position = vec4 (vertex_position, 0.0, 1.0);\n"
-		"  texcoord = vertex_texcoord;\n"
-		"}\n"
-	};
-
-	const GLchar* fragment_shader_source[]{ GLEW_VERSION_4_2 ?
-		"#version 420 core\n"
-		"in vec3 texcoord;\n"
-		"out vec4 frag_color;\n"
-		"layout (binding = 0) uniform sampler2DArray tex;\n"
-		"void main() {\n"
-		"  frag_color = texture(tex, texcoord).rrra;\n"
-		"}\n"
-		:
-		"#version 330\n"
-		"in vec3 texcoord;\n"
-		"out vec4 frag_color;\n"
-		"uniform sampler2DArray tex;\n"
-		"void main() {\n"
-		"  frag_color = texture(tex, texcoord).rrra;\n"
-		"}\n"
-	};
+	// Explicit attribute locations are supported from GLSL 330
+	std::basic_stringstream<GLchar> vertex_shader_source_stream;
+	vertex_shader_source_stream
+		<< (GLEW_VERSION_4_2 ? "#version 420 core\n" : (GLEW_VERSION_3_3 ? "#version 330 core\n" : "#version 130\n"))
+		<< (GLEW_VERSION_3_3 || GLEW_ARB_explicit_attrib_location ? "layout(location = 0) in vec2 vertex_position;\n" : "in vec2 vertex_position;\n")
+		<< (GLEW_VERSION_3_3 || GLEW_ARB_explicit_attrib_location ? "layout(location = 1) in vec3 vertex_texcoord;\n" : "in vec3 vertex_texcoord;\n")
+		<< "out vec3 texcoord;\n"
+		<< "void main() {\n"
+		<< "  gl_Position = vec4 (vertex_position, 0.0, 1.0);\n"
+		<< "  texcoord = vertex_texcoord;\n"
+		<< "}\n";
 
 	// Create and compile vertex shader
 	const auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex_shader, 1, vertex_shader_source, nullptr);
+	const auto vertex_shader_source = vertex_shader_source_stream.str().c_str();
+	glShaderSource(vertex_shader, 1, &vertex_shader_source, nullptr);
 	glCompileShader(vertex_shader);
 
 	GLint success = 0;
@@ -162,9 +147,21 @@ void PpuDebugComponent::initialise()
 		});
 	}
 
+	// Binding points in layout qualifier are supported from GLSL 420
+	std::basic_stringstream<GLchar> fragment_shader_source_stream;
+	fragment_shader_source_stream
+		<< (GLEW_VERSION_4_2 ? "#version 420 core\n" : (GLEW_VERSION_3_3 ? "#version 330 core\n" : "#version 130\n"))
+		<< "in vec3 texcoord;\n"
+		<< "out vec4 frag_color;\n"
+		<< (GLEW_VERSION_4_2 ? "layout (binding = 0) uniform sampler2DArray tex;\n" : "uniform sampler2DArray tex;\n")
+		<< "void main() {\n"
+		<< "  frag_color = texture(tex, texcoord).rrra;\n"
+		<< "}\n";
+
 	// Create and compile fragment shader
 	const auto fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment_shader, 1, fragment_shader_source, nullptr);
+	const auto fragment_shader_source = fragment_shader_source_stream.str().c_str();
+	glShaderSource(fragment_shader, 1, &fragment_shader_source, nullptr);
 	glCompileShader(fragment_shader);
 
 	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
@@ -184,10 +181,19 @@ void PpuDebugComponent::initialise()
 		});
 	}
 
-	// Create program, attach shaders to it, and link it
+	// Create program, attach shaders to it
 	shader_program_ = glCreateProgram();
 	glAttachShader(shader_program_, vertex_shader);
 	glAttachShader(shader_program_, fragment_shader);
+
+	// Perform additional pre-link operations
+	if (!GLEW_VERSION_3_3 && !GLEW_ARB_explicit_attrib_location)
+	{
+		glBindAttribLocation(shader_program_, 0, "vertex_position");
+		glBindAttribLocation(shader_program_, 1, "vertex_texcoord");
+	}
+
+	// Link program
 	glLinkProgram(shader_program_);
 
 	GLint isLinked = 0;
@@ -212,10 +218,10 @@ void PpuDebugComponent::initialise()
 	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
 
+	// Bind texture sampler to texture unit 0, if layout binding points are not supported
 	if (!GLEW_VERSION_4_2)
 	{
-		GLuint t1Location = glGetUniformLocation(shader_program_, "tex");
-		glUniform1i(t1Location, 0);
+		glUniform1i(glGetUniformLocation(shader_program_, "tex"), 0);
 	}
 
 	glUseProgram(shader_program_);
