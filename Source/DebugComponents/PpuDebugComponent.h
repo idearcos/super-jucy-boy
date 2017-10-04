@@ -55,6 +55,8 @@ private:
 
 	std::array<uint8_t, static_cast<size_t>(PPU::Color::Count)> intensity_palette_;
 
+	bool opengl_initialization_complete_{ false };
+
 	DebugPPU* debug_ppu_{ nullptr };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PpuDebugComponent)

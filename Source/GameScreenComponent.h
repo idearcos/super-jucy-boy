@@ -55,6 +55,8 @@ private:
 	// GUI interaction
 	GLint magnification_filter_{ GL_NEAREST };
 
+	bool opengl_initialization_complete_{ false };
+
 	PPU* ppu_;
 
 private:
