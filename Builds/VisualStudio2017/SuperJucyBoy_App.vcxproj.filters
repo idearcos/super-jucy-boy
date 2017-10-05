@@ -2,11 +2,14 @@
 
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="SuperJucyBoy\Source\OptionsComponents">
-      <UniqueIdentifier>{46C3D288-A243-8A2B-6B2F-CDE0D4DAD9C6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SuperJucyBoy\Source\DebugComponents">
       <UniqueIdentifier>{7C7CC8A2-B990-C50F-C0D3-544DF403EA7A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SuperJucyBoy\Source\Dependencies\glew">
+      <UniqueIdentifier>{B43321A7-1C01-242E-EF33-51B3DC992BAC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SuperJucyBoy\Source\Dependencies">
+      <UniqueIdentifier>{441006E2-A28D-B4A3-C2D0-328BF453AF14}</UniqueIdentifier>
     </Filter>
     <Filter Include="SuperJucyBoy\Source\JucyBoy\APU">
       <UniqueIdentifier>{BC802E21-6A9F-D039-2DA6-30B9861CD218}</UniqueIdentifier>
@@ -16,6 +19,9 @@
     </Filter>
     <Filter Include="SuperJucyBoy\Source\JucyBoy">
       <UniqueIdentifier>{E8ECB647-D59E-B786-3481-3F4424081CFA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SuperJucyBoy\Source\OptionsComponents">
+      <UniqueIdentifier>{46C3D288-A243-8A2B-6B2F-CDE0D4DAD9C6}</UniqueIdentifier>
     </Filter>
     <Filter Include="SuperJucyBoy\Source">
       <UniqueIdentifier>{E31578A4-13E2-4498-1DEB-7FB2E512AAF1}</UniqueIdentifier>
@@ -367,12 +373,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\OptionsComponents\AudioOptionsComponent.cpp">
-      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.cpp">
-      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClCompile>
@@ -396,6 +396,9 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\WatchpointsComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\glew-2.1.0\src\glew.c">
+      <Filter>SuperJucyBoy\Source\Dependencies\glew</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\JucyBoy\APU\NoiseChannel.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy\APU</Filter>
@@ -447,6 +450,12 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\JucyBoy\Timer.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\OptionsComponents\AudioOptionsComponent.cpp">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.cpp">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\AudioPlayerComponent.cpp">
       <Filter>SuperJucyBoy\Source</Filter>
@@ -2178,18 +2187,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\AdditionalWindow.h">
-      <Filter>SuperJucyBoy\Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\OptionsComponents\AudioOptionsComponent.h">
-      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.h">
-      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\OptionsComponents\OptionsComponent.h">
-      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClInclude>
@@ -2267,6 +2264,18 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\Timer.h">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\OptionsComponents\AudioOptionsComponent.h">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\OptionsComponents\GraphicOptionsComponent.h">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\OptionsComponents\OptionsComponent.h">
+      <Filter>SuperJucyBoy\Source\OptionsComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\AdditionalWindow.h">
+      <Filter>SuperJucyBoy\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\AudioPlayerComponent.h">
       <Filter>SuperJucyBoy\Source</Filter>

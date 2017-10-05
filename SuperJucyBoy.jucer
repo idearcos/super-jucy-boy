@@ -2,25 +2,11 @@
 
 <JUCERPROJECT id="TfnRnX" name="SuperJucyBoy" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.idearcos.SuperJucyBoy" includeBinaryInAppConfig="1"
-              jucerVersion="5.1.2" defines="GLEW_STATIC&#10;DONT_SET_USING_JUCE_NAMESPACE"
+              jucerVersion="5.1.2" defines="DONT_SET_USING_JUCE_NAMESPACE"
               displaySplashScreen="0" reportAppUsage="0" splashScreenColour="Light"
               cppLanguageStandard="latest">
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
-      <FILE id="iruZsD" name="AdditionalWindow.h" compile="0" resource="0"
-            file="Source/AdditionalWindow.h"/>
-      <GROUP id="{174E98B6-764B-A504-3F51-E1BAFF97243C}" name="OptionsComponents">
-        <FILE id="uyQP1b" name="AudioOptionsComponent.cpp" compile="1" resource="0"
-              file="Source/OptionsComponents/AudioOptionsComponent.cpp"/>
-        <FILE id="qa5fc3" name="AudioOptionsComponent.h" compile="0" resource="0"
-              file="Source/OptionsComponents/AudioOptionsComponent.h"/>
-        <FILE id="judw6x" name="GraphicOptionsComponent.cpp" compile="1" resource="0"
-              file="Source/OptionsComponents/GraphicOptionsComponent.cpp"/>
-        <FILE id="dUlqqr" name="GraphicOptionsComponent.h" compile="0" resource="0"
-              file="Source/OptionsComponents/GraphicOptionsComponent.h"/>
-        <FILE id="OfKHxO" name="OptionsComponent.h" compile="0" resource="0"
-              file="Source/OptionsComponents/OptionsComponent.h"/>
-      </GROUP>
       <GROUP id="{F1A5EA92-351C-9FCF-06FA-0EB39BA6EE8A}" name="DebugComponents">
         <FILE id="RRejek" name="CpuBreakpointsComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/CpuBreakpointsComponent.cpp"/>
@@ -54,6 +40,11 @@
               file="Source/DebugComponents/WatchpointsComponent.cpp"/>
         <FILE id="cztgkU" name="WatchpointsComponent.h" compile="0" resource="0"
               file="Source/DebugComponents/WatchpointsComponent.h"/>
+      </GROUP>
+      <GROUP id="{F6E8ED8B-CF3B-A95B-AE0F-138C37CA1D96}" name="Dependencies">
+        <GROUP id="{1E3CC6C9-CA35-6603-7D2F-4916F872E656}" name="glew">
+          <FILE id="FL4pI2" name="glew.c" compile="1" resource="0" file="Dependencies/glew-2.1.0/src/glew.c"/>
+        </GROUP>
       </GROUP>
       <GROUP id="{F134FA3D-DA88-4DFD-F9D2-E3EF84037505}" name="JucyBoy">
         <GROUP id="{1C482928-B93A-BB34-957E-EDD90B387139}" name="APU">
@@ -102,6 +93,20 @@
         <FILE id="goh0Iq" name="Timer.cpp" compile="1" resource="0" file="Source/JucyBoy/Timer.cpp"/>
         <FILE id="FS65Rs" name="Timer.h" compile="0" resource="0" file="Source/JucyBoy/Timer.h"/>
       </GROUP>
+      <GROUP id="{174E98B6-764B-A504-3F51-E1BAFF97243C}" name="OptionsComponents">
+        <FILE id="uyQP1b" name="AudioOptionsComponent.cpp" compile="1" resource="0"
+              file="Source/OptionsComponents/AudioOptionsComponent.cpp"/>
+        <FILE id="qa5fc3" name="AudioOptionsComponent.h" compile="0" resource="0"
+              file="Source/OptionsComponents/AudioOptionsComponent.h"/>
+        <FILE id="judw6x" name="GraphicOptionsComponent.cpp" compile="1" resource="0"
+              file="Source/OptionsComponents/GraphicOptionsComponent.cpp"/>
+        <FILE id="dUlqqr" name="GraphicOptionsComponent.h" compile="0" resource="0"
+              file="Source/OptionsComponents/GraphicOptionsComponent.h"/>
+        <FILE id="OfKHxO" name="OptionsComponent.h" compile="0" resource="0"
+              file="Source/OptionsComponents/OptionsComponent.h"/>
+      </GROUP>
+      <FILE id="iruZsD" name="AdditionalWindow.h" compile="0" resource="0"
+            file="Source/AdditionalWindow.h"/>
       <FILE id="FAyFIX" name="AudioPlayerComponent.cpp" compile="1" resource="0"
             file="Source/AudioPlayerComponent.cpp"/>
       <FILE id="FgXLWz" name="AudioPlayerComponent.h" compile="0" resource="0"
@@ -120,14 +125,14 @@
   </MAINGROUP>
   <EXPORTFORMATS>
     <VS2015 targetFolder="Builds/VisualStudio2015" extraCompilerFlags="/bigobj"
-            externalLibraries="glew32s.lib">
+            externalLibraries="">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"
-                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"/>
+                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" libraryPath=""
+                       headerPath="../../Dependencies/glew-2.1.0/include&#10;../../Dependencies/cereal-1.2.2/include"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"
-                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" libraryPath=""
+                       headerPath="../../Dependencies/glew-2.1.0/include&#10;../../Dependencies/cereal-1.2.2/include"
                        alwaysGenerateDebugSymbols="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
@@ -146,14 +151,14 @@
       </MODULEPATHS>
     </VS2015>
     <VS2017 targetFolder="Builds/VisualStudio2017" extraCompilerFlags="/bigobj"
-            externalLibraries="glew32s.lib">
+            externalLibraries="">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
-                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64"/>
+                       isDebug="1" optimisation="1" targetName="SuperJucyBoy" headerPath="../../Dependencies/glew-2.1.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       libraryPath=""/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
-                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/x64" alwaysGenerateDebugSymbols="0"/>
+                       isDebug="0" optimisation="3" targetName="SuperJucyBoy" headerPath="../../Dependencies/glew-2.1.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       libraryPath="" alwaysGenerateDebugSymbols="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_opengl" path="./Dependencies/JUCE/modules"/>
@@ -170,14 +175,14 @@
         <MODULEPATH id="juce_audio_basics" path="./Dependencies/JUCE/modules"/>
       </MODULEPATHS>
     </VS2017>
-    <XCODE_MAC targetFolder="Builds/MacOSX" externalLibraries="GLEW">
+    <XCODE_MAC targetFolder="Builds/MacOSX" externalLibraries="">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="SuperJucyBoy"
-                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
-                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/Mac"/>
+                       headerPath="../../Dependencies/glew-2.1.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       libraryPath=""/>
         <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="SuperJucyBoy"
-                       headerPath="../../Dependencies/glew-2.0.0/include&#10;../../Dependencies/cereal-1.2.2/include"
-                       libraryPath="../../Dependencies/glew-2.0.0/lib/Release/Mac"/>
+                       headerPath="../../Dependencies/glew-2.1.0/include&#10;../../Dependencies/cereal-1.2.2/include"
+                       libraryPath=""/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_opengl" path="./Dependencies/JUCE/modules"/>
