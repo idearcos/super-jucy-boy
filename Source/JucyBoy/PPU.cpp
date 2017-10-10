@@ -1,6 +1,7 @@
 #include "PPU.h"
 #include <string>
 #include <cassert>
+#include <set>
 #include "MMU.h"
 
 PPU::PPU(MMU &mmu) :
@@ -589,7 +590,7 @@ void PPU::WriteOam(size_t index, uint8_t value)
 #pragma endregion
 
 #pragma region Listeners
-std::function<void()> PPU::AddListener(Listener listener)
+std::function<void()> PPU::AddNewFrameListener(Listener &&listener)
 {
 	auto it = listeners_.emplace(listeners_.begin(), listener);
 	return [it, this]() { listeners_.erase(it); };

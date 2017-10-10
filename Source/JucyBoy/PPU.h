@@ -43,9 +43,9 @@ public:
 		Count
 	};
 
-	using Palette = std::array<Color, 4>;
-	using Tile = std::array<uint8_t, 8 * 8>;
 	using Framebuffer = std::array<Color, 160 * 144>;
+	using Tile = std::array<uint8_t, 8 * 8>;
+	using Palette = std::array<Color, 4>;
 
 public:
 	PPU(MMU &mmu);
@@ -64,9 +64,11 @@ public:
 
 	// Listeners management
 	using Listener = std::function<void()>;
-	std::function<void()> AddListener(Listener listener);
+	std::function<void()> AddNewFrameListener(Listener &&listener);
 
+	// GUI interaction
 	const Framebuffer& GetFramebuffer() const { return framebuffer_; }
+	const std::array<Tile, 384>& GetTileSet() const { return tile_set_; }
 
 	template<class Archive>
 	void serialize(Archive &archive);
@@ -93,7 +95,7 @@ private:
 	// Listener notification
 	void NotifyNewFrame() const;
 
-protected:
+private:
 	static constexpr size_t oam_state_duration_{ 80 };
 	static constexpr size_t vram_state_duration_{ 172 };
 	static constexpr size_t hblank_state_duration_{ 204 };

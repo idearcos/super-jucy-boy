@@ -412,9 +412,6 @@
     <ClCompile Include="..\..\Source\JucyBoy\Debug\DebugCPU.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy\Debug</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\JucyBoy\Debug\DebugPPU.cpp">
-      <Filter>SuperJucyBoy\Source\JucyBoy\Debug</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\JucyBoy\APU.cpp">
       <Filter>SuperJucyBoy\Source\JucyBoy</Filter>
     </ClCompile>
@@ -2224,9 +2221,6 @@
       <Filter>SuperJucyBoy\Source\JucyBoy\APU</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\Debug\DebugCPU.h">
-      <Filter>SuperJucyBoy\Source\JucyBoy\Debug</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\JucyBoy\Debug\DebugPPU.h">
       <Filter>SuperJucyBoy\Source\JucyBoy\Debug</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\APU.h">
