@@ -5,9 +5,9 @@ JucyBoy::JucyBoy(const std::string &rom_file_path) :
 {
 	// Register all listener functions
 	// CPU listeners
-	cpu_.CPU::AddListener(timer_);
-	cpu_.CPU::AddListener(ppu_);
-	cpu_.CPU::AddListener(apu_);
+	cpu_.CPU::AddMachineCycleLapseListener([this]() { timer_.OnMachineCycleLapse(); });
+	cpu_.CPU::AddMachineCycleLapseListener([this]() { ppu_.OnMachineCycleLapse(); });
+	cpu_.CPU::AddMachineCycleLapseListener([this]() { apu_.OnMachineCycleLapse(); });
 
 	// Map memory read/write functions to MMU
 	mmu_.MapMemoryRead([this](Memory::Address relative_address) { return ppu_.OnVramRead(relative_address); }, Memory::Region::VRAM);

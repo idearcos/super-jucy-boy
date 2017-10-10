@@ -97,7 +97,7 @@ void CPU::ExecuteOneInstruction()
 	{
 	case State::Running:
 		previous_pc_ = registers_.pc;
-		ExecuteInstruction(FetchOpcode());
+		ExecuteInstruction(FetchByte());
 		break;
 	case State::Halted:
 		// NOP instructions are executed until Halted state ends
@@ -414,21 +414,25 @@ void CPU::OnInterruptsWritten(Memory::Address /*address*/, uint8_t value)
 }
 #pragma endregion
 
-#pragma region Listener notification
+#pragma region Listeners management
 void CPU::NotifyRunningLoopInterruption() const
 {
-	for (auto& listener : listeners_)
+	for (auto& listener : running_loop_interruption_listeners_)
 	{
-		listener->OnRunningLoopInterrupted();
+		listener();
 	}
 }
 
-void CPU::NotifyMachineCycleLapse() const
+std::function<void()> CPU::AddMachineCycleLapseListener(std::function<void()> &&listener)
 {
-	for (auto& listener : listeners_)
-	{
-		listener->OnMachineCycleLapse();
-	}
+	auto it = machine_cycle_lapse_listeners_.emplace(machine_cycle_lapse_listeners_.begin(), listener);
+	return [it, this]() { machine_cycle_lapse_listeners_.erase(it); };
+}
+
+std::function<void()> CPU::AddRunningLoopInterruptionListener(std::function<void()> &&listener)
+{
+	auto it = running_loop_interruption_listeners_.emplace(running_loop_interruption_listeners_.begin(), listener);
+	return [it, this]() { running_loop_interruption_listeners_.erase(it); };
 }
 #pragma endregion
 

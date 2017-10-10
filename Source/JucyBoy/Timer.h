@@ -6,14 +6,14 @@
 
 class MMU;
 
-class Timer final : public CPU::Listener
+class Timer final
 {
 public:
 	Timer(MMU &mmu);
 	~Timer() = default;
 
 	// CPU::Listener overrides
-	void OnMachineCycleLapse() override;
+	void OnMachineCycleLapse();
 
 	// MMU mapped memory read/write functions
 	uint8_t OnIoMemoryRead(Memory::Address address) const;

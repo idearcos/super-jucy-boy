@@ -13,13 +13,13 @@
 
 class JucyBoy;
 
-class JucyBoyComponent final : public juce::Component, public juce::ApplicationCommandTarget, public CPU::Listener
+class JucyBoyComponent final : public juce::Component, public juce::ApplicationCommandTarget
 {
 public:
 	JucyBoyComponent();
 	~JucyBoyComponent();
 
-	void paint (juce::Graphics&) override;
+	void paint(juce::Graphics&) override {}
 	void resized() override;
 
 	void mouseDown(const juce::MouseEvent &event) override;
@@ -27,7 +27,7 @@ public:
 	bool keyStateChanged(bool isKeyDown) override;
 
 	// CPU::Listener overrides
-	void OnRunningLoopInterrupted() override;
+	void OnRunningLoopInterrupted();
 
 private:
 	void LoadRom(std::string file_path);

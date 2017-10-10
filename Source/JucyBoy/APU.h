@@ -10,7 +10,7 @@
 #include "APU/NoiseChannel.h"
 #include "CPU.h"
 
-class APU final : public CPU::Listener
+class APU final
 {
 	static constexpr size_t max_channel_volume_{ 15 };
 	static constexpr size_t max_master_volume_{ 8 };
@@ -32,7 +32,7 @@ public:
 	~APU() = default;
 
 	// CPU::Listener overrides
-	void OnMachineCycleLapse() override;
+	void OnMachineCycleLapse();
 
 	// Frame Sequencer callback function
 	void OnFrameSequencerClocked();

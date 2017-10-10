@@ -3,7 +3,7 @@
 #include <string>
 #include "Debug/DebugCPU.h"
 #include "MMU.h"
-#include "Debug/DebugPPU.h"
+#include "PPU.h"
 #include "APU.h"
 #include "Timer.h"
 #include "Joypad.h"
@@ -30,14 +30,14 @@ public:
 public:
 	DebugCPU& GetCpu() { return cpu_; }
 	MMU& GetMmu() { return mmu_; }
-	DebugPPU& GetPpu() { return ppu_; }
+	PPU& GetPpu() { return ppu_; }
 	APU& GetApu() { return apu_; }
 	Joypad& GetJoypad() { return joypad_; }
 
 private:
 	MMU mmu_;
 	DebugCPU cpu_{ mmu_ };
-	DebugPPU ppu_{ mmu_ };
+	PPU ppu_{ mmu_ };
 	APU apu_;
 	Timer timer_{ mmu_ };
 	Joypad joypad_;

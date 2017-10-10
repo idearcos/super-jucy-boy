@@ -8,7 +8,7 @@
 
 class MMU;
 
-class PPU : public CPU::Listener
+class PPU
 {
 public:
 	enum class State
@@ -52,7 +52,7 @@ public:
 	virtual ~PPU() = default;
 
 	// CPU::Listener overrides
-	void OnMachineCycleLapse() override;
+	void OnMachineCycleLapse();
 
 	// MMU mapped memory read/write functions
 	uint8_t OnVramRead(Memory::Address address) const;

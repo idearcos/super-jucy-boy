@@ -4,7 +4,7 @@
 #include <functional>
 #include <atomic>
 #include <future>
-#include <set>
+#include <list>
 #include "Registers.h"
 #include "Memory.h"
 #include "MMU.h"
@@ -34,14 +34,6 @@ public:
 		All = 0xF0
 	};
 
-	class Listener
-	{
-	public:
-		virtual ~Listener() {}
-		virtual void OnRunningLoopInterrupted() {}
-		virtual void OnMachineCycleLapse() {}
-	};
-
 public:
 	CPU(MMU &mmu);
 	virtual ~CPU();
@@ -62,8 +54,8 @@ public:
 	void OnInterruptsWritten(Memory::Address address, uint8_t value);
 
 	// Listeners management
-	void AddListener(Listener &listener) { listeners_.insert(&listener); }
-	void RemoveListener(Listener &listener) { listeners_.erase(&listener); }
+	std::function<void()> AddMachineCycleLapseListener(std::function<void()> &&listener);
+	std::function<void()> AddRunningLoopInterruptionListener(std::function<void()> &&listener);
 
 	template<class Archive>
 	void serialize(Archive &archive);
@@ -78,7 +70,6 @@ protected:
 
 private:
 	// Execution flow
-	inline OpCode FetchOpcode() { return FetchByte(); }
 	void ExecuteInstruction(OpCode opcode);
 	void ExecuteCbInstruction(OpCode opcode);
 	void RunningLoopFunction();
@@ -127,7 +118,7 @@ private:
 	bool IsFlagSet(Flags flag) const;
 
 	// Listener notification
-	void NotifyMachineCycleLapse() const;
+	inline void CPU::NotifyMachineCycleLapse() const { for (auto& listener : machine_cycle_lapse_listeners_) { listener(); } }
 
 protected:
 	Registers registers_;
@@ -164,7 +155,8 @@ private:
 	uint8_t enabled_interrupts_{ 0 };
 	uint8_t requested_interrupts_{ 0 };
 
-	std::set<Listener*> listeners_;
+	std::list<std::function<void()>> machine_cycle_lapse_listeners_;
+	std::list<std::function<void()>> running_loop_interruption_listeners_;
 
 private:
 	CPU(const CPU&) = delete;
