@@ -18,9 +18,8 @@ public:
 	void paint(juce::Graphics&) override {}
 	void resized() override {}
 
-	void OnNewFrame();
-
-	void SetPpu(PPU &ppu);
+	// Interaction with PPU
+	void SetPpu(PPU* ppu) { ppu_ = ppu; }
 	void UpdateFramebuffer();
 
 	// GUI interaction

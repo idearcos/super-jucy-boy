@@ -36,15 +36,35 @@ void JucyBoyComponent::LoadRom(std::string file_path)
 {
 	audio_player_component_.ClearBuffer();
 
+	// Clear previous listener interfaces
+	for (const auto &deregister : listener_deregister_functions_) { deregister(); }
+	listener_deregister_functions_.clear();
+
+	// If the debugger component is not visible, its interfaces have already been cleared (or never set)
+	if (debugger_component_.isVisible())
+	{
+		debugger_component_.SetJucyBoy(nullptr);
+	}
+
+	jucy_boy_.reset();
+
 	try
 	{
 		jucy_boy_ = std::make_unique<JucyBoy>(file_path);
 
-		jucy_boy_->GetCpu().CPU::AddListener(*this);
-		game_screen_component_.SetPpu(jucy_boy_->GetPpu());
+		// Set listener interfaces
+		listener_deregister_functions_.emplace_back(jucy_boy_->GetCpu().AddRunningLoopInterruptionListener([this]() { OnRunningLoopInterrupted(); }));
+		listener_deregister_functions_.emplace_back(jucy_boy_->GetPpu().AddNewFrameListener([this]() { game_screen_component_.UpdateFramebuffer(); }));
 		listener_deregister_functions_.emplace_back(jucy_boy_->GetApu().AddListener([this](APU::SampleBatch &sample_batch) { audio_player_component_.OnNewSamples(sample_batch); }));
 
-		debugger_component_.SetJucyBoy(*jucy_boy_);
+		// Set references to JucyBoy components
+		game_screen_component_.SetPpu(&jucy_boy_->GetPpu());
+
+		// Interface debug components only if debugger component is visible
+		if (debugger_component_.isVisible())
+		{
+			debugger_component_.SetJucyBoy(jucy_boy_.get());
+		}
 
 		loaded_rom_file_path_ = std::move(file_path);
 	}
@@ -80,14 +100,9 @@ void JucyBoyComponent::PauseEmulation()
 	debugger_component_.OnEmulationPaused();
 }
 
-void JucyBoyComponent::paint(juce::Graphics&)
-{
-}
-
 void JucyBoyComponent::resized()
 {
-	auto working_area = getLocalBounds();
-	game_screen_component_.setBounds(working_area.removeFromLeft(160 * 4).removeFromTop(144 * 4));
+	game_screen_component_.setBounds(getLocalBounds());
 }
 
 void JucyBoyComponent::SaveState() const
@@ -375,7 +390,11 @@ bool JucyBoyComponent::perform(const InvocationInfo& info)
 		SelectSaveSlot(1 + (info.commandID - CommandIDs::SelectSaveSlot1Cmd));
 		break;
 	case CommandIDs::EnableDebuggingCmd:
-		debugger_window_.setVisible(true);
+		if (!debugger_component_.isVisible())
+		{
+			debugger_component_.SetJucyBoy(jucy_boy_.get());
+			debugger_window_.setVisible(true);
+		}
 		break;
 	case CommandIDs::ViewOptionsCmd:
 		options_window_.setVisible(true);

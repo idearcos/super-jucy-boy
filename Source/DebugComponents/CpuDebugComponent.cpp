@@ -8,12 +8,30 @@ CpuDebugComponent::CpuDebugComponent()
 	addAndMakeVisible(watchpoints_component_);
 }
 
-void CpuDebugComponent::SetCpu(DebugCPU& debug_cpu)
+void CpuDebugComponent::SetCpu(DebugCPU* debug_cpu)
 {
+	// Remove previous listener interfaces
+	if (debug_cpu_ != nullptr)
+	{
+		debug_cpu_->RemoveListener(breakpoints_component_);
+		debug_cpu_->RemoveListener(instruction_breakpoints_component_);
+		debug_cpu_->RemoveListener(watchpoints_component_);
+	}
+
 	registers_component_.SetCpu(debug_cpu);
 	breakpoints_component_.SetCpu(debug_cpu);
 	instruction_breakpoints_component_.SetCpu(debug_cpu);
 	watchpoints_component_.SetCpu(debug_cpu);
+
+	// Set listener interfaces
+	if (debug_cpu != nullptr)
+	{
+		debug_cpu->AddListener(breakpoints_component_);
+		debug_cpu->AddListener(instruction_breakpoints_component_);
+		debug_cpu->AddListener(watchpoints_component_);
+	}
+
+	debug_cpu_ = debug_cpu;
 }
 
 void CpuDebugComponent::OnEmulationStarted()

@@ -31,10 +31,19 @@ WatchpointsComponent::WatchpointsComponent()
 	addAndMakeVisible(watchpoint_type_write_);
 }
 
-void WatchpointsComponent::SetCpu(DebugCPU& debug_cpu)
+void WatchpointsComponent::SetCpu(DebugCPU* debug_cpu)
 {
-	debug_cpu_ = &debug_cpu;
-	debug_cpu_->AddListener(*this);
+	if (debug_cpu_ != nullptr)
+	{
+		for (const auto &watchpoint : watchpoints_)
+		{
+			debug_cpu_->RemoveWatchpoint(watchpoint);
+		}
+	}
+
+	debug_cpu_ = debug_cpu;
+
+	if (debug_cpu == nullptr) return;
 
 	for (const auto &watchpoint : watchpoints_)
 	{

@@ -38,10 +38,19 @@ CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent()
 	addAndMakeVisible(instruction_breakpoint_add_button_);
 }
 
-void CpuInstructionBreakpointsComponent::SetCpu(DebugCPU& debug_cpu)
+void CpuInstructionBreakpointsComponent::SetCpu(DebugCPU* debug_cpu)
 {
-	debug_cpu_ = &debug_cpu;
-	debug_cpu_->AddListener(*this);
+	if (debug_cpu_ != nullptr)
+	{
+		for (const auto &instruction_breakpoint : instruction_breakpoints_)
+		{
+			debug_cpu_->RemoveInstructionBreakpoint(instruction_breakpoint);
+		}
+	}
+
+	debug_cpu_ = debug_cpu;
+	
+	if (debug_cpu == nullptr) return;
 
 	for (const auto &instruction_breakpoint : instruction_breakpoints_)
 	{

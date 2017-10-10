@@ -9,12 +9,18 @@ public:
 		juce::DocumentWindow{ window_title, background_colour, required_buttons_ }
 	{
 		setContentNonOwned(&content_component, true);
+		getContentComponent()->setVisible(isVisible());
 	}
 	~AdditionalWindow() = default;
 
 	void closeButtonPressed() override
 	{
 		setVisible(false);
+	}
+
+	void visibilityChanged() override
+	{
+		getContentComponent()->setVisible(isVisible());
 	}
 
 private:

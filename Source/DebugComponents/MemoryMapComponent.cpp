@@ -17,7 +17,7 @@ MemoryMapComponent::MemoryMapComponent()
 	memory_map_list_box_.setModel(this);
 	addAndMakeVisible(memory_map_list_box_);
 
-	UpdateState(false);
+	UpdateMemoryMap(false);
 }
 
 void MemoryMapComponent::OnEmulationStarted()
@@ -32,7 +32,7 @@ void MemoryMapComponent::OnEmulationPaused()
 	memory_map_list_box_.repaint();
 }
 
-void MemoryMapComponent::UpdateState(bool compute_diff)
+void MemoryMapComponent::UpdateMemoryMap(bool compute_diff)
 {
 	if (!mmu_) return;
 

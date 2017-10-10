@@ -9,7 +9,7 @@ public:
 	CpuRegistersComponent();
 	~CpuRegistersComponent() = default;
 
-	void SetCpu(DebugCPU& debug_cpu) { debug_cpu_ = &debug_cpu; }
+	void SetCpu(DebugCPU* debug_cpu) { debug_cpu_ = debug_cpu; }
 
 	// ListBoxModel overrides
 	int getNumRows() override { return 6; }

@@ -11,7 +11,7 @@ public:
 	WatchpointsComponent();
 	~WatchpointsComponent() = default;
 
-	void SetCpu(DebugCPU& debug_cpu);
+	void SetCpu(DebugCPU* debug_cpu);
 
 	void OnEmulationStarted();
 	void OnEmulationPaused();

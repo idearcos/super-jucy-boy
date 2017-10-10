@@ -4,6 +4,8 @@
 #include "CpuDebugComponent.h"
 #include "MemoryMapComponent.h"
 #include "PpuDebugComponent.h"
+#include <vector>
+#include <functional>
 
 class JucyBoy;
 
@@ -13,7 +15,7 @@ public:
 	DebuggerComponent();
 	~DebuggerComponent() = default;
 
-	void SetJucyBoy(JucyBoy &jucy_boy_);
+	void SetJucyBoy(JucyBoy* jucy_boy);
 
 	void UpdateState(bool compute_diff);
 	void OnEmulationStarted();
@@ -21,6 +23,7 @@ public:
 
 	void paint(juce::Graphics&) override;
 	void resized() override;
+	void visibilityChanged() override;
 
 private:
 	static const size_t cpu_status_width_{ 150 };
@@ -32,6 +35,10 @@ private:
 	CpuDebugComponent cpu_debug_component_;
 	MemoryMapComponent memory_map_component_;
 	PpuDebugComponent ppu_debug_component_;
+
+	JucyBoy* jucy_boy_{ nullptr };
+
+	std::vector<std::function<void()>> listener_deregister_functions_;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DebuggerComponent)
 };

@@ -1,6 +1,7 @@
 #include "GL/glew.h"
 #include "PpuDebugComponent.h"
 #include <string>
+#include <cassert>
 
 PpuDebugComponent::PpuDebugComponent() :
 	vertices_{ InitializeVertices() },
@@ -21,21 +22,16 @@ PpuDebugComponent::~PpuDebugComponent()
 	shutdownOpenGL();
 }
 
-void PpuDebugComponent::SetPpu(DebugPPU &debug_ppu)
+void PpuDebugComponent::UpdateTileSet()
 {
-	debug_ppu_ = &debug_ppu;
-	debug_ppu_->AddListener([this]() { UpdateTileset(); });
-}
-
-void PpuDebugComponent::UpdateTileset()
-{
-	if (!debug_ppu_) return;
+	if (!ppu_) return;
 
 	std::unique_lock<std::mutex> lock{ tile_set_mutex_ };
-	tile_set_ = debug_ppu_->GetTileSet();
-	for (auto& tile : tile_set_)
+	const auto& ppu_tile_set = ppu_->GetTileSet();
+	assert(ppu_tile_set.size() == tile_set_.size());
+	for (auto ii = 0; ii < ppu_tile_set.size(); ++ii)
 	{
-		std::transform(tile.begin(), tile.end(), tile.begin(), [this](uint8_t color_number) { return intensity_palette_[color_number]; });
+		std::transform(ppu_tile_set[ii].begin(), ppu_tile_set[ii].end(), tile_set_[ii].begin(), [this](uint8_t color_number) { return intensity_palette_[color_number]; });
 	}
 
 	openGLContext.triggerRepaint();

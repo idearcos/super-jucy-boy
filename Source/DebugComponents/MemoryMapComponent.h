@@ -12,11 +12,11 @@ public:
 	MemoryMapComponent();
 	~MemoryMapComponent() = default;
 
-	void SetMmu(MMU &mmu) { mmu_ = &mmu; }
+	void SetMmu(MMU* mmu) { mmu_ = mmu; }
 
 	void OnEmulationStarted();
 	void OnEmulationPaused();
-	void UpdateState(bool compute_diff);
+	void UpdateMemoryMap(bool compute_diff);
 
 	// Component overrides
 	void paint(juce::Graphics&) override;

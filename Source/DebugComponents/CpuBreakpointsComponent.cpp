@@ -24,10 +24,19 @@ CpuBreakpointsComponent::CpuBreakpointsComponent()
 	addAndMakeVisible(breakpoint_add_editor_);
 }
 
-void CpuBreakpointsComponent::SetCpu(DebugCPU& debug_cpu)
+void CpuBreakpointsComponent::SetCpu(DebugCPU* debug_cpu)
 {
-	debug_cpu_ = &debug_cpu;
-	debug_cpu_->AddListener(*this);
+	if (debug_cpu_ != nullptr)
+	{
+		for (const auto &breakpoint : breakpoints_)
+		{
+			debug_cpu_->RemoveBreakpoint(breakpoint);
+		}
+	}
+
+	debug_cpu_ = debug_cpu;
+
+	if (debug_cpu == nullptr) return;
 
 	for (const auto &breakpoint : breakpoints_)
 	{

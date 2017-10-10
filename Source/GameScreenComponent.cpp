@@ -229,27 +229,6 @@ void GameScreenComponent::shutdown()
 	glDeleteProgram(shader_program_);
 }
 
-void GameScreenComponent::OnNewFrame()
-{
-	std::unique_lock<std::mutex> lock{ framebuffer_mutex_ };
-
-	const auto ppu_framebuffer = ppu_->GetFramebuffer();
-
-	for (int i = 0; i < ppu_framebuffer.size(); ++i)
-	{
-		assert(static_cast<size_t>(ppu_framebuffer[i]) < intensity_palette_.size());
-		framebuffer_[i] = intensity_palette_[static_cast<size_t>(ppu_framebuffer[i])];
-	}
-
-	openGLContext.triggerRepaint();
-}
-
-void GameScreenComponent::SetPpu(PPU &ppu)
-{
-	ppu_ = &ppu;
-	ppu_->AddListener([this]() { OnNewFrame(); });
-}
-
 void GameScreenComponent::UpdateFramebuffer()
 {
 	if (!ppu_) return;

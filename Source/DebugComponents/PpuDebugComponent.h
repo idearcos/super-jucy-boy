@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JucyBoy/Debug/DebugPPU.h"
+#include "../JucyBoy/PPU.h"
 
 class PpuDebugComponent final : public juce::OpenGLAppComponent, public PPU::Listener
 {
@@ -9,9 +9,9 @@ public:
 	PpuDebugComponent();
 	~PpuDebugComponent();
 
-	void SetPpu(DebugPPU &debug_ppu);
+	void SetPpu(PPU* ppu) { ppu_ = ppu; }
 
-	void UpdateTileset();
+	void UpdateTileSet();
 
 	// OpenGl2DComponent overrides
 	void render() override;
@@ -57,7 +57,7 @@ private:
 
 	bool opengl_initialization_complete_{ false };
 
-	DebugPPU* debug_ppu_{ nullptr };
+	PPU* ppu_{ nullptr };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PpuDebugComponent)
 };

@@ -18,18 +18,36 @@ DebuggerComponent::DebuggerComponent()
 	setSize(cpu_status_width_ + memory_map_width_ + ppu_tileset_width_, 144 * 4);
 }
 
-void DebuggerComponent::SetJucyBoy(JucyBoy &jucy_boy_)
+void DebuggerComponent::SetJucyBoy(JucyBoy* jucy_boy)
 {
-	cpu_debug_component_.SetCpu(jucy_boy_.GetCpu());
-	memory_map_component_.SetMmu(jucy_boy_.GetMmu());
-	ppu_debug_component_.SetPpu(jucy_boy_.GetPpu());
+	if (jucy_boy != nullptr)
+	{
+		cpu_debug_component_.SetCpu(&jucy_boy->GetCpu());
+		memory_map_component_.SetMmu(&jucy_boy->GetMmu());
+		ppu_debug_component_.SetPpu(&jucy_boy->GetPpu());
+
+		// Set listener interfaces
+		listener_deregister_functions_.emplace_back(jucy_boy->GetPpu().AddNewFrameListener([this]() { ppu_debug_component_.UpdateTileSet(); }));
+	}
+	else
+	{
+		cpu_debug_component_.SetCpu(nullptr);
+		memory_map_component_.SetMmu(nullptr);
+		ppu_debug_component_.SetPpu(nullptr);
+
+		// Remove previous listener interfaces
+		for (auto &deregister : listener_deregister_functions_) { deregister(); }
+		listener_deregister_functions_.clear();
+	}
+
+	jucy_boy_ = jucy_boy;
 }
 
 void DebuggerComponent::UpdateState(bool compute_diff)
 {
 	cpu_debug_component_.UpdateState(compute_diff);
-	memory_map_component_.UpdateState(compute_diff);
-	ppu_debug_component_.UpdateTileset();
+	memory_map_component_.UpdateMemoryMap(compute_diff);
+	ppu_debug_component_.UpdateTileSet();
 }
 
 void DebuggerComponent::OnEmulationStarted()
@@ -80,5 +98,14 @@ void DebuggerComponent::resized()
 	{
 		auto ppu_tileset_area = working_area.removeFromLeft(ppu_tileset_width_);
 		ppu_debug_component_.setBounds(ppu_tileset_area);
+	}
+}
+
+void DebuggerComponent::visibilityChanged()
+{
+	// When closing the debugger component, remove all interfaces with JucyBoy
+	if (!isVisible() && jucy_boy_)
+	{
+		SetJucyBoy(nullptr);
 	}
 }
