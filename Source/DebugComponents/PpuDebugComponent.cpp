@@ -3,41 +3,18 @@
 #include <string>
 #include <cassert>
 
-PpuDebugComponent::PpuDebugComponent() :
+PpuTileSetComponent::PpuTileSetComponent() :
 	vertices_{ InitializeVertices() },
 	elements_{ InitializeElements() },
 	intensity_palette_{ 255, 192, 96, 0 }
 {
-	openGLContext.setComponentPaintingEnabled(false);
-	openGLContext.setContinuousRepainting(false);
-
 	for (auto& tile : tile_set_)
 	{
 		tile.fill(255);
 	}
 }
 
-PpuDebugComponent::~PpuDebugComponent()
-{
-	shutdownOpenGL();
-}
-
-void PpuDebugComponent::UpdateTileSet()
-{
-	if (!ppu_) return;
-
-	std::unique_lock<std::mutex> lock{ tile_set_mutex_ };
-	const auto& ppu_tile_set = ppu_->GetTileSet();
-	assert(ppu_tile_set.size() == tile_set_.size());
-	for (auto ii = 0; ii < ppu_tile_set.size(); ++ii)
-	{
-		std::transform(ppu_tile_set[ii].begin(), ppu_tile_set[ii].end(), tile_set_[ii].begin(), [this](uint8_t color_number) { return intensity_palette_[color_number]; });
-	}
-
-	openGLContext.triggerRepaint();
-}
-
-std::vector<PpuDebugComponent::Vertex> PpuDebugComponent::InitializeVertices()
+std::vector<PpuTileSetComponent::Vertex> PpuTileSetComponent::InitializeVertices()
 {
 	std::vector<Vertex> vertices;
 
@@ -64,7 +41,7 @@ std::vector<PpuDebugComponent::Vertex> PpuDebugComponent::InitializeVertices()
 	return vertices;
 }
 
-std::vector<GLuint> PpuDebugComponent::InitializeElements()
+std::vector<GLuint> PpuTileSetComponent::InitializeElements()
 {
 	std::vector<GLuint> elements;
 
@@ -81,30 +58,8 @@ std::vector<GLuint> PpuDebugComponent::InitializeElements()
 	return elements;
 }
 
-void PpuDebugComponent::initialise()
+void PpuTileSetComponent::initialise()
 {
-	const auto glew_init_result = glewInit();
-	if (glew_init_result != GLEW_OK)
-	{
-		std::string glew_error{ reinterpret_cast<const char*>(glewGetErrorString(glew_init_result)) };
-		juce::MessageManager::callAsync([glew_error = std::move(glew_error)]() {
-			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "OpenGL error: failed to initialize GLEW", glew_error);
-			juce::JUCEApplicationBase::quit();
-		});
-		return;
-	}
-
-	if (!GLEW_VERSION_3_0)
-	{
-		std::string opengl_version{ reinterpret_cast<const char*>(glGetString(GL_VERSION)) };
-		juce::MessageManager::callAsync([opengl_version = std::move(opengl_version)]() {
-			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to initialize PPU debug component",
-				"Minimum required OpenGL version: 3.0.\nVersion found: " + opengl_version);
-			juce::JUCEApplicationBase::quit();
-		});
-		return;
-	}
-
 #pragma region Shaders setup
 	// Explicit attribute locations are supported from GLSL 330
 	std::basic_string<GLchar> vertex_shader_source_string;
@@ -264,11 +219,9 @@ void PpuDebugComponent::initialise()
 
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	opengl_initialization_complete_ = true;
 }
 
-void PpuDebugComponent::shutdown()
+void PpuTileSetComponent::shutdown()
 {
 	glDeleteTextures(1, &texture_);
 
@@ -279,14 +232,12 @@ void PpuDebugComponent::shutdown()
 	glDeleteProgram(shader_program_);
 }
 
-void PpuDebugComponent::render()
+void PpuTileSetComponent::render()
 {
-	if (!opengl_initialization_complete_) return;
-
 	const GLfloat bg_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glClearBufferfv(GL_COLOR, 0, bg_color);
 
-	glViewport(getWidth() / 2 - tile_grid_width_ * tile_width_, getHeight() / 2 - tile_grid_height_ * tile_height_, tile_grid_width_ * tile_width_ * 2, tile_grid_height_ * tile_height_ * 2);
+	glViewport(getX(), getParentComponent()->getHeight() - getY() - getHeight(), getWidth(), getHeight());
 
 	// Bind and draw texture
 	glBindTexture(GL_TEXTURE_2D, texture_);
@@ -305,4 +256,91 @@ void PpuDebugComponent::render()
 	// Unbind VAO and texture
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void PpuTileSetComponent::UpdateTileSet()
+{
+	if (!ppu_) return;
+
+	std::unique_lock<std::mutex> lock{ tile_set_mutex_ };
+	const auto& ppu_tile_set = ppu_->GetTileSet();
+	assert(ppu_tile_set.size() == tile_set_.size());
+	for (auto ii = 0; ii < ppu_tile_set.size(); ++ii)
+	{
+		std::transform(ppu_tile_set[ii].begin(), ppu_tile_set[ii].end(), tile_set_[ii].begin(), [this](uint8_t color_number) { return intensity_palette_[color_number]; });
+	}
+}
+
+PpuDebugComponent::PpuDebugComponent()
+{
+	openGLContext.setComponentPaintingEnabled(false);
+	openGLContext.setContinuousRepainting(false);
+
+	addAndMakeVisible(tileset_component_);
+}
+
+PpuDebugComponent::~PpuDebugComponent()
+{
+	shutdownOpenGL();
+}
+
+void PpuDebugComponent::SetPpu(PPU* ppu)
+{
+	ppu_ = ppu;
+
+	tileset_component_.SetPpu(ppu);
+}
+
+void PpuDebugComponent::Update()
+{
+	tileset_component_.UpdateTileSet();
+
+	openGLContext.triggerRepaint();
+}
+
+void PpuDebugComponent::initialise()
+{
+	const auto glew_init_result = glewInit();
+	if (glew_init_result != GLEW_OK)
+	{
+		std::string glew_error{ reinterpret_cast<const char*>(glewGetErrorString(glew_init_result)) };
+		juce::MessageManager::callAsync([glew_error = std::move(glew_error)]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "OpenGL error: failed to initialize GLEW", glew_error);
+			juce::JUCEApplicationBase::quit();
+		});
+		return;
+	}
+
+	if (!GLEW_VERSION_3_0)
+	{
+		std::string opengl_version{ reinterpret_cast<const char*>(glGetString(GL_VERSION)) };
+		juce::MessageManager::callAsync([opengl_version = std::move(opengl_version)]() {
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to initialize PPU debug component",
+				"Minimum required OpenGL version: 3.0.\nVersion found: " + opengl_version);
+			juce::JUCEApplicationBase::quit();
+		});
+		return;
+	}
+
+	tileset_component_.initialise();
+
+	opengl_initialization_complete_ = true;
+}
+
+void PpuDebugComponent::shutdown()
+{
+	tileset_component_.shutdown();
+}
+
+void PpuDebugComponent::render()
+{
+	if (!opengl_initialization_complete_) return;
+
+	tileset_component_.render();
+}
+
+void PpuDebugComponent::resized()
+{
+	auto working_area = getLocalBounds();
+	tileset_component_.setBounds(working_area.removeFromTop(PpuTileSetComponent::tile_grid_height_ * PpuTileSetComponent::tile_height_ * 2));
 }

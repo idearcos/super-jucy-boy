@@ -27,7 +27,7 @@ void DebuggerComponent::SetJucyBoy(JucyBoy* jucy_boy)
 		ppu_debug_component_.SetPpu(&jucy_boy->GetPpu());
 
 		// Set listener interfaces
-		listener_deregister_functions_.emplace_back(jucy_boy->GetPpu().AddNewFrameListener([this]() { ppu_debug_component_.UpdateTileSet(); }));
+		listener_deregister_functions_.emplace_back(jucy_boy->GetPpu().AddNewFrameListener([this]() { ppu_debug_component_.Update(); }));
 	}
 	else
 	{
@@ -47,7 +47,7 @@ void DebuggerComponent::UpdateState(bool compute_diff)
 {
 	cpu_debug_component_.UpdateState(compute_diff);
 	memory_map_component_.UpdateMemoryMap(compute_diff);
-	ppu_debug_component_.UpdateTileSet();
+	ppu_debug_component_.Update();
 }
 
 void DebuggerComponent::OnEmulationStarted()
