@@ -147,6 +147,8 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.cpp"/>
+    <ClCompile Include="..\..\Source\DebugComponents\PPU\TilesetComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuDebugComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.cpp"/>
@@ -1759,6 +1761,8 @@
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_opengl.cpp"/>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.h"/>
+    <ClInclude Include="..\..\Source\DebugComponents\PPU\TilesetComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuDebugComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.h"/>

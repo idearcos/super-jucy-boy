@@ -1,31 +1,73 @@
 #include "GL/glew.h"
-#include "GameScreenComponent.h"
+#include "BackgroundComponent.h"
 #include <cassert>
-#include <string>
 
-GameScreenComponent::GameScreenComponent() :
-	vertices_{ Vertex{ { -1.0f, 1.0f },{ 0.0f, 0.0f } },
-		Vertex{ { 1.0f, 1.0f },{ 1.0f, 0.0f } },
-		Vertex{ { 1.0f, -1.0f },{ 1.0f, 1.0f } },
-		Vertex{ { -1.0f, -1.0f },{ 0.0f, 1.0f } } },
-	elements_{ 0, 1, 2, 2, 3, 0 },
+BackgroundComponent::BackgroundComponent() :
+	vertices_{ InitializeVertices() },
+	elements_{ InitializeElements() },
 	intensity_palette_{ 255, 192, 96, 0 }
 {
-	// It's important to set the OpenGL component painting to false, otherwise the OpenGL thread will need to lock Juce's MessageManager, which leads to all sorts of deadlocks
 	openGLContext.setComponentPaintingEnabled(false);
-
-	// Continuous repainting leads to greatly decreased performance (although disabling the above might solve this issue too, in case it was caused by locking the MessageManager continuously)
 	openGLContext.setContinuousRepainting(false);
 
-	framebuffer_.fill(255);
+	for (auto& tile : tile_set_)
+	{
+		tile.fill(255);
+	}
+
+	tile_map_.fill(0);
 }
 
-GameScreenComponent::~GameScreenComponent()
+BackgroundComponent::~BackgroundComponent()
 {
 	shutdownOpenGL();
 }
 
-void GameScreenComponent::initialise()
+std::vector<BackgroundComponent::Vertex> BackgroundComponent::InitializeVertices()
+{
+	std::vector<Vertex> vertices;
+
+	// Tile width and height in OpenGL coordinates
+	const auto opengl_tile_width = 2.0f / bg_width_in_tiles_;
+	const auto opengl_tile_height = 2.0f / bg_height_in_tiles_;
+
+	for (int jj = 0; jj < bg_height_in_tiles_; ++jj)
+	{
+		const auto y_offset = +1.0f - opengl_tile_height * jj;
+
+		for (int ii = 0; ii < bg_width_in_tiles_; ++ii)
+		{
+			const auto x_offset = -1.0f + opengl_tile_width * ii;
+
+			const auto layer = static_cast<float>(bg_width_in_tiles_ * jj + ii);
+			vertices.emplace_back(Vertex{ { x_offset, y_offset },{ 0.0f, 0.0f, layer } });
+			vertices.emplace_back(Vertex{ { x_offset + opengl_tile_width, y_offset },{ 1.0f, 0.0f, layer } });
+			vertices.emplace_back(Vertex{ { x_offset + opengl_tile_width, y_offset - opengl_tile_height },{ 1.0f, 1.0f, layer } });
+			vertices.emplace_back(Vertex{ { x_offset, y_offset - opengl_tile_height },{ 0.0f, 1.0f, layer } });
+		}
+	}
+
+	return vertices;
+}
+
+std::vector<GLuint> BackgroundComponent::InitializeElements()
+{
+	std::vector<GLuint> elements;
+
+	for (int ii = 0; ii < num_tiles_; ++ii)
+	{
+		elements.emplace_back(4 * ii);
+		elements.emplace_back(4 * ii + 1);
+		elements.emplace_back(4 * ii + 2);
+		elements.emplace_back(4 * ii + 2);
+		elements.emplace_back(4 * ii + 3);
+		elements.emplace_back(4 * ii);
+	}
+
+	return elements;
+}
+
+void BackgroundComponent::initialise()
 {
 	const auto glew_init_result = glewInit();
 	if (glew_init_result != GLEW_OK)
@@ -42,7 +84,7 @@ void GameScreenComponent::initialise()
 	{
 		std::string opengl_version{ reinterpret_cast<const char*>(glGetString(GL_VERSION)) };
 		juce::MessageManager::callAsync([opengl_version = std::move(opengl_version)]() {
-			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to initialize game screen component",
+			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to initialize PPU debug component",
 				"Minimum required OpenGL version: 3.0.\nVersion found: " + opengl_version);
 			juce::JUCEApplicationBase::quit();
 		});
@@ -54,8 +96,8 @@ void GameScreenComponent::initialise()
 	std::basic_string<GLchar> vertex_shader_source_string;
 	vertex_shader_source_string += GLEW_VERSION_4_2 ? "#version 420 core\n" : (GLEW_VERSION_3_3 ? "#version 330 core\n" : "#version 130\n");
 	vertex_shader_source_string += GLEW_VERSION_3_3 ? "layout(location = 0) in vec2 vertex_position;\n" : "in vec2 vertex_position;\n";
-	vertex_shader_source_string += GLEW_VERSION_3_3 ? "layout(location = 1) in vec2 vertex_texcoord;\n" : "in vec2 vertex_texcoord;\n";
-	vertex_shader_source_string += "out vec2 texcoord;\n";
+	vertex_shader_source_string += GLEW_VERSION_3_3 ? "layout(location = 1) in vec3 vertex_texcoord;\n" : "in vec3 vertex_texcoord;\n";
+	vertex_shader_source_string += "out vec3 texcoord;\n";
 	vertex_shader_source_string += "void main() {\n";
 	vertex_shader_source_string += "  gl_Position = vec4 (vertex_position, 0.0, 1.0);\n";
 	vertex_shader_source_string += "  texcoord = vertex_texcoord;\n";
@@ -88,9 +130,9 @@ void GameScreenComponent::initialise()
 	// Binding points in layout qualifier are supported from GLSL 420
 	std::basic_string<GLchar> fragment_shader_source_string;
 	fragment_shader_source_string += GLEW_VERSION_4_2 ? "#version 420 core\n" : (GLEW_VERSION_3_3 ? "#version 330 core\n" : "#version 130\n");
-	fragment_shader_source_string += "in vec2 texcoord;\n";
+	fragment_shader_source_string += "in vec3 texcoord;\n";
 	fragment_shader_source_string += "out vec4 frag_color;\n";
-	fragment_shader_source_string += GLEW_VERSION_4_2 ? "layout (binding = 0) uniform sampler2D tex;\n" : "uniform sampler2D tex;\n";
+	fragment_shader_source_string += GLEW_VERSION_4_2 ? "layout (binding = 0) uniform sampler2DArray tex;\n" : "uniform sampler2DArray tex;\n";
 	fragment_shader_source_string += "void main() {\n";
 	fragment_shader_source_string += "  frag_color = texture(tex, texcoord).rrra;\n";
 	fragment_shader_source_string += "}\n";
@@ -149,8 +191,6 @@ void GameScreenComponent::initialise()
 		juce::MessageManager::callAsync([error_message = std::move(error_message)]() {
 			juce::AlertWindow::showMessageBox(juce::AlertWindow::AlertIconType::WarningIcon, "Failed to link shader program", "Error: " + error_message);
 		});
-
-		return;
 	}
 
 	// Delete the shaders as the program has them now
@@ -170,55 +210,67 @@ void GameScreenComponent::initialise()
 	// The binding of the VAO must be done BEFORE binding the GL_ELEMENT_ARRAY_BUFFER
 	// Otherwise the GL_ELEMENT_ARRAY_BUFFER won't be tied to the VAO state, and thus not automatically bound with it
 	glGenVertexArrays(1, &vertex_array_object_);
+	GLenum e = glGetError();
 	glBindVertexArray(vertex_array_object_);
+	e = glGetError();
 
 	// Generate Vertex Buffer Object
 	glGenBuffers(1, &vertex_buffer_object_);
+	e = glGetError();
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
+	e = glGetError();
 	glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(decltype(vertices_)::value_type), vertices_.data(), GL_STATIC_DRAW);
+	e = glGetError();
 
 	// Generate Element Buffer Object
 	glGenBuffers(1, &element_buffer_object_);
+	e = glGetError();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object_);
+	e = glGetError();
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements_.size() * sizeof(decltype(elements_)::value_type), elements_.data(), GL_STATIC_DRAW);
+	e = glGetError();
 
 	// Generate texture
 	glActiveTexture(GL_TEXTURE0);
+	e = glGetError();
 	glGenTextures(1, &texture_);
-	glBindTexture(GL_TEXTURE_2D, texture_);
+	e = glGetError();
+	glBindTexture(GL_TEXTURE_2D_ARRAY, texture_);
+	e = glGetError();
 	if (GLEW_VERSION_4_2)
 	{
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, static_cast<GLsizei>(width_), static_cast<GLsizei>(height_));
+		glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB8, tile_width_, tile_height_, num_tiles_);
 	}
 	else
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, static_cast<GLsizei>(width_), static_cast<GLsizei>(height_), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB8, tile_width_, tile_height_, num_tiles_, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
 	}
+	e = glGetError();
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magnification_filter_);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	e = glGetError();
 
 	// Configure Position and Texture coordinate vertex attributes
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(float) * 2));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(float) * 2));
+	e = glGetError();
 
 	// Attributes are disabled by default, therefore enable them
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-
-	// Enable culling of back facing triangles (set CW winding order as front facing first)
-	glFrontFace(GL_CW);
-	glEnable(GL_CULL_FACE);
+	e = glGetError();
 
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	e = glGetError();
 
 	opengl_initialization_complete_ = true;
 }
 
-void GameScreenComponent::shutdown()
+void BackgroundComponent::shutdown()
 {
 	glDeleteTextures(1, &texture_);
 
@@ -229,24 +281,7 @@ void GameScreenComponent::shutdown()
 	glDeleteProgram(shader_program_);
 }
 
-void GameScreenComponent::UpdateFramebuffer()
-{
-	if (!ppu_) return;
-
-	const auto& ppu_framebuffer = ppu_->GetFramebuffer();
-
-	for (int i = 0; i < ppu_framebuffer.size(); ++i)
-	{
-		assert(static_cast<size_t>(ppu_framebuffer[i]) < intensity_palette_.size());
-		framebuffer_[i] = intensity_palette_[static_cast<size_t>(ppu_framebuffer[i])];
-	}
-
-	update_sync_.store(true, std::memory_order::memory_order_release);
-
-	openGLContext.triggerRepaint();
-}
-
-void GameScreenComponent::render()
+void BackgroundComponent::render()
 {
 	if (!opengl_initialization_complete_) return;
 
@@ -257,8 +292,12 @@ void GameScreenComponent::render()
 
 	// Bind and draw texture
 	glBindTexture(GL_TEXTURE_2D, texture_);
-	const auto update_sync = update_sync_.load(std::memory_order::memory_order_acquire);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 160, 144, GL_RED, GL_UNSIGNED_BYTE, framebuffer_.data());
+	const auto updated = update_sync_.load(std::memory_order::memory_order_acquire);
+	for (int ii = 0; ii < num_tiles_; ++ii)
+	{
+		const auto tile_index = active_tile_set_ ? tile_map_[ii] : 256 + static_cast<int8_t>(tile_map_[ii]);
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, ii, tile_width_, tile_height_, 1, GL_RED, GL_UNSIGNED_BYTE, tile_set_[tile_index].data());
+	}
 
 	// Bind VAO
 	glBindVertexArray(vertex_array_object_);
@@ -271,12 +310,21 @@ void GameScreenComponent::render()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void GameScreenComponent::SetMagnificationFilter(GLint magnification_filter)
+void BackgroundComponent::Update()
 {
-	magnification_filter_ = magnification_filter;
-	openGLContext.executeOnGLThread([this](juce::OpenGLContext&) {
-		glBindTexture(GL_TEXTURE_2D, texture_);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magnification_filter_);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}, false);
+	if (!ppu_) return;
+
+	const auto& ppu_tile_set = ppu_->GetTileSet();
+	assert(ppu_tile_set.size() == tile_set_.size());
+	for (auto ii = 0; ii < ppu_tile_set.size(); ++ii)
+	{
+		std::transform(ppu_tile_set[ii].begin(), ppu_tile_set[ii].end(), tile_set_[ii].begin(), [this](uint8_t color_number) { return intensity_palette_[color_number]; });
+	}
+
+	tile_map_ = ppu_->GetTileMap();
+	active_tile_set_ = ppu_->GetActiveTileSet();
+
+	update_sync_.store(true, std::memory_order::memory_order_release);
+
+	openGLContext.triggerRepaint();
 }

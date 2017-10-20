@@ -37,7 +37,7 @@ private:
 	static const size_t width_{ 160 };
 	static const size_t height_{ 144 };
 	std::array<uint8_t, width_ * height_> framebuffer_;
-	std::mutex framebuffer_mutex_;
+	std::atomic<bool> update_sync_{ false };
 
 	// OpenGL stuff
 	GLuint vertex_array_object_{ 0 };

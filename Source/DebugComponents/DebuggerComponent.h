@@ -28,7 +28,7 @@ public:
 private:
 	static const size_t cpu_status_width_{ 150 };
 	static const size_t memory_map_width_{ 430 };
-	static const size_t ppu_tileset_width_{ 128 * 2 };
+	static const size_t ppu_status_width_{ 128 * 2 + 32 * 8 * 2 };
 
 private:
 	juce::Rectangle<int> usage_instructions_area_;

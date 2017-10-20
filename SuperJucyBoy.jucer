@@ -8,6 +8,16 @@
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
       <GROUP id="{F1A5EA92-351C-9FCF-06FA-0EB39BA6EE8A}" name="DebugComponents">
+        <GROUP id="{352660D1-1CA7-FD4B-17C5-5013C823388E}" name="PPU">
+          <FILE id="l6IE8h" name="BackgroundComponent.cpp" compile="1" resource="0"
+                file="Source/DebugComponents/PPU/BackgroundComponent.cpp"/>
+          <FILE id="Fz7NnE" name="BackgroundComponent.h" compile="0" resource="0"
+                file="Source/DebugComponents/PPU/BackgroundComponent.h"/>
+          <FILE id="lCeGGB" name="TilesetComponent.cpp" compile="1" resource="0"
+                file="Source/DebugComponents/PPU/TilesetComponent.cpp"/>
+          <FILE id="ZXQ7Gv" name="TilesetComponent.h" compile="0" resource="0"
+                file="Source/DebugComponents/PPU/TilesetComponent.h"/>
+        </GROUP>
         <FILE id="RRejek" name="CpuBreakpointsComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/CpuBreakpointsComponent.cpp"/>
         <FILE id="u2Cypc" name="CpuBreakpointsComponent.h" compile="0" resource="0"
@@ -32,9 +42,9 @@
               file="Source/DebugComponents/MemoryMapComponent.cpp"/>
         <FILE id="t8fWH8" name="MemoryMapComponent.h" compile="0" resource="0"
               file="Source/DebugComponents/MemoryMapComponent.h"/>
-        <FILE id="RYRThN" name="PpuDebugComponent.cpp" compile="1" resource="0"
+        <FILE id="lpXQdT" name="PpuDebugComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/PpuDebugComponent.cpp"/>
-        <FILE id="HFU7Bi" name="PpuDebugComponent.h" compile="0" resource="0"
+        <FILE id="k7HhoB" name="PpuDebugComponent.h" compile="0" resource="0"
               file="Source/DebugComponents/PpuDebugComponent.h"/>
         <FILE id="PijEQ4" name="WatchpointsComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/WatchpointsComponent.cpp"/>

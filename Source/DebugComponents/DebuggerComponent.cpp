@@ -15,7 +15,7 @@ DebuggerComponent::DebuggerComponent()
 	ppu_debug_component_.addMouseListener(this, true);
 	addAndMakeVisible(ppu_debug_component_);
 
-	setSize(cpu_status_width_ + memory_map_width_ + ppu_tileset_width_, 144 * 4);
+	setSize(cpu_status_width_ + memory_map_width_ + ppu_status_width_, 144 * 4);
 }
 
 void DebuggerComponent::SetJucyBoy(JucyBoy* jucy_boy)
@@ -96,7 +96,7 @@ void DebuggerComponent::resized()
 
 	if (ppu_debug_component_.isVisible())
 	{
-		auto ppu_tileset_area = working_area.removeFromLeft(ppu_tileset_width_);
+		auto ppu_tileset_area = working_area.removeFromLeft(ppu_status_width_);
 		ppu_debug_component_.setBounds(ppu_tileset_area);
 	}
 }

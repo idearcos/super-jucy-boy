@@ -45,6 +45,8 @@ public:
 
 	using Framebuffer = std::array<Color, 160 * 144>;
 	using Tile = std::array<uint8_t, 8 * 8>;
+	using Tileset = std::array<Tile, 384>;
+	using TileMap = std::array<uint8_t, 32 * 32>;
 	using Palette = std::array<Color, 4>;
 
 public:
@@ -68,7 +70,9 @@ public:
 
 	// GUI interaction
 	const Framebuffer& GetFramebuffer() const { return framebuffer_; }
-	const std::array<Tile, 384>& GetTileSet() const { return tile_set_; }
+	const Tileset& GetTileSet() const { return tile_set_; }
+	const TileMap& GetTileMap() const { return tile_maps_[active_bg_tile_map_]; }
+	size_t GetActiveTileSet() const { return active_tile_set_; }
 
 	template<class Archive>
 	void serialize(Archive &archive);
@@ -145,9 +149,8 @@ private:
 
 	std::array<uint8_t, Memory::vram_size_> vram_{};
 	std::array<uint8_t, Memory::oam_size_> oam_{};
-	std::array<Tile, 384> tile_set_{};
+	Tileset tile_set_{};
 
-	using TileMap = std::array<uint8_t, 32 * 32>;
 	std::array<TileMap, 2> tile_maps_{};
 
 	std::array<Sprite, 40> sprites_{};

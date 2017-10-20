@@ -2,6 +2,9 @@
 
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="SuperJucyBoy\Source\DebugComponents\PPU">
+      <UniqueIdentifier>{61E5309A-D45E-1E17-13B0-7561570F476C}</UniqueIdentifier>
+    </Filter>
     <Filter Include="SuperJucyBoy\Source\DebugComponents">
       <UniqueIdentifier>{7C7CC8A2-B990-C50F-C0D3-544DF403EA7A}</UniqueIdentifier>
     </Filter>
@@ -373,6 +376,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.cpp">
+      <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\DebugComponents\PPU\TilesetComponent.cpp">
+      <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClCompile>
@@ -2184,6 +2193,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.h">
+      <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DebugComponents\PPU\TilesetComponent.h">
+      <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClInclude>
