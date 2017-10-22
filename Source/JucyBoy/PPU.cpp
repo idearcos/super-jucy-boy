@@ -10,7 +10,7 @@ PPU::PPU(MMU &mmu) :
 		{ Color::Black, Color::Black, Color::Black, Color::Black } } },
 	mmu_(&mmu)
 {
-
+	bg_tile_map_occurrences_.fill(0);
 }
 
 void PPU::OnMachineCycleLapse()
@@ -81,6 +81,9 @@ void PPU::OnMachineCycleLapse()
 						next_state_ = State::EnteredVBLANK;
 
 						NotifyNewFrame();
+
+						// Reset BG tile map occurrences
+						bg_tile_map_occurrences_.fill(0);
 					}
 					else
 					{
@@ -213,6 +216,8 @@ void PPU::RenderBackground(uint8_t line_number, uint8_t x)
 	is_bg_transparent_[160 * line_number + x] = (color_number == 0);
 
 	framebuffer_[160 * line_number + x] = bg_palette_[color_number];
+
+	bg_tile_map_occurrences_[active_bg_tile_map_] += 1;
 }
 
 void PPU::RenderWindow(uint8_t line_number, uint8_t x)

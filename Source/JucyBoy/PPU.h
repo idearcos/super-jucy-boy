@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <list>
+#include <algorithm>
 #include "Sprite.h"
 #include "CPU.h"
 
@@ -71,7 +72,7 @@ public:
 	// GUI interaction
 	const Framebuffer& GetFramebuffer() const { return framebuffer_; }
 	const Tileset& GetTileSet() const { return tile_set_; }
-	const TileMap& GetTileMap() const { return tile_maps_[active_bg_tile_map_]; }
+	const TileMap& GetTileMap() const { return tile_maps_[std::distance(bg_tile_map_occurrences_.begin(), std::max_element(bg_tile_map_occurrences_.begin(), bg_tile_map_occurrences_.end()))]; }
 	size_t GetActiveTileSet() const { return active_tile_set_; }
 
 	template<class Archive>
@@ -176,6 +177,9 @@ private:
 
 	MMU* mmu_{ nullptr };
 	std::list<Listener> listeners_;
+
+	// GUI interaction
+	std::array<size_t, 2> bg_tile_map_occurrences_; // Keeps track of how often each BG tile map (0 and 1) is used
 
 private:
 	PPU(const PPU&) = delete;
