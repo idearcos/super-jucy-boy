@@ -9,7 +9,7 @@ CpuDebugComponent::CpuDebugComponent()
 	addAndMakeVisible(memory_map_component_);
 	addAndMakeVisible(watchpoints_component_);
 
-	setSize(640, 480);
+	setSize(600, 800);
 }
 
 void CpuDebugComponent::SetCpu(DebugCPU* debug_cpu)
