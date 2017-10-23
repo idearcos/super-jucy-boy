@@ -1,7 +1,7 @@
 #include "CpuInstructionBreakpointsComponent.h"
 #include <sstream>
 #include <iomanip>
-#include "../JucyBoy/InstructionMnemonics.h"
+#include "../../JucyBoy/InstructionMnemonics.h"
 
 CpuInstructionBreakpointsComponent::CpuInstructionBreakpointsComponent()
 {

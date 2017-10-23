@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JucyBoy/Debug/DebugCPU.h"
+#include "../../JucyBoy/Debug/DebugCPU.h"
 
 class CpuRegistersComponent final : public juce::Component, public juce::ListBoxModel
 {

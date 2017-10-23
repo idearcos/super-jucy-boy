@@ -1,6 +1,6 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "MemoryMapComponent.h"
-#include "../JucyBoy/MMU.h"
+#include "../../JucyBoy/MMU.h"
 #include <sstream>
 #include <iomanip>
 #include <algorithm>

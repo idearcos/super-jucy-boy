@@ -147,16 +147,15 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\DebugComponents\Memory\MemoryMapComponent.cpp"/>
+    <ClCompile Include="..\..\Source\DebugComponents\Memory\WatchpointsComponent.cpp"/>
+    <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuBreakpointsComponent.cpp"/>
+    <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuInstructionBreakpointsComponent.cpp"/>
+    <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\PPU\TilesetComponent.cpp"/>
-    <ClCompile Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuDebugComponent.cpp"/>
-    <ClCompile Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.cpp"/>
-    <ClCompile Include="..\..\Source\DebugComponents\CpuRegistersComponent.cpp"/>
-    <ClCompile Include="..\..\Source\DebugComponents\DebuggerComponent.cpp"/>
-    <ClCompile Include="..\..\Source\DebugComponents\MemoryMapComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\PpuDebugComponent.cpp"/>
-    <ClCompile Include="..\..\Source\DebugComponents\WatchpointsComponent.cpp"/>
     <ClCompile Include="..\..\Dependencies\glew-2.1.0\src\glew.c"/>
     <ClCompile Include="..\..\Source\JucyBoy\APU\NoiseChannel.cpp"/>
     <ClCompile Include="..\..\Source\JucyBoy\APU\SquareChannel.cpp"/>
@@ -1761,16 +1760,15 @@
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_opengl.cpp"/>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\DebugComponents\Memory\MemoryMapComponent.h"/>
+    <ClInclude Include="..\..\Source\DebugComponents\Memory\WatchpointsComponent.h"/>
+    <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuBreakpointsComponent.h"/>
+    <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuInstructionBreakpointsComponent.h"/>
+    <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\PPU\TilesetComponent.h"/>
-    <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuDebugComponent.h"/>
-    <ClInclude Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.h"/>
-    <ClInclude Include="..\..\Source\DebugComponents\CpuRegistersComponent.h"/>
-    <ClInclude Include="..\..\Source\DebugComponents\DebuggerComponent.h"/>
-    <ClInclude Include="..\..\Source\DebugComponents\MemoryMapComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\PpuDebugComponent.h"/>
-    <ClInclude Include="..\..\Source\DebugComponents\WatchpointsComponent.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\APU\ClockDivider.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\APU\NoiseChannel.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\APU\SquareChannel.h"/>

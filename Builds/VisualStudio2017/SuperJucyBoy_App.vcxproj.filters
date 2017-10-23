@@ -2,6 +2,12 @@
 
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="SuperJucyBoy\Source\DebugComponents\Memory">
+      <UniqueIdentifier>{4B2ACF2E-DEAE-8777-EE60-F32B5FAA082B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SuperJucyBoy\Source\DebugComponents\CPU">
+      <UniqueIdentifier>{B8C0C748-B78B-F1D0-00F7-4E7208F85047}</UniqueIdentifier>
+    </Filter>
     <Filter Include="SuperJucyBoy\Source\DebugComponents\PPU">
       <UniqueIdentifier>{61E5309A-D45E-1E17-13B0-7561570F476C}</UniqueIdentifier>
     </Filter>
@@ -376,34 +382,31 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\DebugComponents\Memory\MemoryMapComponent.cpp">
+      <Filter>SuperJucyBoy\Source\DebugComponents\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\DebugComponents\Memory\WatchpointsComponent.cpp">
+      <Filter>SuperJucyBoy\Source\DebugComponents\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuBreakpointsComponent.cpp">
+      <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuInstructionBreakpointsComponent.cpp">
+      <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.cpp">
+      <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\PPU\TilesetComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.cpp">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\CpuDebugComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.cpp">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\DebugComponents\CpuRegistersComponent.cpp">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\DebugComponents\DebuggerComponent.cpp">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\DebugComponents\MemoryMapComponent.cpp">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\PpuDebugComponent.cpp">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\DebugComponents\WatchpointsComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Dependencies\glew-2.1.0\src\glew.c">
@@ -2193,34 +2196,31 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\DebugComponents\Memory\MemoryMapComponent.h">
+      <Filter>SuperJucyBoy\Source\DebugComponents\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DebugComponents\Memory\WatchpointsComponent.h">
+      <Filter>SuperJucyBoy\Source\DebugComponents\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuBreakpointsComponent.h">
+      <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuInstructionBreakpointsComponent.h">
+      <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.h">
+      <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\PPU\TilesetComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\DebugComponents\CpuBreakpointsComponent.h">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\CpuDebugComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\DebugComponents\CpuInstructionBreakpointsComponent.h">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\DebugComponents\CpuRegistersComponent.h">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\DebugComponents\DebuggerComponent.h">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\DebugComponents\MemoryMapComponent.h">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\PpuDebugComponent.h">
-      <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\DebugComponents\WatchpointsComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\JucyBoy\APU\ClockDivider.h">

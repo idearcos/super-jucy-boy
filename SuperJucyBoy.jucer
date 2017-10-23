@@ -8,6 +8,30 @@
   <MAINGROUP id="IFf366" name="SuperJucyBoy">
     <GROUP id="{B4AB82D3-017F-535E-2503-CBCA0304574C}" name="Source">
       <GROUP id="{F1A5EA92-351C-9FCF-06FA-0EB39BA6EE8A}" name="DebugComponents">
+        <GROUP id="{CAE4DF36-9161-2092-236E-EDF99D5F85E8}" name="Memory">
+          <FILE id="sn2XWK" name="MemoryMapComponent.cpp" compile="1" resource="0"
+                file="Source/DebugComponents/Memory/MemoryMapComponent.cpp"/>
+          <FILE id="oSFn8V" name="MemoryMapComponent.h" compile="0" resource="0"
+                file="Source/DebugComponents/Memory/MemoryMapComponent.h"/>
+          <FILE id="oqSDmC" name="WatchpointsComponent.cpp" compile="1" resource="0"
+                file="Source/DebugComponents/Memory/WatchpointsComponent.cpp"/>
+          <FILE id="QyFj45" name="WatchpointsComponent.h" compile="0" resource="0"
+                file="Source/DebugComponents/Memory/WatchpointsComponent.h"/>
+        </GROUP>
+        <GROUP id="{71D6F50E-1785-AB30-9447-CA4FD20BB5D6}" name="CPU">
+          <FILE id="aYd1RG" name="CpuBreakpointsComponent.cpp" compile="1" resource="0"
+                file="Source/DebugComponents/CPU/CpuBreakpointsComponent.cpp"/>
+          <FILE id="n47FCZ" name="CpuBreakpointsComponent.h" compile="0" resource="0"
+                file="Source/DebugComponents/CPU/CpuBreakpointsComponent.h"/>
+          <FILE id="VthOEm" name="CpuInstructionBreakpointsComponent.cpp" compile="1"
+                resource="0" file="Source/DebugComponents/CPU/CpuInstructionBreakpointsComponent.cpp"/>
+          <FILE id="MRwMGb" name="CpuInstructionBreakpointsComponent.h" compile="0"
+                resource="0" file="Source/DebugComponents/CPU/CpuInstructionBreakpointsComponent.h"/>
+          <FILE id="JDeUix" name="CpuRegistersComponent.cpp" compile="1" resource="0"
+                file="Source/DebugComponents/CPU/CpuRegistersComponent.cpp"/>
+          <FILE id="I3VqTG" name="CpuRegistersComponent.h" compile="0" resource="0"
+                file="Source/DebugComponents/CPU/CpuRegistersComponent.h"/>
+        </GROUP>
         <GROUP id="{352660D1-1CA7-FD4B-17C5-5013C823388E}" name="PPU">
           <FILE id="l6IE8h" name="BackgroundComponent.cpp" compile="1" resource="0"
                 file="Source/DebugComponents/PPU/BackgroundComponent.cpp"/>
@@ -18,38 +42,14 @@
           <FILE id="ZXQ7Gv" name="TilesetComponent.h" compile="0" resource="0"
                 file="Source/DebugComponents/PPU/TilesetComponent.h"/>
         </GROUP>
-        <FILE id="RRejek" name="CpuBreakpointsComponent.cpp" compile="1" resource="0"
-              file="Source/DebugComponents/CpuBreakpointsComponent.cpp"/>
-        <FILE id="u2Cypc" name="CpuBreakpointsComponent.h" compile="0" resource="0"
-              file="Source/DebugComponents/CpuBreakpointsComponent.h"/>
         <FILE id="l7KWIo" name="CpuDebugComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/CpuDebugComponent.cpp"/>
         <FILE id="a26fGe" name="CpuDebugComponent.h" compile="0" resource="0"
               file="Source/DebugComponents/CpuDebugComponent.h"/>
-        <FILE id="SczVYQ" name="CpuInstructionBreakpointsComponent.cpp" compile="1"
-              resource="0" file="Source/DebugComponents/CpuInstructionBreakpointsComponent.cpp"/>
-        <FILE id="w7AQPy" name="CpuInstructionBreakpointsComponent.h" compile="0"
-              resource="0" file="Source/DebugComponents/CpuInstructionBreakpointsComponent.h"/>
-        <FILE id="WGtcuq" name="CpuRegistersComponent.cpp" compile="1" resource="0"
-              file="Source/DebugComponents/CpuRegistersComponent.cpp"/>
-        <FILE id="PessTL" name="CpuRegistersComponent.h" compile="0" resource="0"
-              file="Source/DebugComponents/CpuRegistersComponent.h"/>
-        <FILE id="lonWor" name="DebuggerComponent.cpp" compile="1" resource="0"
-              file="Source/DebugComponents/DebuggerComponent.cpp"/>
-        <FILE id="QxGJLc" name="DebuggerComponent.h" compile="0" resource="0"
-              file="Source/DebugComponents/DebuggerComponent.h"/>
-        <FILE id="LtPoBP" name="MemoryMapComponent.cpp" compile="1" resource="0"
-              file="Source/DebugComponents/MemoryMapComponent.cpp"/>
-        <FILE id="t8fWH8" name="MemoryMapComponent.h" compile="0" resource="0"
-              file="Source/DebugComponents/MemoryMapComponent.h"/>
         <FILE id="lpXQdT" name="PpuDebugComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/PpuDebugComponent.cpp"/>
         <FILE id="k7HhoB" name="PpuDebugComponent.h" compile="0" resource="0"
               file="Source/DebugComponents/PpuDebugComponent.h"/>
-        <FILE id="PijEQ4" name="WatchpointsComponent.cpp" compile="1" resource="0"
-              file="Source/DebugComponents/WatchpointsComponent.cpp"/>
-        <FILE id="cztgkU" name="WatchpointsComponent.h" compile="0" resource="0"
-              file="Source/DebugComponents/WatchpointsComponent.h"/>
       </GROUP>
       <GROUP id="{F6E8ED8B-CF3B-A95B-AE0F-138C37CA1D96}" name="Dependencies">
         <GROUP id="{1E3CC6C9-CA35-6603-7D2F-4916F872E656}" name="glew">

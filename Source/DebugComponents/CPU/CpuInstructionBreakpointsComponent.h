@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JucyBoy/Debug/DebugCPU.h"
+#include "../../JucyBoy/Debug/DebugCPU.h"
 #include <set>
 
 class CpuInstructionBreakpointsComponent final : public juce::Component, public juce::ListBoxModel, public juce::ComboBox::Listener, public juce::Button::Listener, public DebugCPU::Listener

@@ -20,8 +20,9 @@ JucyBoyComponent::JucyBoyComponent()
 	// Options window
 	options_window_.setLookAndFeel(&look_and_feel_);
 
-	// Debugger window
-	debugger_window_.setLookAndFeel(&look_and_feel_);
+	// Debugger windows
+	cpu_debug_window_.setLookAndFeel(&look_and_feel_);
+	ppu_debug_window_.setLookAndFeel(&look_and_feel_);
 
 	application_command_manager_.registerAllCommandsForTarget(this);
 	addKeyListener(application_command_manager_.getKeyMappings());
@@ -41,9 +42,15 @@ void JucyBoyComponent::LoadRom(std::string file_path)
 	listener_deregister_functions_.clear();
 
 	// If the debugger component is not visible, its interfaces have already been cleared (or never set)
-	if (debugger_component_.isVisible())
+	if (cpu_debug_component_.isVisible())
 	{
-		debugger_component_.SetJucyBoy(nullptr);
+		cpu_debug_component_.SetCpu(nullptr);
+		cpu_debug_component_.SetMmu(nullptr);
+	}
+
+	if (ppu_debug_component_.isVisible())
+	{
+		ppu_debug_component_.SetPpu(nullptr);
 	}
 
 	jucy_boy_.reset();
@@ -61,9 +68,15 @@ void JucyBoyComponent::LoadRom(std::string file_path)
 		game_screen_component_.SetPpu(&jucy_boy_->GetPpu());
 
 		// Interface debug components only if debugger component is visible
-		if (debugger_component_.isVisible())
+		if (cpu_debug_component_.isVisible())
 		{
-			debugger_component_.SetJucyBoy(jucy_boy_.get());
+			cpu_debug_component_.SetCpu(&jucy_boy_->GetCpu());
+			cpu_debug_component_.SetMmu(&jucy_boy_->GetMmu());
+		}
+
+		if (ppu_debug_component_.isVisible())
+		{
+			ppu_debug_component_.SetPpu(&jucy_boy_->GetPpu());
 		}
 
 		loaded_rom_file_path_ = std::move(file_path);
@@ -78,9 +91,9 @@ void JucyBoyComponent::StartEmulation()
 {
 	if (!jucy_boy_ || jucy_boy_->IsRunning()) return;
 
-	jucy_boy_->StartEmulation(debugger_window_.isVisible());
+	jucy_boy_->StartEmulation(cpu_debug_component_.isVisible());
 
-	debugger_component_.OnEmulationStarted();
+	cpu_debug_component_.OnEmulationStarted();
 }
 
 void JucyBoyComponent::PauseEmulation()
@@ -97,7 +110,7 @@ void JucyBoyComponent::PauseEmulation()
 		juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 	}
 
-	debugger_component_.OnEmulationPaused();
+	cpu_debug_component_.OnEmulationPaused();
 }
 
 void JucyBoyComponent::resized()
@@ -169,7 +182,8 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 	if (was_cpu_running)
 	{
 		PauseEmulation();
-		debugger_component_.UpdateState(false);
+		cpu_debug_component_.UpdateState(false);
+		ppu_debug_component_.Update();
 	}
 
 	juce::PopupMenu save_slot_submenu;
@@ -188,7 +202,8 @@ void JucyBoyComponent::mouseDown(const juce::MouseEvent &event)
 	menu.addCommandItem(&application_command_manager_, CommandIDs::LoadStateCmd);
 	menu.addSubMenu("Select save slot", save_slot_submenu);
 	menu.addSeparator();
-	menu.addCommandItem(&application_command_manager_, CommandIDs::EnableDebuggingCmd);
+	menu.addCommandItem(&application_command_manager_, CommandIDs::ShowCpuDebuggingCmd);
+	menu.addCommandItem(&application_command_manager_, CommandIDs::ShowPpuDebuggingCmd);
 	menu.addSeparator();
 	menu.addCommandItem(&application_command_manager_, CommandIDs::ViewOptionsCmd);
 	
@@ -206,7 +221,8 @@ bool JucyBoyComponent::keyPressed(const juce::KeyPress &key)
 		if (jucy_boy_->IsRunning())
 		{
 			PauseEmulation();
-			debugger_component_.UpdateState(true);
+			cpu_debug_component_.UpdateState(true);
+			ppu_debug_component_.Update();
 			game_screen_component_.UpdateFramebuffer();
 		}
 		else
@@ -220,13 +236,14 @@ bool JucyBoyComponent::keyPressed(const juce::KeyPress &key)
 
 		try
 		{
-			jucy_boy_->StepOver(debugger_window_.isVisible());
+			jucy_boy_->StepOver(cpu_debug_component_.isVisible());
 		}
 		catch (std::exception &e)
 		{
 			juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, "Exception caught in CPU: ", e.what());
 		}
-		debugger_component_.UpdateState(true);
+		cpu_debug_component_.UpdateState(true);
+		ppu_debug_component_.Update();
 		game_screen_component_.UpdateFramebuffer();
 	}
 
@@ -282,7 +299,8 @@ void JucyBoyComponent::OnRunningLoopInterrupted()
 {
 	juce::MessageManager::callAsync([this]() {
 		PauseEmulation();
-		debugger_component_.UpdateState(true);
+		cpu_debug_component_.UpdateState(true);
+		ppu_debug_component_.Update();
 		game_screen_component_.UpdateFramebuffer();
 	});
 }
@@ -336,10 +354,15 @@ void JucyBoyComponent::getCommandInfo(juce::CommandID commandID, juce::Applicati
 		result.setTicked(selected_save_slot_ == (1 + (commandID - CommandIDs::SelectSaveSlot1Cmd)));
 		result.addDefaultKeypress('1' + (commandID - CommandIDs::SelectSaveSlot1Cmd), juce::ModifierKeys::commandModifier);
 		break;
-	case CommandIDs::EnableDebuggingCmd:
-		result.setInfo("Debug...", "Show debugging window", "General", 0);
-		result.setTicked(debugger_window_.isVisible());
+	case CommandIDs::ShowCpuDebuggingCmd:
+		result.setInfo("Debug CPU...", "Show CPU + memory debugging window", "General", 0);
+		result.setTicked(cpu_debug_component_.isVisible());
 		result.addDefaultKeypress('d', juce::ModifierKeys::commandModifier);
+		break;
+	case CommandIDs::ShowPpuDebuggingCmd:
+		result.setInfo("Debug PPU...", "Show graphics debugging window", "General", 0);
+		result.setTicked(ppu_debug_component_.isVisible());
+		result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier);
 		break;
 	case CommandIDs::ViewOptionsCmd:
 		result.setInfo("Options...", "Show options window", "General", 0);
@@ -356,7 +379,8 @@ bool JucyBoyComponent::perform(const InvocationInfo& info)
 	if (was_cpu_running)
 	{
 		PauseEmulation();
-		debugger_component_.UpdateState(false);
+		cpu_debug_component_.UpdateState(false);
+		ppu_debug_component_.Update();
 	}
 
 	switch (info.commandID)
@@ -366,12 +390,12 @@ bool JucyBoyComponent::perform(const InvocationInfo& info)
 		if (rom_chooser.browseForFileToOpen()) {
 			auto rom_file = rom_chooser.getResult();
 			LoadRom(rom_file.getFullPathName().toStdString());
-			if (!debugger_window_.isVisible()) StartEmulation();
+			if (!cpu_debug_component_.isVisible()) StartEmulation();
 		}}
 		break;
 	case CommandIDs::ResetCmd:
 		LoadRom(loaded_rom_file_path_);
-		if (!debugger_window_.isVisible()) StartEmulation();
+		if (!cpu_debug_component_.isVisible()) StartEmulation();
 		break;
 	case CommandIDs::SaveStateCmd:
 		SaveState();
@@ -389,11 +413,25 @@ bool JucyBoyComponent::perform(const InvocationInfo& info)
 	case CommandIDs::SelectSaveSlot8Cmd:
 		SelectSaveSlot(1 + (info.commandID - CommandIDs::SelectSaveSlot1Cmd));
 		break;
-	case CommandIDs::EnableDebuggingCmd:
-		if (!debugger_component_.isVisible())
+	case CommandIDs::ShowCpuDebuggingCmd:
+		if (!cpu_debug_component_.isVisible())
 		{
-			debugger_component_.SetJucyBoy(jucy_boy_.get());
-			debugger_window_.setVisible(true);
+			if (jucy_boy_ != nullptr)
+			{
+				cpu_debug_component_.SetCpu(&jucy_boy_->GetCpu());
+				cpu_debug_component_.SetMmu(&jucy_boy_->GetMmu());
+			}
+			cpu_debug_window_.setVisible(true);
+		}
+		break;
+	case CommandIDs::ShowPpuDebuggingCmd:
+		if (!ppu_debug_component_.isVisible())
+		{
+			if (jucy_boy_ != nullptr)
+			{
+				ppu_debug_component_.SetPpu(&jucy_boy_->GetPpu());
+			}
+			ppu_debug_window_.setVisible(true);
 		}
 		break;
 	case CommandIDs::ViewOptionsCmd:

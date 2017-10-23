@@ -4,6 +4,8 @@
 #include "PPU/TilesetComponent.h"
 #include "PPU/BackgroundComponent.h"
 #include "../JucyBoy/PPU.h"
+#include <vector>
+#include <functional>
 
 class PpuDebugComponent final : public juce::Component, public PPU::Listener
 {
@@ -16,14 +18,19 @@ public:
 	void Update();
 
 	// juce::Component overrides
-	void paint(juce::Graphics&) override {}
+	void paint(juce::Graphics&) override;
 	void resized() override;
+	void visibilityChanged() override;
 
 private:
+	juce::Rectangle<int> tileset_label_area_;
 	TilesetComponent tileset_component_;
+	juce::Rectangle<int> background_label_area_;
 	BackgroundComponent background_component_;
 
 	PPU* ppu_{ nullptr };
+
+	std::vector<std::function<void()>> listener_deregister_functions_;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PpuDebugComponent)
 };

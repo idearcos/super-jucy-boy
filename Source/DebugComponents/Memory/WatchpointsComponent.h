@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../JucyBoy/Memory.h"
-#include "../JucyBoy/Debug/DebugCPU.h"
+#include "../../JucyBoy/Memory.h"
+#include "../../JucyBoy/Debug/DebugCPU.h"
 #include <set>
 
 class WatchpointsComponent final : public juce::Component, public juce::ListBoxModel, public juce::TextEditor::Listener, public DebugCPU::Listener

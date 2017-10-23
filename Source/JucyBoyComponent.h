@@ -8,7 +8,8 @@
 #include "AudioPlayerComponent.h"
 #include "JucyBoy/CPU.h"
 #include "OptionsComponents/OptionsComponent.h"
-#include "DebugComponents/DebuggerComponent.h"
+#include "DebugComponents/CpuDebugComponent.h"
+#include "DebugComponents/PpuDebugComponent.h"
 #include "AdditionalWindow.h"
 
 class JucyBoy;
@@ -59,8 +60,10 @@ private:
 
 	OptionsComponent options_component_{ game_screen_component_, audio_player_component_ };
 	AdditionalWindow options_window_{ options_component_, "JucyBoy Options", juce::Colours::white, juce::DocumentWindow::closeButton };
-	DebuggerComponent debugger_component_;
-	AdditionalWindow debugger_window_{ debugger_component_, "JucyBoy Debugger", juce::Colours::white, juce::DocumentWindow::closeButton };
+	CpuDebugComponent cpu_debug_component_;
+	AdditionalWindow cpu_debug_window_{ cpu_debug_component_, "JucyBoy CPU Debugger", juce::Colours::white, juce::DocumentWindow::closeButton };
+	PpuDebugComponent ppu_debug_component_;
+	AdditionalWindow ppu_debug_window_{ ppu_debug_component_, "JucyBoy PPU Debugger", juce::Colours::white, juce::DocumentWindow::closeButton };
 
 	size_t selected_save_slot_{ 1 }; // Slot 0 is not used
 
@@ -80,7 +83,8 @@ private:
 		SelectSaveSlot6Cmd,
 		SelectSaveSlot7Cmd,
 		SelectSaveSlot8Cmd,
-		EnableDebuggingCmd,
+		ShowCpuDebuggingCmd,
+		ShowPpuDebuggingCmd,
 		ViewOptionsCmd,
 		CommandCount // Always leave this last
 	};
