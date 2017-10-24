@@ -288,7 +288,7 @@ void BackgroundComponent::render()
 	const GLfloat bg_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glClearBufferfv(GL_COLOR, 0, bg_color);
 
-	glViewport(0, 0, getWidth(), getHeight());
+	glViewport(viewport_area_.getX(), viewport_area_.getY(), viewport_area_.getWidth(), viewport_area_.getHeight());
 
 	// Bind and draw texture
 	glBindTexture(GL_TEXTURE_2D, texture_);
@@ -327,4 +327,10 @@ void BackgroundComponent::Update()
 	update_sync_.store(true, std::memory_order::memory_order_release);
 
 	openGLContext.triggerRepaint();
+}
+
+void BackgroundComponent::resized()
+{
+	const auto side_length = std::min(getWidth(), getHeight());
+	viewport_area_ = juce::Rectangle<int>((getWidth() - side_length) / 2, (getHeight() - side_length) / 2, side_length, side_length);
 }

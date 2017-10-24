@@ -23,9 +23,8 @@ public:
 	void visibilityChanged() override;
 
 private:
-	juce::Rectangle<int> tileset_label_area_;
+	juce::TabbedComponent tabbed_component_{ juce::TabbedButtonBar::TabsAtTop };
 	TilesetComponent tileset_component_;
-	juce::Rectangle<int> background_label_area_;
 	BackgroundComponent background_component_;
 
 	PPU* ppu_{ nullptr };

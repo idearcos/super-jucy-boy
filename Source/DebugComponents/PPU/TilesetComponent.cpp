@@ -307,3 +307,10 @@ void TilesetComponent::UpdateTileSet()
 
 	openGLContext.triggerRepaint();
 }
+
+void TilesetComponent::resized()
+{
+	const auto width = std::min(static_cast<size_t>(getWidth()), getHeight() * tile_grid_width_ / tile_grid_height_);
+	const auto height = width * tile_grid_height_ / tile_grid_width_;
+	viewport_area_ = juce::Rectangle<int>((getWidth() - width) / 2, (getHeight() - height) / 2, width, height);
+}

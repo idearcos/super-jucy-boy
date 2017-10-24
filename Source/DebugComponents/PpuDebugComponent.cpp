@@ -2,10 +2,12 @@
 
 PpuDebugComponent::PpuDebugComponent()
 {
-	addAndMakeVisible(tileset_component_);
-	addAndMakeVisible(background_component_);
+	addAndMakeVisible(tabbed_component_);
 
-	setSize(800, 600);
+	tabbed_component_.addTab("Tile Set", juce::Colours::white, &tileset_component_, true);
+	tabbed_component_.addTab("Background", juce::Colours::white, &background_component_, true);
+
+	setSize(BackgroundComponent::bg_width_in_tiles_ * BackgroundComponent::tile_width_ * 2, BackgroundComponent::bg_height_in_tiles_ * BackgroundComponent::tile_height_ * 2);
 }
 
 void PpuDebugComponent::SetPpu(PPU* ppu)
@@ -40,24 +42,11 @@ void PpuDebugComponent::paint(juce::Graphics &g)
 	g.drawRect(getLocalBounds(), 1);
 
 	g.setFont(14.0f);
-
-	g.drawFittedText("Tile set", tileset_label_area_, juce::Justification::centred, 2);
-	g.drawRect(tileset_label_area_, 1);
-
-	g.drawFittedText("Background", background_label_area_, juce::Justification::centred, 2);
-	g.drawRect(background_label_area_, 1);
 }
 
 void PpuDebugComponent::resized()
 {
-	auto working_area = getLocalBounds();
-	auto tileset_area = working_area.removeFromLeft(TilesetComponent::tile_grid_width_ * TilesetComponent::tile_width_ * 2);
-	tileset_label_area_ = tileset_area.removeFromTop(getHeight() - TilesetComponent::tile_grid_height_ * TilesetComponent::tile_height_ * 2);
-	tileset_component_.setBounds(tileset_area);
-
-	auto background_area = working_area.removeFromRight(BackgroundComponent::bg_width_in_tiles_ * BackgroundComponent::tile_width_ * 2);
-	background_label_area_ = background_area.removeFromTop(getHeight() - BackgroundComponent::bg_height_in_tiles_ * BackgroundComponent::tile_height_ * 2);
-	background_component_.setBounds(background_area);
+	tabbed_component_.setBounds(getLocalBounds());
 }
 
 void PpuDebugComponent::visibilityChanged()

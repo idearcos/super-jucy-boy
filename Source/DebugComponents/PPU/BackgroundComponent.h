@@ -13,9 +13,13 @@ public:
 
 	void Update();
 
+	// juce::OpenGLAppComponent overrides
 	void render();
 	void initialise();
 	void shutdown();
+
+	// juce::Component overrides
+	void resized() override;
 
 private:
 	struct Vertex
@@ -52,6 +56,7 @@ private:
 
 	std::array<uint8_t, static_cast<size_t>(PPU::Color::Count)> intensity_palette_;
 
+	juce::Rectangle<int> viewport_area_;
 	bool opengl_initialization_complete_{ false };
 
 	PPU* ppu_{ nullptr };
