@@ -2,26 +2,18 @@
 #include "TilesetComponent.h"
 #include <cassert>
 
-TilesetComponent::TilesetComponent() :
+TilesetRenderer::TilesetRenderer() :
 	vertices_{ InitializeVertices() },
 	elements_{ InitializeElements() },
 	intensity_palette_{ 255, 192, 96, 0 }
 {
-	openGLContext.setComponentPaintingEnabled(false);
-	openGLContext.setContinuousRepainting(false);
-
 	for (auto& tile : tile_set_)
 	{
 		tile.fill(255);
 	}
 }
 
-TilesetComponent::~TilesetComponent()
-{
-	shutdownOpenGL();
-}
-
-std::vector<TilesetComponent::Vertex> TilesetComponent::InitializeVertices()
+std::vector<TilesetRenderer::Vertex> TilesetRenderer::InitializeVertices()
 {
 	std::vector<Vertex> vertices;
 
@@ -48,7 +40,7 @@ std::vector<TilesetComponent::Vertex> TilesetComponent::InitializeVertices()
 	return vertices;
 }
 
-std::vector<GLuint> TilesetComponent::InitializeElements()
+std::vector<GLuint> TilesetRenderer::InitializeElements()
 {
 	std::vector<GLuint> elements;
 
@@ -65,7 +57,7 @@ std::vector<GLuint> TilesetComponent::InitializeElements()
 	return elements;
 }
 
-void TilesetComponent::initialise()
+void TilesetRenderer::initialise()
 {
 	const auto glew_init_result = glewInit();
 	if (glew_init_result != GLEW_OK)
@@ -232,7 +224,6 @@ void TilesetComponent::initialise()
 	{
 		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB8, tile_width_, tile_height_, num_tiles_, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
 	}
-	auto e = glGetError();
 
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -253,7 +244,7 @@ void TilesetComponent::initialise()
 	opengl_initialization_complete_ = true;
 }
 
-void TilesetComponent::shutdown()
+void TilesetRenderer::shutdown()
 {
 	glDeleteTextures(1, &texture_);
 
@@ -264,14 +255,14 @@ void TilesetComponent::shutdown()
 	glDeleteProgram(shader_program_);
 }
 
-void TilesetComponent::render()
+void TilesetRenderer::render()
 {
 	if (!opengl_initialization_complete_) return;
 
 	const GLfloat bg_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glClearBufferfv(GL_COLOR, 0, bg_color);
 
-	glViewport(0, 0, getWidth(), getHeight());
+	glViewport(viewport_area_.getX(), viewport_area_.getY(), viewport_area_.getWidth(), viewport_area_.getHeight());
 
 	// Bind and draw texture
 	glBindTexture(GL_TEXTURE_2D, texture_);
@@ -292,7 +283,7 @@ void TilesetComponent::render()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TilesetComponent::UpdateTileSet()
+void TilesetRenderer::Update()
 {
 	if (!ppu_) return;
 
@@ -304,13 +295,11 @@ void TilesetComponent::UpdateTileSet()
 	}
 
 	update_sync_.store(true, std::memory_order::memory_order_release);
-
-	openGLContext.triggerRepaint();
 }
 
-void TilesetComponent::resized()
+void TilesetRenderer::SetViewportArea(const juce::Rectangle<int> &viewport_area)
 {
-	const auto width = std::min(static_cast<size_t>(getWidth()), getHeight() * tile_grid_width_ / tile_grid_height_);
+	const auto width = std::min(static_cast<size_t>(viewport_area.getWidth()), viewport_area.getHeight() * tile_grid_width_ / tile_grid_height_);
 	const auto height = width * tile_grid_height_ / tile_grid_width_;
-	viewport_area_ = juce::Rectangle<int>((getWidth() - width) / 2, (getHeight() - height) / 2, width, height);
+	viewport_area_ = juce::Rectangle<int>((viewport_area.getWidth() - width) / 2, (viewport_area.getHeight() - height) / 2, width, height);
 }

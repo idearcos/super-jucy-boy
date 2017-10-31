@@ -3,23 +3,21 @@
 #include "../../../JuceLibraryCode/JuceHeader.h"
 #include "../../JucyBoy/PPU.h"
 
-class TilesetComponent final : public juce::OpenGLAppComponent
+class TilesetRenderer final
 {
 public:
-	TilesetComponent();
-	~TilesetComponent();
+	TilesetRenderer();
+	~TilesetRenderer() = default;
 
 	void SetPpu(PPU* ppu) { ppu_ = ppu; }
 
-	void UpdateTileSet();
+	void Update();
+	void SetViewportArea(const juce::Rectangle<int> &viewport_area);
 
-	// juce::OpenGLAppComponent overrides
+	// These are not overrides since the class does not inherit from juce::OpenGLAppComponent, but the functions have the same names
 	void render();
 	void initialise();
 	void shutdown();
-
-	// juce::Component overrides
-	void resized() override;
 
 private:
 	struct Vertex
@@ -59,5 +57,5 @@ private:
 
 	PPU* ppu_{ nullptr };
 
-	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TilesetComponent)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TilesetRenderer)
 };

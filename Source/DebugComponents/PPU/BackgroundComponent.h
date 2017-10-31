@@ -3,23 +3,21 @@
 #include "../../../JuceLibraryCode/JuceHeader.h"
 #include "../../JucyBoy/PPU.h"
 
-class BackgroundComponent : public juce::OpenGLAppComponent
+class BackgroundRenderer
 {
 public:
-	BackgroundComponent();
-	~BackgroundComponent();
+	BackgroundRenderer();
+	~BackgroundRenderer() = default;
 
 	void SetPpu(PPU* ppu) { ppu_ = ppu; }
 
 	void Update();
+	void SetViewportArea(const juce::Rectangle<int> &viewport_area);
 
-	// juce::OpenGLAppComponent overrides
+	// These are not overrides since the class does not inherit from juce::OpenGLAppComponent, but the functions have the same names
 	void render();
 	void initialise();
 	void shutdown();
-
-	// juce::Component overrides
-	void resized() override;
 
 private:
 	struct Vertex
@@ -62,5 +60,5 @@ private:
 	PPU* ppu_{ nullptr };
 	size_t updated_index_{ 0 };
 
-	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BackgroundComponent)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BackgroundRenderer)
 };

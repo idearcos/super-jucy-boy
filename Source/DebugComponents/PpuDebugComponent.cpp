@@ -2,12 +2,24 @@
 
 PpuDebugComponent::PpuDebugComponent()
 {
-	addAndMakeVisible(tabbed_component_);
+	tabbed_button_bar_.addChangeListener(this);
+	addAndMakeVisible(tabbed_button_bar_);
 
-	tabbed_component_.addTab("Tile Set", juce::Colours::white, &tileset_component_, true);
-	tabbed_component_.addTab("Background", juce::Colours::white, &background_component_, true);
+	tabbed_button_bar_.addTab("Tile Set", juce::Colours::white, 0);
+	tabbed_button_bar_.addTab("Background", juce::Colours::white, 1);
 
-	setSize(BackgroundComponent::bg_width_in_tiles_ * BackgroundComponent::tile_width_ * 2, BackgroundComponent::bg_height_in_tiles_ * BackgroundComponent::tile_height_ * 2);
+	addAndMakeVisible(opengl_canvas_component_);
+
+	setSize(BackgroundRenderer::bg_width_in_tiles_ * BackgroundRenderer::tile_width_ * 2, BackgroundRenderer::bg_height_in_tiles_ * BackgroundRenderer::tile_height_ * 2);
+
+	openGLContext.attachTo(opengl_canvas_component_);
+	openGLContext.setComponentPaintingEnabled(false);
+	openGLContext.setContinuousRepainting(false);
+}
+
+PpuDebugComponent::~PpuDebugComponent()
+{
+	shutdownOpenGL();
 }
 
 void PpuDebugComponent::SetPpu(PPU* ppu)
@@ -18,8 +30,8 @@ void PpuDebugComponent::SetPpu(PPU* ppu)
 
 	ppu_ = ppu;
 
-	tileset_component_.SetPpu(ppu);
-	background_component_.SetPpu(ppu);
+	tileset_renderer_.SetPpu(ppu);
+	background_renderer_.SetPpu(ppu);
 
 	if (ppu != nullptr)
 	{
@@ -30,8 +42,10 @@ void PpuDebugComponent::SetPpu(PPU* ppu)
 
 void PpuDebugComponent::Update()
 {
-	tileset_component_.UpdateTileSet();
-	background_component_.Update();
+	tileset_renderer_.Update();
+	background_renderer_.Update();
+
+	openGLContext.triggerRepaint();
 }
 
 void PpuDebugComponent::paint(juce::Graphics &g)
@@ -40,13 +54,16 @@ void PpuDebugComponent::paint(juce::Graphics &g)
 
 	g.setColour(juce::Colours::orange);
 	g.drawRect(getLocalBounds(), 1);
-
-	g.setFont(14.0f);
 }
 
 void PpuDebugComponent::resized()
 {
-	tabbed_component_.setBounds(getLocalBounds());
+	auto working_area = getLocalBounds();
+	tabbed_button_bar_.setBounds(working_area.removeFromTop(30));
+
+	opengl_canvas_component_.setBounds(working_area);
+	tileset_renderer_.SetViewportArea(working_area);
+	background_renderer_.SetViewportArea(working_area);
 }
 
 void PpuDebugComponent::visibilityChanged()
@@ -56,4 +73,35 @@ void PpuDebugComponent::visibilityChanged()
 	{
 		SetPpu(nullptr);
 	}
+}
+
+void PpuDebugComponent::changeListenerCallback(juce::ChangeBroadcaster*)
+{
+	
+}
+
+void PpuDebugComponent::render()
+{
+	switch (tabbed_button_bar_.getCurrentTabIndex())
+	{
+	case 0:
+		tileset_renderer_.render();
+		break;
+	case 1:
+		background_renderer_.render();
+		break;
+	default:
+		break;
+	}
+}
+
+void PpuDebugComponent::initialise()
+{
+	tileset_renderer_.initialise();
+	background_renderer_.initialise();
+}
+
+void PpuDebugComponent::shutdown()
+{
+	tileset_renderer_.shutdown();
 }

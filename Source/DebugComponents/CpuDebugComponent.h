@@ -22,6 +22,7 @@ public:
 	void OnEmulationPaused();
 	void UpdateState(bool compute_diff);
 
+	// juce::Component overrides
 	void paint(juce::Graphics&) override;
 	void resized() override;
 	void visibilityChanged() override;

@@ -2,14 +2,11 @@
 #include "BackgroundComponent.h"
 #include <cassert>
 
-BackgroundComponent::BackgroundComponent() :
+BackgroundRenderer::BackgroundRenderer() :
 	vertices_{ InitializeVertices() },
 	elements_{ InitializeElements() },
 	intensity_palette_{ 255, 192, 96, 0 }
 {
-	openGLContext.setComponentPaintingEnabled(false);
-	openGLContext.setContinuousRepainting(false);
-
 	for (auto& tile : tile_set_)
 	{
 		tile.fill(255);
@@ -18,12 +15,7 @@ BackgroundComponent::BackgroundComponent() :
 	tile_map_.fill(0);
 }
 
-BackgroundComponent::~BackgroundComponent()
-{
-	shutdownOpenGL();
-}
-
-std::vector<BackgroundComponent::Vertex> BackgroundComponent::InitializeVertices()
+std::vector<BackgroundRenderer::Vertex> BackgroundRenderer::InitializeVertices()
 {
 	std::vector<Vertex> vertices;
 
@@ -50,7 +42,7 @@ std::vector<BackgroundComponent::Vertex> BackgroundComponent::InitializeVertices
 	return vertices;
 }
 
-std::vector<GLuint> BackgroundComponent::InitializeElements()
+std::vector<GLuint> BackgroundRenderer::InitializeElements()
 {
 	std::vector<GLuint> elements;
 
@@ -67,7 +59,7 @@ std::vector<GLuint> BackgroundComponent::InitializeElements()
 	return elements;
 }
 
-void BackgroundComponent::initialise()
+void BackgroundRenderer::initialise()
 {
 	const auto glew_init_result = glewInit();
 	if (glew_init_result != GLEW_OK)
@@ -270,7 +262,7 @@ void BackgroundComponent::initialise()
 	opengl_initialization_complete_ = true;
 }
 
-void BackgroundComponent::shutdown()
+void BackgroundRenderer::shutdown()
 {
 	glDeleteTextures(1, &texture_);
 
@@ -281,7 +273,7 @@ void BackgroundComponent::shutdown()
 	glDeleteProgram(shader_program_);
 }
 
-void BackgroundComponent::render()
+void BackgroundRenderer::render()
 {
 	if (!opengl_initialization_complete_) return;
 
@@ -310,7 +302,7 @@ void BackgroundComponent::render()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void BackgroundComponent::Update()
+void BackgroundRenderer::Update()
 {
 	if (!ppu_) return;
 
@@ -325,12 +317,10 @@ void BackgroundComponent::Update()
 	active_tile_set_ = ppu_->GetActiveTileSet();
 
 	update_sync_.store(true, std::memory_order::memory_order_release);
-
-	openGLContext.triggerRepaint();
 }
 
-void BackgroundComponent::resized()
+void BackgroundRenderer::SetViewportArea(const juce::Rectangle<int> &viewport_area)
 {
-	const auto side_length = std::min(getWidth(), getHeight());
-	viewport_area_ = juce::Rectangle<int>((getWidth() - side_length) / 2, (getHeight() - side_length) / 2, side_length, side_length);
+	const auto side_length = std::min(viewport_area.getWidth(), viewport_area.getHeight());
+	viewport_area_ = juce::Rectangle<int>((viewport_area.getWidth() - side_length) / 2, (viewport_area.getHeight() - side_length) / 2, side_length, side_length);
 }

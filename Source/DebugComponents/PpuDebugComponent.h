@@ -7,25 +7,34 @@
 #include <vector>
 #include <functional>
 
-class PpuDebugComponent final : public juce::Component, public PPU::Listener
+class PpuDebugComponent final : public juce::OpenGLAppComponent, public PPU::Listener, public juce::ChangeListener
 {
 public:
 	PpuDebugComponent();
-	~PpuDebugComponent() = default;
+	~PpuDebugComponent();
 
 	void SetPpu(PPU* ppu);
 
 	void Update();
+
+	// juce::OpenGLAppComponent overrides
+	void render();
+	void initialise();
+	void shutdown();
 
 	// juce::Component overrides
 	void paint(juce::Graphics&) override;
 	void resized() override;
 	void visibilityChanged() override;
 
+	// juce::ChangeListener overrides
+	void changeListenerCallback(juce::ChangeBroadcaster *source) override;
+
 private:
-	juce::TabbedComponent tabbed_component_{ juce::TabbedButtonBar::TabsAtTop };
-	TilesetComponent tileset_component_;
-	BackgroundComponent background_component_;
+	juce::TabbedButtonBar tabbed_button_bar_{ juce::TabbedButtonBar::TabsAtTop };
+	TilesetRenderer tileset_renderer_;
+	BackgroundRenderer background_renderer_;
+	juce::Component opengl_canvas_component_;
 
 	PPU* ppu_{ nullptr };
 
