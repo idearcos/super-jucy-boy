@@ -397,10 +397,10 @@
     <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.cpp">
+    <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundRenderer.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\DebugComponents\PPU\TilesetComponent.cpp">
+    <ClCompile Include="..\..\Source\DebugComponents\PPU\TilesetRenderer.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\CpuDebugComponent.cpp">
@@ -2211,10 +2211,10 @@
     <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.h">
+    <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundRenderer.h">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\DebugComponents\PPU\TilesetComponent.h">
+    <ClInclude Include="..\..\Source\DebugComponents\PPU\TilesetRenderer.h">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\CpuDebugComponent.h">

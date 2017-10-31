@@ -152,8 +152,8 @@
     <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuBreakpointsComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuInstructionBreakpointsComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.cpp"/>
-    <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.cpp"/>
-    <ClCompile Include="..\..\Source\DebugComponents\PPU\TilesetComponent.cpp"/>
+    <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundRenderer.cpp"/>
+    <ClCompile Include="..\..\Source\DebugComponents\PPU\TilesetRenderer.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\CpuDebugComponent.cpp"/>
     <ClCompile Include="..\..\Source\DebugComponents\PpuDebugComponent.cpp"/>
     <ClCompile Include="..\..\Dependencies\glew-2.1.0\src\glew.c"/>
@@ -1765,8 +1765,8 @@
     <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuBreakpointsComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuInstructionBreakpointsComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.h"/>
-    <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.h"/>
-    <ClInclude Include="..\..\Source\DebugComponents\PPU\TilesetComponent.h"/>
+    <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundRenderer.h"/>
+    <ClInclude Include="..\..\Source\DebugComponents\PPU\TilesetRenderer.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\CpuDebugComponent.h"/>
     <ClInclude Include="..\..\Source\DebugComponents\PpuDebugComponent.h"/>
     <ClInclude Include="..\..\Source\JucyBoy\APU\ClockDivider.h"/>

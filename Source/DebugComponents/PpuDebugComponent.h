@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "PPU/TilesetComponent.h"
-#include "PPU/BackgroundComponent.h"
+#include "PPU/TilesetRenderer.h"
+#include "PPU/BackgroundRenderer.h"
 #include "../JucyBoy/PPU.h"
 #include <vector>
 #include <functional>

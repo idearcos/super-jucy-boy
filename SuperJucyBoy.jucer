@@ -33,14 +33,14 @@
                 file="Source/DebugComponents/CPU/CpuRegistersComponent.h"/>
         </GROUP>
         <GROUP id="{352660D1-1CA7-FD4B-17C5-5013C823388E}" name="PPU">
-          <FILE id="l6IE8h" name="BackgroundComponent.cpp" compile="1" resource="0"
-                file="Source/DebugComponents/PPU/BackgroundComponent.cpp"/>
-          <FILE id="Fz7NnE" name="BackgroundComponent.h" compile="0" resource="0"
-                file="Source/DebugComponents/PPU/BackgroundComponent.h"/>
-          <FILE id="lCeGGB" name="TilesetComponent.cpp" compile="1" resource="0"
-                file="Source/DebugComponents/PPU/TilesetComponent.cpp"/>
-          <FILE id="ZXQ7Gv" name="TilesetComponent.h" compile="0" resource="0"
-                file="Source/DebugComponents/PPU/TilesetComponent.h"/>
+          <FILE id="sohKqb" name="BackgroundRenderer.cpp" compile="1" resource="0"
+                file="Source/DebugComponents/PPU/BackgroundRenderer.cpp"/>
+          <FILE id="MKd4Ot" name="BackgroundRenderer.h" compile="0" resource="0"
+                file="Source/DebugComponents/PPU/BackgroundRenderer.h"/>
+          <FILE id="YmMjPF" name="TilesetRenderer.cpp" compile="1" resource="0"
+                file="Source/DebugComponents/PPU/TilesetRenderer.cpp"/>
+          <FILE id="LDFfdA" name="TilesetRenderer.h" compile="0" resource="0"
+                file="Source/DebugComponents/PPU/TilesetRenderer.h"/>
         </GROUP>
         <FILE id="l7KWIo" name="CpuDebugComponent.cpp" compile="1" resource="0"
               file="Source/DebugComponents/CpuDebugComponent.cpp"/>
