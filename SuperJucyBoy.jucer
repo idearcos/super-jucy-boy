@@ -33,6 +33,10 @@
                 file="Source/DebugComponents/CPU/CpuRegistersComponent.h"/>
         </GROUP>
         <GROUP id="{352660D1-1CA7-FD4B-17C5-5013C823388E}" name="PPU">
+          <FILE id="oYIkqk" name="BackgroundComponent.cpp" compile="1" resource="0"
+                file="Source/DebugComponents/PPU/BackgroundComponent.cpp"/>
+          <FILE id="YzrM56" name="BackgroundComponent.h" compile="0" resource="0"
+                file="Source/DebugComponents/PPU/BackgroundComponent.h"/>
           <FILE id="sohKqb" name="BackgroundRenderer.cpp" compile="1" resource="0"
                 file="Source/DebugComponents/PPU/BackgroundRenderer.cpp"/>
           <FILE id="MKd4Ot" name="BackgroundRenderer.h" compile="0" resource="0"

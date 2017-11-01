@@ -397,6 +397,9 @@
     <ClCompile Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.cpp">
+      <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\DebugComponents\PPU\BackgroundRenderer.cpp">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClCompile>
@@ -2210,6 +2213,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\CPU\CpuRegistersComponent.h">
       <Filter>SuperJucyBoy\Source\DebugComponents\CPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundComponent.h">
+      <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\DebugComponents\PPU\BackgroundRenderer.h">
       <Filter>SuperJucyBoy\Source\DebugComponents\PPU</Filter>

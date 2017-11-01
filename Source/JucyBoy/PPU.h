@@ -72,7 +72,8 @@ public:
 	// GUI interaction
 	const Framebuffer& GetFramebuffer() const { return framebuffer_; }
 	const Tileset& GetTileSet() const { return tile_set_; }
-	const TileMap& GetTileMap() const { return tile_maps_[std::distance(bg_tile_map_occurrences_.begin(), std::max_element(bg_tile_map_occurrences_.begin(), bg_tile_map_occurrences_.end()))]; }
+	const TileMap& GetTileMap(size_t tile_map) const { return tile_maps_[tile_map]; }
+	size_t GetDetectedActiveBackgroundTileMap() const { return std::distance(bg_tile_map_occurrences_.begin(), std::max_element(bg_tile_map_occurrences_.begin(), bg_tile_map_occurrences_.end())); }
 	size_t GetActiveTileSet() const { return active_tile_set_; }
 
 	template<class Archive>

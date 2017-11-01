@@ -1,6 +1,7 @@
 #include "GL/glew.h"
 #include "BackgroundRenderer.h"
 #include <cassert>
+#include <string>
 
 BackgroundRenderer::BackgroundRenderer() :
 	vertices_{ InitializeVertices() },
@@ -313,7 +314,8 @@ void BackgroundRenderer::Update()
 		std::transform(ppu_tile_set[ii].begin(), ppu_tile_set[ii].end(), tile_set_[ii].begin(), [this](uint8_t color_number) { return intensity_palette_[color_number]; });
 	}
 
-	tile_map_ = ppu_->GetTileMap();
+	tile_map_ = ppu_->GetTileMap(selected_tile_map_.value_or(ppu_->GetDetectedActiveBackgroundTileMap()));
+
 	active_tile_set_ = ppu_->GetActiveTileSet();
 
 	update_sync_.store(true, std::memory_order::memory_order_release);
@@ -323,4 +325,10 @@ void BackgroundRenderer::SetViewportArea(const juce::Rectangle<int> &viewport_ar
 {
 	const auto side_length = std::min(viewport_area.getWidth(), viewport_area.getHeight());
 	viewport_area_ = juce::Rectangle<int>((viewport_area.getWidth() - side_length) / 2, (viewport_area.getHeight() - side_length) / 2, side_length, side_length);
+}
+
+void BackgroundRenderer::SetSelectedTileMap(std::optional<size_t> selected_tile_map)
+{
+	selected_tile_map_ = selected_tile_map;
+	Update();
 }

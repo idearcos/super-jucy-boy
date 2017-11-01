@@ -2,6 +2,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PPU/TilesetRenderer.h"
+#include "PPU/BackgroundComponent.h"
 #include "PPU/BackgroundRenderer.h"
 #include "../JucyBoy/PPU.h"
 #include <vector>
@@ -34,6 +35,7 @@ private:
 	juce::TabbedButtonBar tabbed_button_bar_{ juce::TabbedButtonBar::TabsAtTop };
 	TilesetRenderer tileset_renderer_;
 	BackgroundRenderer background_renderer_;
+	BackgroundComponent background_component_{ background_renderer_ };
 	juce::Component opengl_canvas_component_;
 
 	PPU* ppu_{ nullptr };

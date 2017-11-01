@@ -2,12 +2,12 @@
 
 PpuDebugComponent::PpuDebugComponent()
 {
-	tabbed_button_bar_.addChangeListener(this);
 	addAndMakeVisible(tabbed_button_bar_);
-
+	tabbed_button_bar_.addChangeListener(this);
 	tabbed_button_bar_.addTab("Tile Set", juce::Colours::white, 0);
 	tabbed_button_bar_.addTab("Background", juce::Colours::white, 1);
 
+	addAndMakeVisible(background_component_);
 	addAndMakeVisible(opengl_canvas_component_);
 
 	setSize(BackgroundRenderer::bg_width_in_tiles_ * BackgroundRenderer::tile_width_ * 2, BackgroundRenderer::bg_height_in_tiles_ * BackgroundRenderer::tile_height_ * 2);
@@ -61,6 +61,8 @@ void PpuDebugComponent::resized()
 	auto working_area = getLocalBounds();
 	tabbed_button_bar_.setBounds(working_area.removeFromTop(30));
 
+	if (background_component_.isVisible()) background_component_.setBounds(working_area.removeFromTop(30));
+
 	opengl_canvas_component_.setBounds(working_area);
 	tileset_renderer_.SetViewportArea(working_area);
 	background_renderer_.SetViewportArea(working_area);
@@ -77,7 +79,9 @@ void PpuDebugComponent::visibilityChanged()
 
 void PpuDebugComponent::changeListenerCallback(juce::ChangeBroadcaster*)
 {
-	
+	background_component_.setVisible(tabbed_button_bar_.getCurrentTabIndex() == 1);
+
+	resized();
 }
 
 void PpuDebugComponent::render()
