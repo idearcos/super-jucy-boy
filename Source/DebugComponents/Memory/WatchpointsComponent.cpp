@@ -154,8 +154,9 @@ void WatchpointsComponent::textEditorReturnKeyPressed(juce::TextEditor &)
 	}
 	if (!watchpoint) return;
 
-	const auto insert_result = watchpoints_.insert(*watchpoint);
-	if (insert_result.second && debug_cpu_) debug_cpu_->AddWatchpoint(*insert_result.first);
+	if (const auto[it, inserted] = watchpoints_.insert(*watchpoint); inserted && debug_cpu_) {
+		debug_cpu_->AddWatchpoint(*it);
+	}
 
 	watchpoint_add_editor_.clear();
 	watchpoint_list_box_.updateContent();

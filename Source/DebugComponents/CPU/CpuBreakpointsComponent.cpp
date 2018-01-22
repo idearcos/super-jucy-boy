@@ -110,8 +110,9 @@ void CpuBreakpointsComponent::textEditorReturnKeyPressed(juce::TextEditor&)
 	const auto breakpoint = std::stoi(breakpoint_add_editor_.getText().toStdString(), 0, 16);
 	if (breakpoint < std::numeric_limits<uint16_t>::min() || breakpoint > std::numeric_limits<uint16_t>::max()) return;
 
-	const auto insert_result = breakpoints_.insert(static_cast<uint16_t>(breakpoint));
-	if (insert_result.second && debug_cpu_) debug_cpu_->AddBreakpoint(*insert_result.first);
+	if (const auto[it, inserted] = breakpoints_.insert(static_cast<uint16_t>(breakpoint)); inserted && debug_cpu_) {
+		debug_cpu_->AddBreakpoint(*it);
+	}
 
 	breakpoint_add_editor_.clear();
 	breakpoint_list_box_.updateContent();

@@ -117,8 +117,9 @@ void CpuInstructionBreakpointsComponent::deleteKeyPressed(int lastRowSelected)
 
 void CpuInstructionBreakpointsComponent::buttonClicked(juce::Button*)
 {
-	const auto insert_result = instruction_breakpoints_.insert(static_cast<CPU::OpCode>(instruction_breakpoint_add_combo_box_.getSelectedId() - 1));
-	if (insert_result.second && debug_cpu_) debug_cpu_->AddInstructionBreakpoint(*insert_result.first);
+	if (const auto[it, inserted] = instruction_breakpoints_.insert(static_cast<CPU::OpCode>(instruction_breakpoint_add_combo_box_.getSelectedId() - 1)); inserted && debug_cpu_) {
+		debug_cpu_->AddInstructionBreakpoint(*it);
+	}
 
 	instruction_breakpoint_list_box_.updateContent();
 }
