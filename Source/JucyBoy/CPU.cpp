@@ -150,37 +150,48 @@ void CPU::CheckInterrupts()
 		{
 			break;
 		}
+		// Fallthrough
 	case State::Halted:
-		for (auto interrupt = static_cast<uint16_t>(Interrupt::VBlank); interrupt <= static_cast<uint16_t>(Interrupt::Joypad); ++interrupt)
+		if ((enabled_interrupts_ & requested_interrupts_) != 0)
 		{
-			if ((enabled_interrupts_ & (1 << interrupt)) && (requested_interrupts_ & (1 << interrupt)))
-			{
-				current_state_ = State::Running;
+			current_state_ = State::Running;
 
-				if (!interrupt_master_enable_) { break; }
+			if (!interrupt_master_enable_) { break; }
 
-				// There are 2 additional machine cycles spent here
-				NotifyMachineCycleLapse();
-				NotifyMachineCycleLapse();
+			// There are 2 additional machine cycles spent here
+			NotifyMachineCycleLapse();
+			NotifyMachineCycleLapse();
+			NotifyMachineCycleLapse();
+			WriteByte(--registers_.sp, (registers_.pc >> 8) & 0xFF);
 
-				// Call appropriate Interrupt Service Routine
-				Call(Memory::ISR + (interrupt * 0x08));
-
-				// Interrupt Master Enable and the corresponding bit in the IF register become cleared
-				interrupt_master_enable_ = false;
-				requested_interrupts_ &= (~(1 << interrupt));
-
-				// Interrupts are processed one at a time, therefore exit the loop now
-				break;
+			// Check which interrupt needs to be handled
+			auto interrupt = static_cast<uint16_t>(Interrupt::VBlank);
+			Memory::Address address_to_jump_to{ 0 };
+			for (; interrupt <= static_cast<uint16_t>(Interrupt::Joypad); ++interrupt) {
+				if ((enabled_interrupts_ & (1 << interrupt)) && (requested_interrupts_ & (1 << interrupt))) {
+					address_to_jump_to = Memory::ISR + (interrupt * 0x08);
+					break;
+				}
 			}
+
+			// Call appropriate Interrupt Service Routine
+			WriteByte(--registers_.sp, registers_.pc & 0xFF);
+			registers_.pc = address_to_jump_to;
+
+			// Interrupt Master Enable and the corresponding bit in the IF register become cleared
+			interrupt_master_enable_ = false;
+			requested_interrupts_ &= (~(1 << interrupt));
 		}
 		break;
+
 	case State::Stopped:
 		break;
+
 	case State::HaltBug:
 		// HaltBug is only reached when IME is disabled, therefore interrupt servicing is not needed
 		// (The state will change to Running in the next CPU step)
 		break;
+
 	default:
 		throw std::runtime_error{ "Invalid CPU state in interrupt check: " + std::to_string(static_cast<int>(current_state_)) };
 	}
