@@ -17,29 +17,28 @@ void PPU::OnMachineCycleLapse()
 {
 	if (lcd_on_)
 	{
-		current_state_ = next_state_;
 		for (int ii = 0; ii < 4; ++ii)
 		{
+			current_state_ = next_state_;
 			clock_cycles_lapsed_in_state_ += 1;
 			clock_cycles_lapsed_in_line_ += 1;
+
+			// STAT interrupt helpers update
+			stat_interrupt_mode_ = current_state_;
+			if (line_coincidence_interrupt_delay_ > 0) {
+				if (--line_coincidence_interrupt_delay_ == 0) {
+					if (++stat_interrupt_line_ == 154) {
+						stat_interrupt_line_ = 0;
+					}
+				}
+			}
+
 			switch (current_state_)
 			{
-			case State::OAM_Line0:
-				// Line #0 requests the mode 2 STAT interrupt when entered, as opposed to the rest of the lines, which request it at the end of mode 0 instead
-				if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-				next_state_ = State::OAM;
-				break;
-
-			case State::EnteredOAM:
-				// Line comparison is triggered at the beginning of OAM mode, 4 clock cycles after LY is incremented
-				if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-				next_state_ = State::OAM;
-				break;
-
 			case State::OAM:
-				if (clock_cycles_lapsed_in_state_ >= oam_state_duration_)
+				if (clock_cycles_lapsed_in_state_ == oam_state_duration_)
 				{
-					clock_cycles_lapsed_in_state_ -= oam_state_duration_;
+					clock_cycles_lapsed_in_state_ = 0;
 					sprites_to_render_this_line_ = ComputeSpritesToRender(current_line_);
 					scroll_x_delay_this_line_ = scroll_x_ & 0x07;
 					x_to_render_ = 0;
@@ -59,12 +58,12 @@ void PPU::OnMachineCycleLapse()
 					x_to_render_ += 1;
 				}
 
-				if (clock_cycles_lapsed_in_state_ >= vram_duration_this_line_)
+				if (clock_cycles_lapsed_in_state_ == vram_duration_this_line_)
 				{
-					clock_cycles_lapsed_in_state_ -= vram_duration_this_line_;
+					clock_cycles_lapsed_in_state_ = 0;
 					hblank_duration_this_line_ = line_duration_ - oam_state_duration_ - vram_duration_this_line_;
 
-					if (hblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
+					stat_interrupt_mode_ = State::HBLANK;
 					next_state_ = State::HBLANK;
 
 					RenderSprites(current_line_);
@@ -72,13 +71,13 @@ void PPU::OnMachineCycleLapse()
 				break;
 
 			case State::HBLANK:
-				if (clock_cycles_lapsed_in_state_ >= hblank_duration_this_line_)
+				if (clock_cycles_lapsed_in_state_ == hblank_duration_this_line_)
 				{
-					clock_cycles_lapsed_in_state_ -= hblank_duration_this_line_;
-					clock_cycles_lapsed_in_line_ -= line_duration_;
+					clock_cycles_lapsed_in_state_ = 0;
+					clock_cycles_lapsed_in_line_ = 0;
 					if (++current_line_ == 144)
 					{
-						next_state_ = State::EnteredVBLANK;
+						next_state_ = State::VBLANK;
 
 						NotifyNewFrame();
 
@@ -87,76 +86,53 @@ void PPU::OnMachineCycleLapse()
 					}
 					else
 					{
-						if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-						next_state_ = State::EnteredOAM;
+						stat_interrupt_mode_ = State::OAM;
+
+						next_state_ = State::OAM;
 					}
+
+					line_coincidence_interrupt_delay_ = 4;
 				}
 				break;
 
-			case State::EnteredVBLANK:
-				mmu_->SetBit(Memory::IF, 0); // Request VBlank interrupt
-
-											 // Mode 2 STAT interrupt is also requested at this point, if enabled
-				if (oam_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-
-				next_state_ = State::VBLANK;
-				// Fallthrough
 			case State::VBLANK:
-				// Mode 1 STAT interrupt is requested every cycle
-				if (vblank_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-
-				if (clock_cycles_lapsed_in_state_ >= line_duration_)
+				if ((current_line_ == 144) && (clock_cycles_lapsed_in_state_ == 4))
 				{
-					clock_cycles_lapsed_in_state_ -= line_duration_;
-					clock_cycles_lapsed_in_line_ -= line_duration_;
-					if (++current_line_ == 153)
+					stat_interrupt_mode_ = State::OAM;
+					mmu_->SetBit(Memory::IF, 0); // Request VBlank interrupt
+				}
+				else if (current_line_ == 153)
+				{
+					if (clock_cycles_lapsed_in_state_ == 4)
 					{
-						next_state_ = State::EnteredVBLANK_Line153;
+						current_line_ = 0;
+					}
+					else if (clock_cycles_lapsed_in_state_ == 8)
+					{
+						line_coincidence_interrupt_delay_ = 4;
+					}
+				}
+
+				if (clock_cycles_lapsed_in_state_ == line_duration_)
+				{
+					clock_cycles_lapsed_in_state_ = 0;
+					clock_cycles_lapsed_in_line_ = 0;
+					if (current_line_ == 0)
+					{
+						next_state_ = State::OAM;
 					}
 					else
 					{
-						next_state_ = State::VBLANK;
+						current_line_ += 1;
+						line_coincidence_interrupt_delay_ = 4;
 					}
-				}
-				break;
-
-			case State::EnteredVBLANK_Line153:
-				// LY=LYC interrupt is requested if LYC is set to 153...
-				if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-				// ...then line number immediately changes to 0
-				current_line_ = 0;
-
-				next_state_ = State::VBLANK_Line153;
-				break;
-
-			case State::VBLANK_Line153:
-				if (clock_cycles_lapsed_in_state_ >= vblank_line153_duration)
-				{
-					clock_cycles_lapsed_in_state_ -= vblank_line153_duration;
-					next_state_ = State::EnteredVBLANK_Line0;
-				}
-				break;
-
-			case State::EnteredVBLANK_Line0:
-				// LY=LYC interrupt is requested if LYC is set to 0
-				if ((current_line_ == line_compare_) && line_coincidence_interrupt_enabled_) { mmu_->SetBit(Memory::IF, 1); }
-
-				next_state_ = State::VBLANK_Line0;
-				break;
-
-			case State::VBLANK_Line0:
-				if (clock_cycles_lapsed_in_state_ >= vblank_line0_duration)
-				{
-					clock_cycles_lapsed_in_state_ -= vblank_line0_duration;
-					clock_cycles_lapsed_in_line_ -= line_duration_;
-					next_state_ = State::OAM_Line0;
 				}
 				break;
 
 			case State::LcdTurnedOn:
-				if (clock_cycles_lapsed_in_state_ >= oam_state_duration_)
+				if (clock_cycles_lapsed_in_state_ == oam_state_duration_)
 				{
-					clock_cycles_lapsed_in_state_ -= oam_state_duration_;
+					clock_cycles_lapsed_in_state_ = 0;
 					vram_duration_this_line_ = ComputeVramModeDuration();
 					next_state_ = State::VRAM;
 				}
@@ -165,6 +141,12 @@ void PPU::OnMachineCycleLapse()
 			default:
 				throw std::logic_error("Invalid current mode in OnMachineCycleLapse: " + std::to_string(static_cast<int>(current_state_)));
 			}
+
+			const auto is_stat_interrupt_raised = IsStatInterruptRaised();
+			if (!is_stat_interrupt_raised_ && is_stat_interrupt_raised) {
+				mmu_->SetBit(Memory::IF, 1);
+			}
+			is_stat_interrupt_raised_ = is_stat_interrupt_raised;
 		}
 	}
 
@@ -389,6 +371,7 @@ void PPU::EnableLcd(bool enabled)
 	{
 		current_state_ = State::HBLANK;
 		current_line_ = 0;
+		is_stat_interrupt_raised_ = false;
 	}
 }
 
@@ -537,7 +520,7 @@ void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 
 		//TODO: Should the cycle counter in the current mode be reset to 0 too?
 		clock_cycles_lapsed_in_line_ = clock_cycles_lapsed_in_state_ = 0;
-		next_state_ = State::OAM_Line0;
+		next_state_ = State::OAM;
 		break;
 	case Memory::LYC:
 		line_compare_ = value;

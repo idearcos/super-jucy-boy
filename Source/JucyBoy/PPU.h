@@ -20,18 +20,8 @@ public:
 
 		HBLANK = 0,
 		LcdTurnedOn = 4, // Used upon LCD being turned on, for line #0 (there is no OAM mode for this line before VRAM mode)
-
 		VBLANK = 1,
-		EnteredVBLANK = 5,
-		VBLANK_Line153 = 9, // Line 153 of VBlank reports LY=153 for only 8 clock cycles...
-		EnteredVBLANK_Line153 = 13, // VBLANK mode of line 153 requests LY=LYC for line 153 upon entering
-		VBLANK_Line0 = 17, // The remaining clock cycles of VBLANK in line 153 report LY=0, and requests 
-		EnteredVBLANK_Line0 = 21, // VBLANK mode of line 0 requests LY=LYC for line 0 upon entering
-
 		OAM = 2,
-		EnteredOAM = 6, // Used to trigger LY = LYC comparison at the beginning of OAM (4 clock cycles after LY is incremented)
-		OAM_Line0 = 10, // Used for OAM mode of line 0
-
 		VRAM = 3,
 	};
 
@@ -96,7 +86,12 @@ private:
 	void EnableLcd(bool enabled);
 	uint8_t GetPaletteData(const Palette &palette) const;
 	void WriteOam(size_t index, uint8_t value);
-	inline bool CompareCurrentLine() const { return (current_line_ == line_compare_) && ((clock_cycles_lapsed_in_line_ >= 4) || (current_line_ == 0)); }
+	inline bool CompareCurrentLine() const { return (stat_interrupt_line_ == line_compare_) && (line_coincidence_interrupt_delay_ == 0); }
+	inline bool IsLineCoincidenceInterruptRaised() const { return line_coincidence_interrupt_enabled_ && CompareCurrentLine(); }
+	inline bool IsOamInterruptRaised() const { return oam_interrupt_enabled_ && (stat_interrupt_mode_ == State::OAM); }
+	inline bool IsHblankInterruptRaised() const { return hblank_interrupt_enabled_ && (stat_interrupt_mode_ == State::HBLANK); }
+	inline bool IsVblankInterruptRaised() const { return vblank_interrupt_enabled_ && (current_state_ == State::VBLANK); }
+	inline bool IsStatInterruptRaised() const { return IsLineCoincidenceInterruptRaised() || IsHblankInterruptRaised() || IsVblankInterruptRaised() || IsOamInterruptRaised(); }
 
 	// Listener notification
 	void NotifyNewFrame() const;
@@ -138,6 +133,12 @@ private:
 	bool vblank_interrupt_enabled_{ false };			// bit 4
 	bool oam_interrupt_enabled_{ false };				// bit 5
 	bool line_coincidence_interrupt_enabled_{ false };	// bit 6
+
+	// Helpers for STAT interrupt timing
+	bool is_stat_interrupt_raised_{ false };
+	size_t line_coincidence_interrupt_delay_{ 0 };
+	State stat_interrupt_mode_{ current_state_ };
+	uint8_t stat_interrupt_line_{ 0 };
 
 	// Other register values
 	uint8_t scroll_y_{ 0 };
