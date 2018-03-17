@@ -91,7 +91,7 @@ void PPU::OnMachineCycleLapse()
 						next_state_ = State::OAM;
 					}
 
-					line_coincidence_interrupt_delay_ = 4;
+					line_coincidence_interrupt_delay_ = 1;
 				}
 				break;
 
@@ -101,16 +101,13 @@ void PPU::OnMachineCycleLapse()
 					stat_interrupt_mode_ = State::OAM;
 					mmu_->SetBit(Memory::IF, 0); // Request VBlank interrupt
 				}
-				else if (current_line_ == 153)
+				else if ((current_line_ == 153) && (clock_cycles_lapsed_in_state_ == 4))
 				{
-					if (clock_cycles_lapsed_in_state_ == 4)
-					{
-						current_line_ = 0;
-					}
-					else if (clock_cycles_lapsed_in_state_ == 8)
-					{
-						line_coincidence_interrupt_delay_ = 4;
-					}
+					current_line_ = 0;
+				}
+				else if ((current_line_ == 0) && (clock_cycles_lapsed_in_state_ == 8))
+				{
+					line_coincidence_interrupt_delay_ = 1;
 				}
 
 				if (clock_cycles_lapsed_in_state_ == line_duration_)
@@ -124,7 +121,7 @@ void PPU::OnMachineCycleLapse()
 					else
 					{
 						current_line_ += 1;
-						line_coincidence_interrupt_delay_ = 4;
+						line_coincidence_interrupt_delay_ = 1;
 					}
 				}
 				break;
@@ -141,13 +138,13 @@ void PPU::OnMachineCycleLapse()
 			default:
 				throw std::logic_error("Invalid current mode in OnMachineCycleLapse: " + std::to_string(static_cast<int>(current_state_)));
 			}
-
-			const auto is_stat_interrupt_raised = IsStatInterruptRaised();
-			if (!is_stat_interrupt_raised_ && is_stat_interrupt_raised) {
-				mmu_->SetBit(Memory::IF, 1);
-			}
-			is_stat_interrupt_raised_ = is_stat_interrupt_raised;
 		}
+
+		const auto is_stat_interrupt_raised = IsStatInterruptRaised();
+		if (!is_stat_interrupt_raised_ && is_stat_interrupt_raised) {
+			mmu_->SetBit(Memory::IF, 1);
+		}
+		is_stat_interrupt_raised_ = is_stat_interrupt_raised;
 	}
 
 	// OAM DMA
@@ -365,6 +362,8 @@ void PPU::EnableLcd(bool enabled)
 	{
 		clock_cycles_lapsed_in_state_ = 4;
 		clock_cycles_lapsed_in_line_ = 4;
+		line_coincidence_interrupt_delay_ = 1;
+		stat_interrupt_line_ = 153;
 		next_state_ = State::LcdTurnedOn;
 	}
 	else
@@ -520,6 +519,8 @@ void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 
 		//TODO: Should the cycle counter in the current mode be reset to 0 too?
 		clock_cycles_lapsed_in_line_ = clock_cycles_lapsed_in_state_ = 0;
+		line_coincidence_interrupt_delay_ = 1;
+		stat_interrupt_line_ = 153;
 		next_state_ = State::OAM;
 		break;
 	case Memory::LYC:
