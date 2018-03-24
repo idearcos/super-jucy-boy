@@ -527,7 +527,7 @@ void PPU::OnIoMemoryWritten(Memory::Address address, uint8_t value)
 		line_compare_ = value;
 		break;
 	case Memory::DMA:
-		if (value > 0xF1) throw std::invalid_argument("Invalid DMA transfer source: " + std::to_string(static_cast<size_t>(value)));
+		if (value > 0xC0) value &= 0xDF;
 
 		oam_dma_.next_state_ = OamDma::State::Startup;
 		oam_dma_.source_ = value << 8;
